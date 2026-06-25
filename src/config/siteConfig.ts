@@ -1,31 +1,31 @@
 import type { SiteConfig } from "../types/config";
 
 // 定义站点语言
-const SITE_LANG = "en"; // 语言代码，例如：'en', 'zh_CN', 'ja' 等。
+const SITE_LANG = "zh_CN"; // 语言代码，例如：'en', 'zh_CN', 'ja' 等。
 
 export const siteConfig: SiteConfig = {
-	title: "Mizuki",
-	subtitle: "One demo website",
-	siteURL: "https://mizuki.mysqil.com/", // 请替换为你的站点URL，以斜杠结尾
-	siteStartDate: "2025-01-01", // 站点开始运行日期，用于站点统计组件计算运行天数
+	title: "Roderick's Agent Lab",
+	subtitle: "Agent, RL, LLM Engineering, and Systems Notes",
+	siteURL: "https://mizuki.mysqil.com/", // 部署后替换为正式域名，以斜杠结尾
+	siteStartDate: "2026-06-25", // 站点开始运行日期
 
 	lang: SITE_LANG,
 
 	themeColor: {
-		hue: 240, // 主题色的默认色相，范围从 0 到 360。例如：红色：0，青色：200，蓝绿色：250，粉色：345
+		hue: 210, // 科技蓝色调，适合技术博客
 		fixed: false, // 对访问者隐藏主题色选择器
 	},
 
-	// 特色页面开关配置（关闭未使用的页面有助于提升 SEO，关闭后请记得在 navbarConfig 中移除对应链接）
+	// 特色页面开关配置
 	featurePages: {
-		anime: true, // 番剧页面开关
-		diary: true, // 日记页面开关
-		friends: true, // 友链页面开关
-		projects: true, // 项目页面开关
-		skills: true, // 技能页面开关
-		timeline: true, // 时间线页面开关
-		albums: true, // 相册页面开关
-		devices: true, // 设备页面开关
+		anime: false, // 关闭番剧
+		diary: false, // 关闭日记
+		friends: true, // 友链（用作 Links 页面）
+		projects: true, // 项目展示
+		skills: true, // 技能展示
+		timeline: true, // 时间线
+		albums: false, // 关闭相册
+		devices: false, // 关闭设备
 	},
 
 	// 顶栏标题配置
@@ -33,7 +33,7 @@ export const siteConfig: SiteConfig = {
 		// 显示模式："text-icon" 显示图标+文本，"logo" 仅显示Logo
 		mode: "text-icon",
 		// 顶栏标题文本
-		text: "MizukiUI",
+		text: "Roderick's Lab",
 		// 顶栏标题图标路径，默认使用 public/assets/home/home.webp
 		icon: "assets/home/home.webp",
 		// 网站Logo图片路径
@@ -147,15 +147,15 @@ export const siteConfig: SiteConfig = {
 
 		homeText: {
 			enable: true,
-			title: "わたしの部屋",
+			title: "Roderick's Agent Lab",
 			switchable: true,
 
 			subtitle: [
-				"特別なことはないけど、君がいると十分です",
-				"今でもあなたは私の光",
-				"君ってさ、知らないうちに私の毎日になってたよ",
-				"君と話すと、なんか毎日がちょっと楽しくなるんだ",
-				"今日はなんでもない日。でも、ちょっとだけいい日",
+				"Building intelligent agents, one paper at a time",
+				"RL, LLMs, and the path to general intelligence",
+				"From ReAct to Multi-Agent — engineering notes",
+				"Exploring the frontier of agentic systems",
+				"Code, train, deploy — rinse and repeat",
 			],
 			typewriter: {
 				enable: true, // 启用副标题打字机效果
@@ -182,8 +182,8 @@ export const siteConfig: SiteConfig = {
 		mobileTop: true, // 手机端顶部 TOC 按钮
 		desktopSidebar: true, // 电脑端右侧边栏 TOC
 		floating: true, // 悬浮 TOC 按钮
-		depth: 2, // 目录深度，1-6，1 表示只显示 h1 标题，2 表示显示 h1 和 h2 标题，依此类推
-		useJapaneseBadge: true, // 使用日语假名标记（あいうえお...）代替数字，开启后会将 1、2、3... 改为 あ、い、う...
+		depth: 2, // 目录深度，1-6
+		useJapaneseBadge: false, // 使用数字标记
 	},
 	showCoverInContent: true, // 在文章内容页显示文章封面
 	generateOgImages: false, // 启用生成OpenGraph图片功能,注意开启后要渲染很长时间，不建议本地调试的时候开启
@@ -201,19 +201,18 @@ export const siteConfig: SiteConfig = {
 		// 注意：自定义字体需要在 src/styles/main.css 中引入字体文件
 		// 注意：字体子集优化功能目前仅支持 TTF 格式字体,开启后需要在生产环境才能看到效果,在Dev环境下显示的是浏览器默认字体!
 		asciiFont: {
-			// 英文字体 - 优先级最高
-			// 指定为英文字体则无论字体包含多大范围，都只会保留 ASCII 字符子集
+			// 英文字体 - ZenMaruGothic-Medium
 			fontFamily: "ZenMaruGothic-Medium",
 			fontWeight: "400",
 			localFonts: ["ZenMaruGothic-Medium.ttf"],
-			enableCompress: true, // 启用字体子集优化，减少字体文件大小
+			enableCompress: true,
 		},
 		cjkFont: {
-			// 中日韩字体 - 作为回退字体
-			fontFamily: "萝莉体 第二版",
+			// 中日韩字体
+			fontFamily: "ZenMaruGothic-Medium",
 			fontWeight: "500",
-			localFonts: ["loli.ttf"],
-			enableCompress: true, // 启用字体子集优化，减少字体文件大小
+			localFonts: ["ZenMaruGothic-Medium.ttf"],
+			enableCompress: true,
 		},
 	},
 	showLastModified: true, // 控制"上次编辑"卡片显示的开关
