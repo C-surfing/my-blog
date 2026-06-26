@@ -2,9 +2,9 @@ import type { ProfileConfig } from "../types/config";
 
 // 个人资料配置
 export const profileConfig: ProfileConfig = {
-	avatar: "assets/images/avatar.webp", // 相对于 /src 目录
-	name: "Roderick",
-	bio: "Agent / RL / LLM Engineering. Building intelligent systems.",
+	avatar: "assets/images/avatar.webp",
+	name: "Csurfing",
+	bio: "SZU 25 software-engineering student",
 	typewriter: {
 		enable: true,
 		speed: 80,
