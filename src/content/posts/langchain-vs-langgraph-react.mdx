@@ -1,0 +1,44 @@
+---
+title: LangChain vs LangGraph ReAct 笔记
+published: 2026-06-26
+description: Agent 工程笔记：LangChain 与 LangGraph 中 ReAct 模式的实现对比。
+tags: [Agent, ReAct, LangChain, LangGraph]
+category: Agent
+draft: false
+pinned: false
+comment: true
+lang: zh-CN
+---
+
+import PdfViewer from "@/components/PdfViewer.astro";
+
+# LangChain vs LangGraph ReAct 笔记
+
+## 概述
+
+本文对比 LangChain 和 LangGraph 两种框架下 ReAct 模式的实现方式，分析各自的优缺点和适用场景。
+
+## PDF 原文
+
+<PdfViewer
+  src="/pdfs/Modern_Agent_02_LangChain_vs_LangGraph_ReAct_notes.pdf"
+  title="LangChain vs LangGraph ReAct Notes"
+/>
+
+## 核心要点
+
+### LangChain 方式
+- 基于 Chain 的线性执行
+- `AgentExecutor` 封装 ReAct 循环
+- 适合简单、顺序的 Agent 任务
+
+### LangGraph 方式
+- 基于 Graph 的状态机编排
+- 显式的 State + Node + Edge 定义
+- 支持循环、条件分支、并行执行
+- 适合复杂 Multi-Agent 编排
+
+## 后续学习方向
+
+- 实现一个基于 LangGraph 的 Multi-Agent 系统
+- 对比不同 Agent 框架的 benchmark 表现

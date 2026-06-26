@@ -1,0 +1,38 @@
+---
+interface Props {
+  src: string;
+  title?: string;
+  height?: string;
+}
+const { src, title = "PDF", height = "85vh" } = Astro.props;
+---
+
+<div class="not-content pdf-viewer-wrapper my-4 overflow-hidden rounded-xl border border-(--border-color)">
+  <div class="flex items-center gap-2 border-b border-(--border-color) bg-(--card-bg) px-4 py-2 text-sm text-(--text-secondary)">
+    <span class="i-material-symbols:description text-(--primary)" style="font-size:1.2em"></span>
+    <span>{title}</span>
+    <a
+      href={src}
+      download
+      class="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:bg-(--primary) hover:text-white"
+      title="下载 PDF"
+    >
+      <span class="i-material-symbols:download" style="font-size:1em"></span>
+      下载
+    </a>
+  </div>
+  <iframe
+    src={src}
+    style="width:100%;height:{height};border:none;"
+    title={title}
+  ></iframe>
+</div>
+
+<style is:global>
+  .pdf-viewer-wrapper iframe {
+    background: #f5f5f5;
+  }
+  .dark .pdf-viewer-wrapper iframe {
+    background: #1a1a2e;
+  }
+</style>
