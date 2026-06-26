@@ -2,37 +2,57 @@
 interface Props {
   src: string;
   title?: string;
-  height?: string;
 }
-const { src, title = "PDF", height = "85vh" } = Astro.props;
+
+const { src, title = "PDF" } = Astro.props;
 ---
 
-<div class="not-content pdf-viewer-wrapper my-4 overflow-hidden rounded-xl border border-(--border-color)">
-  <div class="flex items-center gap-2 border-b border-(--border-color) bg-(--card-bg) px-4 py-2 text-sm text-(--text-secondary)">
-    <span class="i-material-symbols:description text-(--primary)" style="font-size:1.2em"></span>
-    <span>{title}</span>
-    <a
-      href={src}
-      download
-      class="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:bg-(--primary) hover:text-white"
-      title="下载 PDF"
-    >
-      <span class="i-material-symbols:download" style="font-size:1em"></span>
-      下载
-    </a>
+<div class="not-content pdf-card my-8 overflow-hidden rounded-xl border border-(--border-color) shadow-sm">
+  <!-- 顶栏 -->
+  <div class="flex items-center gap-2 border-b border-(--border-color) bg-(--card-bg) px-4 py-2.5 text-sm">
+    <span class="i-material-symbols:description" style="font-size:1.2em;color:var(--primary)"></span>
+    <span class="truncate font-medium">{title}</span>
+    <div class="ml-auto flex items-center gap-1.5">
+      <a
+        href={src}
+        target="_blank"
+        class="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors border border-(--border-color) hover:bg-(--primary) hover:text-white"
+      >新窗口打开</a>
+      <a
+        href={src}
+        download
+        class="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors border border-(--border-color) hover:bg-(--primary) hover:text-white"
+      >下载</a>
+    </div>
   </div>
-  <iframe
-    src={src}
-    style="width:100%;height:{height};border:none;"
-    title={title}
-  ></iframe>
+
+  <!-- PDF 预览 -->
+  <div class="pdf-viewport" style="width:100%;min-height:80vh;background:#525659;">
+    <embed
+      src={src}
+      type="application/pdf"
+      style="width:100%;min-height:80vh;display:block;border:none;"
+      title={title}
+    />
+  </div>
+
+  <!-- 浏览器不支持 embed 时的兜底 -->
+  <div class="pdf-fallback hidden border-t border-(--border-color) bg-(--card-bg) p-4 text-center text-sm text-(--text-secondary)">
+    浏览器不支持内嵌 PDF 预览，
+    <a href={src} target="_blank" class="text-(--primary) underline">点此新窗口打开</a>
+    或 <a href={src} download class="text-(--primary) underline">下载</a>
+  </div>
 </div>
 
 <style is:global>
-  .pdf-viewer-wrapper iframe {
-    background: #f5f5f5;
+  .pdf-viewport {
+    background: #525659; /* Chrome PDF viewer background color */
   }
-  .dark .pdf-viewer-wrapper iframe {
-    background: #1a1a2e;
+  .dark .pdf-viewport {
+    background: #1e1e1e;
+  }
+  /* 检测不支持 embed 的浏览器 */
+  .pdf-card embed:not([src]) ~ .pdf-fallback {
+    display: block;
   }
 </style>
