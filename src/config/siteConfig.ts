@@ -4,7 +4,7 @@ import type { SiteConfig } from "../types/config";
 const SITE_LANG = "zh_CN"; // 语言代码，例如：'en', 'zh_CN', 'ja' 等。
 
 export const siteConfig: SiteConfig = {
-	title: "Roderick's Agent Lab",
+	title: "Csurfing's Agent Lab",
 	subtitle: "Agent, RL, LLM Engineering, and Systems Notes",
 	siteURL: "https://my-blog-woad-mu.vercel.app/", // 部署后替换为正式域名，以斜杠结尾
 	siteStartDate: "2026-06-25", // 站点开始运行日期
@@ -33,7 +33,7 @@ export const siteConfig: SiteConfig = {
 		// 显示模式："text-icon" 显示图标+文本，"logo" 仅显示Logo
 		mode: "text-icon",
 		// 顶栏标题文本
-		text: "Roderick's Lab",
+		text: "Csurfing's Lab",
 		// 顶栏标题图标路径，默认使用 public/assets/home/home.webp
 		icon: "assets/home/home.webp",
 		// 网站Logo图片路径
@@ -147,7 +147,7 @@ export const siteConfig: SiteConfig = {
 
 		homeText: {
 			enable: true,
-			title: "Roderick's Agent Lab",
+			title: "Csurfing's Agent Lab",
 			switchable: true,
 
 			subtitle: [
