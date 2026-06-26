@@ -10,7 +10,7 @@ export const LOCAL_PLAYLIST: Song[] = [
 		title: "Our First Time",
 		artist: "Bruno Mars",
 		cover: "",
-		url: "assets/music/url/bruno-mars-our-first-time.mp3",
+		url: "/assets/music/url/bruno-mars-our-first-time.mp3",
 		duration: 0,
 	},
 	{
@@ -18,7 +18,7 @@ export const LOCAL_PLAYLIST: Song[] = [
 		title: "I'd Rather Pretend",
 		artist: "Bryant Barnes",
 		cover: "",
-		url: "assets/music/url/bryant-barnes-pretend.mp3",
+		url: "/assets/music/url/bryant-barnes-pretend.mp3",
 		duration: 0,
 	},
 	{
@@ -26,7 +26,7 @@ export const LOCAL_PLAYLIST: Song[] = [
 		title: "All Around Me",
 		artist: "Justin Bieber",
 		cover: "",
-		url: "assets/music/url/justin-bieber-all-around-me.mp3",
+		url: "/assets/music/url/justin-bieber-all-around-me.mp3",
 		duration: 0,
 	},
 	{
@@ -34,7 +34,7 @@ export const LOCAL_PLAYLIST: Song[] = [
 		title: "For Days",
 		artist: "RINI",
 		cover: "",
-		url: "assets/music/url/rini-for-days.mp3",
+		url: "/assets/music/url/rini-for-days.mp3",
 		duration: 0,
 	},
 	{
@@ -42,7 +42,7 @@ export const LOCAL_PLAYLIST: Song[] = [
 		title: "Open Hearts",
 		artist: "The Weeknd",
 		cover: "",
-		url: "assets/music/url/the-weeknd-open-hearts.mp3",
+		url: "/assets/music/url/the-weeknd-open-hearts.mp3",
 		duration: 0,
 	},
 ];
