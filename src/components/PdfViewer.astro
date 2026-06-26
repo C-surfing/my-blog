@@ -5,133 +5,28 @@ interface Props {
 }
 
 const { src, title = "PDF" } = Astro.props;
-const id = `pdf-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<div class="not-content pdf-card my-8 overflow-hidden rounded-xl border border-(--border-color) shadow-sm">
-  <div class="flex items-center gap-2 border-b border-(--border-color) bg-(--card-bg) px-4 py-2.5 text-sm">
-    <span class="i-material-symbols:description" style="font-size:1.2em;color:var(--primary)"></span>
-    <span class="truncate font-medium">{title}</span>
-    <div class="ml-auto flex items-center gap-1.5">
+<div class="not-content my-6 overflow-hidden rounded-xl border border-(--border-color) shadow-sm">
+  <div class="flex items-center gap-3 px-5 py-4">
+    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-(--primary)/10">
+      <span class="i-material-symbols:description text-2xl" style="color:var(--primary)"></span>
+    </div>
+    <div class="min-w-0 flex-1">
+      <div class="truncate font-medium text-sm">{title}</div>
+      <div class="text-xs text-(--text-secondary) mt-0.5">PDF 文档</div>
+    </div>
+    <div class="flex shrink-0 gap-2">
       <a href={src} target="_blank"
-        class="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors border border-(--border-color) hover:bg-(--primary) hover:text-white">新窗口</a>
+        class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors border border-(--border-color) hover:bg-(--primary) hover:text-white">
+        <span class="i-material-symbols:open-in-new"></span>
+        新窗口
+      </a>
       <a href={src} download
-        class="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors border border-(--border-color) hover:bg-(--primary) hover:text-white">下载</a>
+        class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors border border-(--border-color) hover:bg-(--primary) hover:text-white">
+        <span class="i-material-symbols:download"></span>
+        下载
+      </a>
     </div>
   </div>
-
-  <!-- iframe 优先（浏览器原生PDF阅读器，瞬间加载） -->
-  <div id={id}>
-    <iframe
-      src={src}
-      style="width:100%;height:80vh;border:none;display:block;background:#525659;"
-      title={title}
-    ></iframe>
-  </div>
 </div>
-
-<script>
-  (function() {
-    const container = document.getElementById("{id}");
-    if (!container) return;
-    const iframe = container.querySelector("iframe");
-    if (!iframe) return;
-
-    // 检测 iframe 是否成功加载了 PDF
-    let fallbackUsed = false;
-
-    function tryFallback() {
-      if (fallbackUsed) return;
-      fallbackUsed = true;
-
-      const pdfUrl = iframe.src;
-      const card = container.closest(".pdf-card");
-
-      // 替换为 PDF.js canvas 渲染
-      container.innerHTML = `
-        <div class="pdf-loading" style="display:flex;align-items:center;justify-content:center;min-height:80vh;background:#525659;color:#999;font-size:0.9rem;flex-direction:column;gap:12px;">
-          <div class="pdf-spinner" style="width:32px;height:32px;border:3px solid #444;border-top-color:#888;border-radius:50%;"></div>
-          正在加载 PDF...
-        </div>
-      `;
-
-      // 注入 spinner 动画
-      const spinStyle = document.createElement("style");
-      spinStyle.textContent = `
-        @keyframes pdfSpin { to { transform: rotate(360deg); } }
-        .pdf-spinner { animation: pdfSpin 0.8s linear infinite; }
-      `;
-      document.head.appendChild(spinStyle);
-
-      // 动态加载 PDF.js
-      const s = document.createElement("script");
-      s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-      s.onload = async () => {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        try {
-          const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-          container.innerHTML = "";
-
-          const info = document.createElement("div");
-          Object.assign(info.style, { position:"sticky", top:"0", zIndex:"10", display:"flex", alignItems:"center", gap:"8px", padding:"8px 16px", background:"rgba(0,0,0,0.85)", color:"#fff", fontSize:"13px", backdropFilter:"blur(8px)" });
-          info.innerHTML = `<span style="opacity:0.7;">${pdf.numPages} 页</span><span style="margin-left:auto;opacity:0.5;font-size:11px;">PDF.js</span>`;
-          container.appendChild(info);
-
-          const maxW = container.clientWidth - 32;
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            let vp = page.getViewport({ scale: 1.3 });
-            if (vp.width > maxW) vp = page.getViewport({ scale: maxW / vp.width });
-            const c = document.createElement("canvas");
-            Object.assign(c.style, { display:"block", margin:"0 auto", boxShadow:"0 2px 12px rgba(0,0,0,0.3)", maxWidth:"100%" });
-            c.width = vp.width; c.height = vp.height;
-            await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
-            const w = document.createElement("div");
-            w.style.cssText = "padding:8px 0;text-align:center;";
-            w.appendChild(c);
-            container.appendChild(w);
-          }
-        } catch(e) {
-          container.innerHTML = `<div style="padding:2rem;text-align:center;background:#525659;color:#999;">PDF 加载失败，<a href="${pdfUrl}" target="_blank" style="color:var(--primary);text-decoration:underline;">点击新窗口打开</a></div>`;
-        }
-      };
-      s.onerror = () => {
-        container.innerHTML = `<div style="padding:2rem;text-align:center;background:#525659;color:#999;">PDF 加载失败，<a href="${pdfUrl}" target="_blank" style="color:var(--primary);text-decoration:underline;">点击新窗口打开</a></div>`;
-      };
-      document.head.appendChild(s);
-    }
-
-    // 方案1: 检测 iframe 内容
-    try {
-      const check = setInterval(() => {
-        try {
-          const doc = iframe.contentDocument || iframe.contentWindow?.document;
-          if (doc) {
-            const text = doc.body?.innerText || "";
-            // 如果 iframe 内容不是 PDF 阅读器界面（比如显示"下载"按钮）
-            if (text.includes("download") || text.includes("Download") || text.includes("PDF")) {
-              // 正常 - PDF 已加载
-              clearInterval(check);
-            }
-          }
-        } catch(e) {
-          // 跨域异常 = iframe 正常加载了 PDF（Chrome PDF viewer 会触发跨域）
-          clearInterval(check);
-        }
-      }, 500);
-      setTimeout(() => clearInterval(check), 8000);
-    } catch(e) {}
-
-    // 方案2: 如果 3 秒后 iframe 还是空白，切 PDF.js
-    setTimeout(() => {
-      try {
-        const body = iframe.contentDocument?.body;
-        if (body && body.children.length <= 1) {
-          tryFallback();
-        }
-      } catch(e) {
-        // 跨域 = PDF 正常，不用切
-      }
-    }, 3000);
-  })();
-</script>
