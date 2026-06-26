@@ -12,6 +12,8 @@
 
 interface Props {
 	gtmId?: string;
+	umamiUrl?: string;
+	umamiId?: string;
 	thirdPartyAnalytics?: {
 		enable: boolean;
 		clarityId?: string;
@@ -20,11 +22,14 @@ interface Props {
 
 const {
 	gtmId = "GTM-KRX3XGVH",
+	umamiUrl = "",
+	umamiId = "",
 	thirdPartyAnalytics = { enable: false, clarityId: "" },
 } = Astro.props;
 
 const clarityEnable =
 	thirdPartyAnalytics.enable && thirdPartyAnalytics.clarityId;
+const umamiEnable = umamiUrl && umamiId;
 ---
 
 <!-- 第三方分析脚本 - 仅在用户交互后延迟加载 -->
@@ -34,10 +39,12 @@ const clarityEnable =
 		gtmId,
 		clarityEnable,
 		clarityId: thirdPartyAnalytics.clarityId || "",
+		umamiUrl,
+		umamiId,
+		umamiEnable,
 	}}
 >
 	(function () {
-		// 标记脚本是否已加载
 		window.analyticsLoaded = window.analyticsLoaded || false;
 
 		function loadAnalytics() {
@@ -45,6 +52,15 @@ const clarityEnable =
 				return;
 			}
 			window.analyticsLoaded = true;
+
+			// Umami Analytics
+			if (umamiEnable && umamiUrl && umamiId) {
+				const script = document.createElement("script");
+				script.defer = true;
+				script.src = umamiUrl + "/script.js";
+				script.setAttribute("data-website-id", umamiId);
+				document.head.appendChild(script);
+			}
 
 			// Google Tag Manager
 			(function (w, d, s, l, i) {
