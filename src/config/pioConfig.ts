@@ -3,7 +3,10 @@ import type { PioConfig } from "../types/config";
 // Pio 看板娘配置
 export const pioConfig: PioConfig = {
 	enable: true,
-	models: ["/pio/models/Pichu/Pichu.model3.json"],
+	models: [
+		"/pio/models/Pichu/Pichu.model3.json",
+		"https://model.hacxy.cn/cat-black/model.json",
+	],
 	position: "left",
 	width: 280,
 	height: 250,
