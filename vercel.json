@@ -5,24 +5,11 @@
 	"framework": "astro",
 	"headers": [
 		{
-			"source": "/pio/live2d-host",
-			"headers": [
-				{
-					"key": "X-Frame-Options",
-					"value": "SAMEORIGIN"
-				}
-			]
-		},
-		{
 			"source": "/(.*)",
 			"headers": [
 				{
 					"key": "X-Content-Type-Options",
 					"value": "nosniff"
-				},
-				{
-					"key": "X-Frame-Options",
-					"value": "DENY"
 				},
 				{
 					"key": "X-XSS-Protection",
