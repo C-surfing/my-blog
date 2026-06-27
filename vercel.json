@@ -5,6 +5,15 @@
 	"framework": "astro",
 	"headers": [
 		{
+			"source": "/pio/live2d-host",
+			"headers": [
+				{
+					"key": "X-Frame-Options",
+					"value": "SAMEORIGIN"
+				}
+			]
+		},
+		{
 			"source": "/(.*)",
 			"headers": [
 				{
