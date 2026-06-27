@@ -2,7 +2,7 @@ import type { PioConfig } from "../types/config";
 
 export const pioConfig: PioConfig = {
 	enable: true,
-	models: ["/pio/models/NOIR/noir.model3.json"],
+	models: ["/pio/models/Pichu/Pichu.model3.json"],
 	position: "left",
 	width: 280,
 	height: 250,
