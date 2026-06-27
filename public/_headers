@@ -13,6 +13,9 @@
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
+/pio/live2d-host.html
+  X-Frame-Options: SAMEORIGIN
+
 /pio/live2d-host
   X-Frame-Options: SAMEORIGIN
 
