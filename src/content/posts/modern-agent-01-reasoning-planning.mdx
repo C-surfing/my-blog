@@ -1,0 +1,337 @@
+---
+title: "Modern Agent 01：LLM Agent 推理与规划综述"
+published: 2026-06-28
+description: "Modern Agent 系列第一期，从推理与规划的基础概念出发，深入 ReAct、ToT、PDDL、Test-Time Compute 等核心方法，探讨 Agent 推理的工程实践。"
+tags: [Agent, Reasoning, Planning, PDDL, CoT, ReAct, ToT, MCTS, HRM]
+category: Agent
+draft: false
+pinned: false
+comment: true
+lang: zh-CN
+---
+
+import PdfViewer from "@/components/PdfViewer.astro";
+
+## 引言
+
+> 模型真正的智能通过**推理（Reasoning）**来体现。Agentic 是对模型智能的兑现——通过频繁地与外部环境交互去求解问题，让模型的推理能力真正落地。
+
+本文是 **Modern Agent 系列**的第一期，核心内容来自一份 B 站视频讲解的深度笔记（五道口纳什 × Codex），结合了 LLM Agent 推理与规划领域的最新研究动态和工程实践视角。
+
+---
+
+## 一、推理（Reasoning）：模型智能的基石
+
+### 1.1 什么是推理
+
+推理是一种**无中生有**的能力——从已知且有限的前提（Premise）出发，沿着推理链推导出更多、更丰富、更有深度的结论。它是语言模型各项能力的核心基础。
+
+**三个经典例子：**
+
+1. **演绎推理三段论**：大前提（所有人都会死）→ 小前提（苏格拉底是人）→ 结论（苏格拉底也会死）
+2. **系统提示词中的推理**：Paper Reading 场景中，设计 System Prompt 让模型理解论文 → 生成评论 → 整体锐评 →"One More Thing"自由发挥，极度依赖模型的推理能力
+3. **Reasoning 与规划的关系**：如果模型没有推理能力，就没有规划（Planning）。因为规划涉及任务分解、提前思考（Think Ahead）、自我反思（Reflection）和批评（Critic），都需要大量的推理生成结论
+
+### 1.2 推理的两种基本形式
+
+| | 演绎推理（Deduction） | 归纳推理（Induction） |
+|---|---|---|
+| **方向** | 前向推理，三段论形式 | 或然性推理 |
+| **确定性** | 前提为真则结论必然为真 | 前提越多结论越自信，但非绝对确定 |
+| **示例** | 所有人都会死 → 苏格拉底会死 | 见过的天鹅都是白色的 → "天鹅都是白色的" |
+| **Agent 设计意义** | 可用于确定性推理链 | 不可将归纳结论当作确定性事实使用 |
+
+### 1.3 Reasoning Token vs Context Length
+
+> **Reasoning Token**：模型"思考过程"消耗的 token，即模型内部产生的长链思考（Long CoT）所花费的计算资源。
+> **Context Length**：模型一次能看到的上下文窗口大小。
+
+以 DeepSeek R1 和 OpenAI OO 系列为代表的推理模型，追求一种 **隐式的 Long CoT**：
+
+- 复杂问题 → 模型内部自发产生长的思考过程
+- 简单问题 → 产生短的思考过程
+- 这是一种隐式的 CoT，模型在训练时被训练为自发地产生不同长度的推理链
+
+**推理模型 vs 传统模型的区别：**
+
+```
+传统模型：问题 → 直接输出答案（可能缺少中间推理）
+推理模型：问题 → 内部 CoT（reasoning token）→ 输出答案
+```
+
+---
+
+## 二、规划（Planning）：任务分解与长期求解
+
+### 2.1 什么是规划
+
+规划是对任务的分解——无论是显式还是隐式，都需要：
+
+1. **识别用户目标**
+2. **分解为子步骤**
+3. **确定执行顺序**
+4. **处理约束条件**
+
+规划涉及的关键能力：Task Decomposition、Single Head / Multi-Step Thinking、长周期 Multi-Hop 问题的处理。
+
+### 2.2 2024 LLM Planning Survey 的四大模块
+
+经典的 Survey 将 LLM Planning 分为四个核心模块：
+
+| 模块 | 说明 | 代表方法 |
+|------|------|----------|
+| **分解（Decomposition）** | 将任务拆解为可执行的子步骤 | CoT、ReAct、Plan-and-Solve |
+| **选择（Selection）** | 从多个候选路径中选择最优 | ToT、MCTS |
+| **外部求解器（External Solver）** | 让精确求解器处理模型不擅长的步骤 | LM + PDDL |
+| **反思（Reflection / Critic）** | 验证和修正生成的 Plan | Self-Critic、Generative Agents |
+
+---
+
+## 三、经典 Workflows 与架构模式
+
+### 3.1 ReAct：推理-行动循环
+
+ReAct 是最基础的 Agent 模式之一：
+
+```
+1. 基于当前 Reasoning / Thought
+2. 调用 Tool 或执行 Action
+3. 拿到 Tool 的 Response / 新的观测
+4. 循环上述过程直到问题解决
+```
+
+**ReAct 的局限性**：当交互过程特别长时，会出现 Context 问题：
+- 模型会 **Lost in the Middle**——迷失在上下文中
+- 忘记用户原始任务
+- 忘记自己做过什么、得到什么结果
+- 不足以产生下一步合理的 Action / Plan
+
+### 3.2 Plan-and-Solve 与动态重规划
+
+Plan-and-Solve 是对 Zero-Shot CoT 的改进：
+
+1. 先生成一个 **Plan**（在 Prompt 中引入规划概念）
+2. 严格按照 Plan 执行
+3. 可引入**动态性**（Dynamic Plan-and-Solve）
+
+**核心矛盾——缸中之脑：**
+
+> Plan 是在头脑中形成的，没有和环境真实交互。当与真实环境交互时，会有新的 Feedback。这时需要把这个 Feedback 引入 Plan 机制，进行动态的 Revise 或 Replan。
+
+**动态 Plan-and-Solve 的核心流程：**
+
+```
+1. Planner 形成 Plan（List of Steps）
+2. 每个 Step 交给 ReAct 执行
+3. 执行完后检查是否解决了问题
+4. 若未解决，RePlan 产生新的 Steps
+```
+
+> **经济性策略**：用强的（贵的）模型做 Planner 和 RePlan，用弱的（便宜的）模型做 ReAct 执行。
+
+### 3.3 Tree of Thoughts（ToT）与 MCTS
+
+ToT 和 LATS（LM + MCTS）的核心在于 Selection：
+
+1. 从一个节点出发做扩展，语言模型在该节点产生多个 Proposal
+2. **状态爆炸问题**——需要对节点打分并过滤
+3. 基于 **UCB 值**（探索 vs 利用的平衡）选择最有潜力的节点继续搜索
+4. Score / Critic 机制的设计非常关键，直接影响搜索质量
+
+### 3.4 从 ReAct 到 ToT 的演进总结
+
+```
+ReAct → Plan-and-Solve → ToT / MCTS
+简单交互循环 → 显式规划 → 树搜索
+```
+
+复杂度逐步提升，每种模式都有自己的适用边界。
+
+---
+
+## 四、神经符号方法（Neural-Symbolic）：LM + PDDL
+
+### 4.1 为什么需要 PDDL？
+
+> **核心洞察**：语言模型擅长做**翻译（Translation）**和**判定（Judgment）**，但不擅长直接产生精确的 Plan。PDDL 有稳健的 Solver，可以产生真实可行的执行序列。将两者结合（LM + P）就是扬长避短。
+
+### 4.2 PDDL 的典型工作流
+
+以机器人物体操作为例：
+
+```
+1. 问题定义：用户描述操作任务（"把苹果放在冰箱里"）
+2. LM 做翻译：将自然语言翻译为 PDDL Goal State
+3. PDDL Solver 求解：生成精确的 Action Sequence
+4. LM 做逆向翻译：将 PDDL 序列翻译回自然语言
+```
+
+### 4.3 LM as Planner vs LM + P 的对比
+
+| 方法 | 效果 | 说明 |
+|------|------|------|
+| **LM as Planner**（直接产生 Plan） | ❌ 较差 | 容易步骤缺失或多余 |
+| **LM + In-Context Examples** | ⚠️ 略好 | 提供示例后仍不可靠 |
+| **LM + P**（LM 只转 Goal State，Solver 求解） | ✅ **最好** | 发挥两者的各自优势 |
+
+### 4.4 AlphaGeometry：神经符号的经典案例
+
+**第一代：**
+1. 将几何问题翻译为符号语言
+2. 符号引擎尝试直接求解
+3. 若不能求解，LM 添加辅助线
+4. 符号引擎完成证明
+
+**第二代（关键创新）：**
+1. 引入多个并行的 LM 提 Proposal 和搜索思路
+2. 中间过程中符号引擎推理出的新 Facts 是**共享的**，可以成为其他模型的新前提
+3. 形成**多路并行搜索的协作**
+
+> 虽然 DeepSeek 在自然语言层面（无需 Symbolic Solver）就实现了 IMO 金牌水平，但 AlphaGeometry 2 的并行思考策略启发了他们如何设计更好的 Parallel Thinking 策略。
+
+---
+
+## 五、测试时计算（Test-Time Compute）
+
+### 5.1 核心思想
+
+在推理阶段投入更多的计算资源来提高输出质量。
+
+**代表方法：**
+- **Majority Voting**：多次采样，取多数答案
+- **DeepConf**：对每个 Trace 计算置信度，做**加权多数投票**
+- **Self-Critic**：提 Proposal → Critic 验证 → 反馈 → 再生成的循环
+
+### 5.2 Self-Critic Workflow
+
+```
+Step 1-2: Generator 提一个 Proposal
+Step 3:   Critic 做 Verification——给出具体问题和意见
+Step 4:   Generator 基于 Critic 反馈 Refine 方案
+→ 循环直到连续 5 次评估结果为"完美" → 接受
+→ 若连续 10 次有重大问题 → 拒绝该方案
+```
+
+---
+
+## 六、Agent 中的强化学习
+
+### 6.1 挑战：稀疏奖励
+
+Agent 中的 RL 比标准 RL 更复杂，因为 **reward 可能很稀疏**：
+
+- 最后任务成功才有奖励
+- 中间每一步到底好不好不容易判断
+- 这会导致 **Credit Assignment** 更难：成功到底是因为哪个 thought？哪个 action？哪个 observation？
+
+### 6.2 Trajectory Management
+
+在 Agent 的 RL 训练中，完整的轨迹（trajectory）包括：
+
+```
+thought → action → observation → thought → action → observation → ... → final result
+```
+
+管理这些轨迹的关键在于：
+
+- **有效轨迹筛选**：哪些中间步骤真正贡献了最终的成功
+- **失败轨迹分析**：在哪个步骤偏离了正确路径
+- **Credit Assignment**：将成功/失败归因到具体的 thought 或 action
+
+---
+
+## 七、HRM：层级推理模型
+
+### 7.1 什么是 HRM
+
+HRM（Hierarchical Reasoning Model，**层级推理模型**）是一种较新的实验性推理架构。它不是传统的"超大 LLM + 很长 CoT"路线，而是在设计 Transformer 架构本身。
+
+**核心思想**：用两个相互作用的循环模块做推理：
+
+| 模块 | 职责 | 特性 |
+|------|------|------|
+| **高层模块** | 慢速、抽象规划 | 负责全局策略 |
+| **低层模块** | 快速、细节计算 | 负责局部执行 |
+
+### 7.2 与普通 LLM 的差异
+
+HRM 的核心特点：
+- 可以在单次 forward pass 中执行序列推理任务
+- 不依赖显式 CoT 监督
+- 只有 **2700 万参数**（远小于传统 LLM）
+
+### 7.3 已知局限
+
+> 注意：HRM 现在还不是 Agent 工程里的主流基础模型路线。2026 年已有论文从机制角度分析 HRM，指出它可能存在 **fixed point 相关失败模式**，甚至在某些情况下更像是在"guessing"而不是稳定推理。
+
+---
+
+## 八、Memory 中的反思（Reflection）
+
+以 **Generative Agents** 为例，在维护 Memory 时，仅记住事实是浅层的、无价值的。需要在 Memory 层面做一次反思：
+
+> 你上午遇到一个人在读论文，下午发现他也在读论文，晚上再遇到时他还在读论文。此时触发一次反思，语言模型得出更高层次的结论：**这是一个对科研非常有热情的人。**
+
+| | 仅记住事实 | 基于事实触发 Reflection |
+|---|---|---|
+| **层次** | 浅层记忆 | 深层理解 |
+| **价值** | 无助深入思考 | 形成有深度的更高层次结论 |
+| **对 Agent 的意义** | 无法辅助规划 | 帮助 Agent 进行有深度的规划 |
+
+---
+
+## 九、关键概念辨析
+
+### 9.1 System Prompt / Scaffold Prompt
+
+系统提示词（System Prompt）是 Agent 行为的基础指令，Scaffold Prompt 是围绕 Agent 循环搭建的"脚手架"提示词，两者共同定义了 Agent 的行为框架。
+
+### 9.2 Schema
+
+工具 Schema 是模型与外部环境之间的接口规范，决定了模型能调用哪些工具、如何调用、传入什么参数。Schema 的精确性直接影响 Agent 行为的可靠性。
+
+### 9.3 Repo
+
+在 Agent 工程语境中，Repo 通常指项目代码库的上下文管理——Agent 需要理解项目的结构、依赖关系和约定（如"用 pytest 测试"、"用 uv 管理依赖"），才能做出符合项目规范的修改。
+
+---
+
+## 十、总结与核心观点
+
+### 10.1 主讲人核心观点
+
+1. **显式或隐式的 Plan 非常必要且有效**，对于语言模型求解复杂的长周期问题至关重要
+2. 涉及 **Top-Down 和 Bottom-Up** 两个过程：
+   - Top-Down：任务分解形成 Plan
+   - Bottom-Up：执行过程中的反馈修正 Plan
+
+### 10.2 实用建议
+
+- 根据任务复杂度选择合适的推理/规划方法
+- 对于需要精确 Plan 的任务，优先考虑 **Neural-Symbolic（LM + P）** 方案
+- 对于长周期任务，使用 **Dynamic Replan** 机制引入环境反馈
+- 在 Memory 中引入 **Reflection** 层，提升 Agent 的深度理解能力
+
+### 10.3 系列预告
+
+Modern Agent 系列后续将深入：
+- Context Engineering 与 Memory 设计
+- LangChain / LangGraph 框架实践
+- GraphRAG 与知识图谱方法
+- Self-Evolving 技术
+- 工具封装与 Tool 设计
+
+---
+
+## PDF 原文
+
+<PdfViewer
+  src="/pdfs/Modern_Agent_01_LLM_Agent_Reasoning_Planning_notes.pdf"
+  title="Modern Agent 01：LLM Agent 推理与规划综述 PDF"
+/>
+
+## 参考链接
+
+- B站视频：[Modern Agent 01：Survey of LLM Agent Reasoning & Planning, PDDL](https://www.bilibili.com/video/BV1wjY5zyEki)
+- [Modern Agent 01 笔记 PDF](/pdfs/Modern_Agent_01_LLM_Agent_Reasoning_Planning_notes.pdf)（页面底部可在线阅读/下载）
+- [WDKNS Skills](https://github.com/wdkns/wdkns-skills)——PDF 笔记制作工具
