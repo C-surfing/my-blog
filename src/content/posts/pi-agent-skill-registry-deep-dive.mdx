@@ -1,0 +1,278 @@
+---
+title: "PI Agent 架构解析：Skill Registry 的发现、选择与加载机制"
+published: 2026-06-28
+description: "深入解析 PI Agent 框架的核心组件——Skill Registry，探讨技能的发现、选择、加载与执行机制，以及\n
+  name/description/location 三层设计背后的工程哲学。"
+tags: [PI Agent, Agent, Skill Registry, LLM, Tool Calling]
+category: Agent
+draft: false
+pinned: false
+comment: true
+lang: zh-CN
+---
+
+import PdfViewer from "@/components/PdfViewer.astro";
+import { siteConfig } from "@/config";
+
+## 引言
+
+PI Agent 是一个遵循 Unix 哲学的轻量 TypeScript 智能体引擎。它的核心理念是"每个组件做好一件事，组合使用完成复杂任务"。
+
+在 PI Agent 的架构中，**Skill Registry（技能注册表）** 是一个关键却又容易引起误解的组件。最近在社区中有一场关于 Skill Registry 的有趣讨论，其核心问题是：
+
+> **既然使用 skill 时最终需要通过 `/skill` 或指定某个 skill，并把它的 location 放进上下文，那为什么还要提前把所有 skills 的 name + description 放进 system prompt？**
+
+这篇文章将结合 PI Agent 的官方文档和社区讨论，深入剖析 Skill Registry 的设计哲学。
+
+## 一句话结论
+
+`name + description` 放进 system prompt 的意义，是让模型知道"有哪些技能、什么时候该用"；`location` 的意义，是让模型或运行时知道"去哪里读取这个技能的完整内容"。
+
+前者解决**发现与路由**，后者解决**加载与执行**。
+
+## 三层设计：Index → Pointer → Body
+
+理解 Skill Registry 的关键，在于看到它的**三层结构**：
+
+| 层级 | 内容 | 作用 |
+|------|------|------|
+| **Skill Index** | name + description | 给模型做选择，相当于"技能菜单" |
+| **Skill Pointer** | location | 告诉系统去哪找完整技能 |
+| **Skill Body** | SKILL.md + 相关文件 | 真正指导模型怎么做任务 |
+
+### Skill Index：发现层
+
+当 Agent 启动时，它会扫描所有配置的技能路径，提取每个技能的 `name` 和 `description`。根据 PI Agent 的实现，这些信息被注入到 system prompt 的 XML 格式中：
+
+```xml
+<available_skills>
+  <skill>
+    <name>pdf-processing</name>
+    <description>Extract text and tables from PDF files, fill PDF forms, and merge multiple PDFs.</description>
+  </skill>
+  <skill>
+    <name>brave-search</name>
+    <description>Web search and content extraction via Brave Search API.</description>
+  </skill>
+</available_skills>
+```
+
+此时代理只知道"有哪些技能可用"，不知道具体的执行细节。
+
+### Skill Pointer：定位层
+
+当模型判断某个技能合适时，运行时负责根据内部 registry 找到对应的 `location`。这个位置可以是：
+
+- 文件系统路径：`~/.pi/agent/skills/pdf-processing/SKILL.md`
+- 包内的 skills 目录
+- 通过配置指定的远程路径
+
+### Skill Body：执行层
+
+实际的 SKILL.md 包含完整的操作说明、脚本路径、模板文件等。这是一个延迟加载的过程——**只有在真正需要时才读取**。
+
+## 为什么不是"把 skill 内容直接塞进 prompt"？
+
+这是 Skill Registry 设计中最容易被误解的地方。真实的 skill 不是一个简单的 prompt 片段，而是一个**可延迟加载的技能包**，其中可能包括：
+
+- SKILL.md：完整操作说明
+- 示例文件
+- 脚本
+- 模板
+- 工具调用规范
+- 特定领域的工作流
+- 约束条件
+
+如果一开始就把所有 skill 的完整内容塞进 system prompt，会浪费大量 context。这正是**渐进式披露（Progressive Disclosure）** 原则的体现：
+
+> "only descriptions are always in context; full instructions load on-demand." —— PI Agent 官方文档
+
+## `/skill` 与 name-desc 的关系
+
+讨论中，关于 `/skill` 和 system prompt 中的 name-desc 的关系存在两种交互模式：
+
+### 模式 A：手动模式
+
+用户输入 `/skill:name` 手动指定技能。此时 name-desc 对模型选择的意义较小，但对前端展示有意义。
+
+```
+用户: /skill:pdf-processing
+→ Runtime 直接定位 location
+→ 加载 skill 内容
+→ 模型执行
+```
+
+### 模式 B：自动模式
+
+模型根据任务自主判断需要哪个 skill。此时 name-desc 至关重要，类似于 tool schema。
+
+```
+用户: "帮我提取这个 PDF 中的表格"
+→ 模型看到 name-desc，判断需要 pdf-processing skill
+→ runtime 根据 name 找到 location
+→ 读取 SKILL.md
+→ 模型按 skill 规则执行
+```
+
+### 模式 C：混合模式（最常见）
+
+用户可手动指定，模型也可自主选择。PI Agent 采用了这种设计：
+
+> "Skills register as `/skill:name`. On task match, agent uses `read` to load the full SKILL.md."
+
+## 关键分歧：要不要把 location 也放进 system prompt？
+
+这是讨论中双方真正争论的细节。
+
+### 方案 A：只暴露 name + description
+
+```xml
+<skill>
+  <name>pdf-processing</name>
+  <description>Use this skill when creating or editing PDFs.</description>
+</skill>
+```
+
+此时 location 由 runtime 管理，模型不需要知道。
+
+**优点**：节省上下文、更安全、更像正式产品
+**缺点**：模型知道该用什么 skill 但不知道去哪读
+
+### 方案 B：暴露 name + description + location
+
+```xml
+<skill>
+  <name>pdf-processing</name>
+  <description>Use this skill when working with PDFs.</description>
+  <location>/home/user/.pi/skills/pdf-processing/SKILL.md</location>
+</skill>
+```
+
+**优点**：机制简单透明，模型可直接用 read tool 读取
+**缺点**：暴露路径、占更多上下文
+
+PI Agent 的官方实现采用了方案 A——name 和 description 放在 system prompt 中，location 由内部的扫描机制管理。不过，它同时支持通过 `disable-model-invocation` 配置隐藏某些 skill：
+
+> "If `true`, skill hidden from system prompt; users must use `/skill:name`."
+
+这个配置选项恰恰验证了讨论中的核心观点：**name-description 的价值取决于系统的交互模式**。如果你的系统完全依赖手动触发，那 name-desc 的确更多是 UI 辅助；如果支持模型自主决策，那 name-desc 就是核心路由机制。
+
+## PI Agent 的 Skill 扫描机制
+
+根据官方文档，PI Agent 的扫描规则如下：
+
+| 范围 | 路径 |
+|------|------|
+| **全局** | `~/.pi/agent/skills/`, `~/.agents/skills/` |
+| **项目** (受信任) | `.pi/skills/`, `.agents/skills/` |
+| **包** | `skills/` 目录或 `package.json` 中的 `pi.skills` |
+| **配置** | `settings.json` 中的 `skills` 数组 |
+| **CLI** | `--skill <path>`（可重复） |
+
+**发现规则**：
+- 在 `~/.pi/agent/skills/` 和 `.pi/skills/` 中：根目录的直接 `.md` 文件视为独立技能
+- 在所有位置：包含 `SKILL.md` 的目录会被递归发现
+- 可以通过 `--no-skills` 禁用
+
+这套扫描机制本身就是一个 **Skill Pointer 的自动管理系统**——runtime 自动负责将 name 映射到 location，模型不需要操心文件路径。
+
+## SKILL.md 格式
+
+根据 [Agent Skills 规范](https://agentskills.io/specification) 和 PI Agent 的实现：
+
+```markdown
+---
+name: my-skill
+description: What it does and when to use it. Be specific.
+---
+
+# My Skill
+
+## Setup
+```bash
+npm install
+```
+
+## Usage
+```bash
+./scripts/process.sh <input>
+```
+```
+
+**前注（frontmatter）字段**：
+
+| 字段 | 必需 | 说明 |
+|------|------|------|
+| `name` | 是 | 最多 64 字符，小写字母、数字、连字符 |
+| `description` | 是 | 最多 1024 字符，说明用途和触发条件 |
+| `license` | 否 | 许可证 |
+| `compatibility` | 否 | 环境要求 |
+| `allowed-tools` | 否 | 预批准的工具列表（实验性） |
+| `disable-model-invocation` | 否 | 设为 `true` 时 skill 对模型隐藏，必须用 `/skill:name` 触发 |
+
+关键规则：**缺失 `description` 的技能不会被加载**。这直接体现了 name-desc 在注册表中的核心地位。
+
+## 与 Tool Calling 的类比
+
+这场讨论实际上触及了 Agent 框架设计中一个更根本的问题：**Skill 应该被设计成"用户手动指定的快捷指令"，还是"模型可以自主发现和调用的外部能力"？**
+
+如果把 Skill 类比为 Tool Calling，就会发现：
+
+| Tool Calling | Skill Registry |
+|-------------|----------------|
+| tool schema（name + description） | skill 的 name + description |
+| tool 的实现代码 | skill 的 SKILL.md |
+| runtime 根据 name 找到实现函数 | runtime 根据 name 找到 location |
+
+正如 tools 不需要把完整实现代码放进 system prompt，skills 也不需要把完整 SKILL.md 塞进去。两者都遵循相同的设计原则：**只放索引，按需加载**。
+
+## 总结：你想怎么理解 Skill Registry？
+
+可以把 Skill 机制理解成 **"工具调用 + 文件加载 + prompt 模板"** 的混合体。
+
+它不是简单的"把 skill 内容复制进 prompt"，而是：
+
+1. 先给模型一个**技能目录**
+2. 模型判断需要哪个技能
+3. 根据技能位置**加载详细说明**
+4. 最后按说明**执行任务**
+
+完整链路是：
+
+```
+用户任务
+→ 模型看到 name-desc，判断需要某个 skill
+→ runtime 根据 name 找到 location
+→ 读取 SKILL.md
+→ 把完整 skill 内容注入上下文
+→ 模型按 skill 规则执行
+```
+
+如果用户手动 `/skill:name`，链路变为：
+
+```
+用户 /skill:name
+→ runtime 直接定位 location
+→ 加载 skill 内容
+→ 模型执行
+```
+
+这两种模式并不互斥——PI Agent 同时支持两者。这也是为什么社区讨论中最合理的结论是：**name-desc 的价值取决于系统设计**。
+
+如果你的系统支持模型自主决策，name-desc 就是核心路由机制；如果只支持手动触发，它更多是 UI 展示辅助。而 PI Agent 的定位，正是一个**两者兼顾**的框架。
+
+---
+
+## 参考与延伸阅读
+
+- [PI Agent 官方文档 · Skills](https://pi.dev/docs/latest/skills)
+- [PI Agent 项目介绍 — John's Blog](https://johng.cn/ai/pi-agent-framework-introduction)
+- [PI Agent GitHub](https://github.com/badlogic/pi-mono)
+- [Agent Skills 规范](https://agentskills.io/specification)
+
+## 附：PI Agent 架构深入 PDF
+
+<PdfViewer
+  src="/pdfs/PI_Architecture_Deep_Dive.pdf"
+  title="PI Architecture Deep Dive"
+/>

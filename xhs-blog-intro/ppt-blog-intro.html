@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Csurfing's Agent Lab · 博客汇报</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a12; font-family: 'Inter','Noto Sans SC',sans-serif; }
+
+  .slides { position: relative; width: 100vw; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 80px 10%;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease;
+    background: linear-gradient(135deg, #0a0a12 0%, #12121f 50%, #1a1a2e 100%);
+    overflow-y: auto;
+  }
+  .slide.active { opacity: 1; pointer-events: auto; z-index: 10; }
+
+  /* Progress bar */
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #002FA7, #4A80FF); z-index: 100; transition: width 0.4s ease; }
+  .page-num { position: fixed; bottom: 24px; right: 32px; font-family: 'JetBrains Mono',monospace; font-size: 14px; color: rgba(255,255,255,0.3); z-index: 100; }
+
+  /* Typography */
+  .kicker { font-family: 'JetBrains Mono',monospace; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: #4A80FF; margin-bottom: 16px; opacity: 0; animation: fadeUp 0.5s 0.2s forwards; }
+  h1 { font-size: clamp(2.4rem,5vw,4rem); font-weight: 300; color: #fff; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 20px; opacity: 0; animation: fadeUp 0.5s 0.4s forwards; }
+  h1 strong { font-weight: 500; background: linear-gradient(135deg, #4A80FF, #00C6FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  h2 { font-size: clamp(1.6rem,3vw,2.4rem); font-weight: 300; color: #fff; line-height: 1.2; margin-bottom: 16px; opacity: 0; animation: fadeUp 0.5s 0.4s forwards; }
+  h2 .hl { background: linear-gradient(135deg, #4A80FF, #00C6FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 500; }
+  p { font-size: clamp(0.95rem,1.5vw,1.15rem); color: rgba(255,255,255,0.65); line-height: 1.7; margin-bottom: 12px; opacity: 0; animation: fadeUp 0.5s 0.6s forwards; }
+  .sub { color: rgba(255,255,255,0.45); font-size: 0.9rem; }
+
+  /* Stats grid */
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin: 28px 0; opacity: 0; animation: fadeUp 0.5s 0.7s forwards; }
+  .stat-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; text-align: center; }
+  .stat-box .n { font-size: 2rem; font-weight: 200; color: #4A80FF; line-height: 1; }
+  .stat-box .l { font-size: 0.75rem; font-family: 'JetBrains Mono',monospace; color: rgba(255,255,255,0.4); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* Article cards */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; opacity: 0; animation: fadeUp 0.5s 0.7s forwards; }
+  .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px 20px; }
+  .card .cat { font-family: 'JetBrains Mono',monospace; font-size: 11px; color: #4A80FF; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .card h4 { font-size: 0.95rem; font-weight: 500; color: #fff; margin-bottom: 4px; }
+  .card p { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin: 0; animation: none; opacity: 1; }
+
+  /* Feature tags */
+  .feats { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; opacity: 0; animation: fadeUp 0.5s 0.7s forwards; }
+  .feat { background: rgba(74,128,255,0.1); border: 1px solid rgba(74,128,255,0.2); border-radius: 8px; padding: 14px 18px; min-width: 140px; flex:1; }
+  .feat .e { font-size: 1.4rem; margin-bottom: 4px; }
+  .feat .n { font-size: 0.85rem; font-weight: 500; color: #fff; }
+  .feat .d { font-size: 0.75rem; color: rgba(255,255,255,0.45); }
+
+  /* Roadmap */
+  .rmap { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 20px 0; opacity: 0; animation: fadeUp 0.5s 0.7s forwards; }
+  .rmap-item { border-radius: 10px; padding: 24px; }
+  .rmap-item.primary { background: linear-gradient(135deg, #002FA7, #1a4ab0); }
+  .rmap-item.secondary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+  .rmap-item h4 { font-size: 1rem; font-weight: 500; color: #fff; margin-bottom: 10px; }
+  .rmap-item ul { list-style: none; padding: 0; }
+  .rmap-item li { font-size: 0.85rem; color: rgba(255,255,255,0.65); padding: 3px 0; }
+  .rmap-item li::before { content: '› '; color: #4A80FF; font-weight: 700; }
+  .rmap-item.primary li::before { color: rgba(255,255,255,0.7); }
+
+  /* URL */
+  .url-box { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 20px; margin-top: 16px; font-family: 'JetBrains Mono',monospace; font-size: 1rem; color: #4A80FF; opacity: 0; animation: fadeUp 0.5s 1s forwards; }
+
+  /* Tags */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .tags span { font-family: 'JetBrains Mono',monospace; font-size: 12px; padding: 4px 12px; border: 1px solid rgba(74,128,255,0.2); border-radius: 4px; color: rgba(255,255,255,0.5); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Navigation hints */
+  .nav-hint { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); font-family: 'JetBrains Mono',monospace; font-size: 12px; color: rgba(255,255,255,0.2); z-index: 100; }
+
+  @media (max-width: 768px) {
+    .slide { padding: 48px 6%; }
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .cards { grid-template-columns: 1fr; }
+    .rmap { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress" style="width:14.2%"></div>
+<div class="slides" id="slides">
+
+<!-- Slide 1: Title -->
+<div class="slide active" data-index="0">
+  <p class="kicker">Personal Tech Blog · 2026</p>
+  <h1>Csurfing's<br><strong>Agent Lab</strong></h1>
+  <p style="font-size:1.2rem;color:rgba(255,255,255,0.5)">Agent · Reinforcement Learning · LLM Engineering · Systems Notes</p>
+  <div class="url-box">→ csurfing.xyz</div>
+  <div class="tags" style="margin-top:24px">
+    <span>Agent</span><span>ReAct</span><span>LangGraph</span><span>RLHF</span><span>GRPO</span><span>DAPO</span>
+  </div>
+</div>
+
+<!-- Slide 2: Overview -->
+<div class="slide" data-index="1">
+  <p class="kicker">About</p>
+  <h2>一个专注于 <span class="hl">Agent 工程</span> 的个人实验室</h2>
+  <p>从 ReAct 到 Multi-Agent，从 RLHF 到 DAPO —— 记录 Agent 工程、强化学习和 LLM 后训练的完整学习路径。</p>
+  <div class="stats">
+    <div class="stat-box"><div class="n">4</div><div class="l">文章</div></div>
+    <div class="stat-box"><div class="n">3</div><div class="l">分类</div></div>
+    <div class="stat-box"><div class="n">15</div><div class="l">标签</div></div>
+    <div class="stat-box"><div class="n">✅</div><div class="l">在线</div></div>
+  </div>
+  <p class="sub">基于 Astro + Mizuki 构建 · 部署在 Vercel · DNS 通过 Cloudflare</p>
+</div>
+
+<!-- Slide 3: Articles -->
+<div class="slide" data-index="2">
+  <p class="kicker">Content · 4 Articles</p>
+  <h2>已发布文章</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="cat">Agent</div>
+      <h4>Agent 工程学习路线</h4>
+      <p>从 ReAct → Tool Use → Multi-Agent 的完整路径</p>
+    </div>
+    <div class="card">
+      <div class="cat">Reinforcement Learning</div>
+      <h4>LLM 后训练中的 RL</h4>
+      <p>RLHF → GRPO → DAPO 技术演进</p>
+    </div>
+    <div class="card">
+      <div class="cat">Agent</div>
+      <h4>LangChain vs LangGraph</h4>
+      <p>ReAct 实现对比 · PDF 笔记</p>
+    </div>
+    <div class="card">
+      <div class="cat">Projects</div>
+      <h4>Mizuki 部署记录</h4>
+      <p>Astro 博客搭建全流程</p>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 4: Features -->
+<div class="slide" data-index="3">
+  <p class="kicker">Features</p>
+  <h2>博客特色功能</h2>
+  <div class="feats">
+    <div class="feat"><div class="e">🎵</div><div class="n">音乐播放器</div><div class="d">5 首本地歌曲</div></div>
+    <div class="feat"><div class="e">⚡</div><div class="n">Pichu 看板娘</div><div class="d">Live2D 可交互</div></div>
+    <div class="feat"><div class="e">📄</div><div class="n">PDF 阅读</div><div class="d">论文内嵌浏览</div></div>
+    <div class="feat"><div class="e">🔍</div><div class="n">全文搜索</div><div class="d">Pagefind 中文</div></div>
+  </div>
+</div>
+
+<!-- Slide 5: Roadmap -->
+<div class="slide" data-index="4">
+  <p class="kicker">Roadmap</p>
+  <h2>后续更新计划</h2>
+  <div class="rmap">
+    <div class="rmap-item primary">
+      <h4>🤖 PI Agent 研究</h4>
+      <ul>
+        <li>Agent 自主改进循环</li>
+        <li>Reward 设计与优化</li>
+        <li>Multi-Agent 编排实践</li>
+        <li>SWE-bench 评测</li>
+      </ul>
+    </div>
+    <div class="rmap-item secondary">
+      <h4>🧠 Agent Memory</h4>
+      <ul>
+        <li>记忆压缩与检索</li>
+        <li>长期记忆架构</li>
+        <li>Experience Replay</li>
+        <li>Agent 状态持久化</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:12px;font-size:0.9rem">即将开始：C++ 系统学习 · LC-3 汇编 · 论文阅读笔记 · 项目复盘</p>
+</div>
+
+<!-- Slide 6: Tech Stack -->
+<div class="slide" data-index="5">
+  <p class="kicker">Tech Stack</p>
+  <h2>技术架构</h2>
+  <div class="feats">
+    <div class="feat"><div class="e">🛠</div><div class="n">Astro 7</div><div class="d">静态站点生成</div></div>
+    <div class="feat"><div class="e">🎨</div><div class="n">Mizuki Theme</div><div class="d">Material Design 3</div></div>
+    <div class="feat"><div class="e">☁️</div><div class="n">Vercel</div><div class="d">自动部署</div></div>
+    <div class="feat"><div class="e">🌐</div><div class="n">Cloudflare</div><div class="d">DNS + HTTPS</div></div>
+  </div>
+  <p class="sub" style="margin-top:16px">自定义域名 csurfing.xyz · GitHub 自动部署流水线</p>
+</div>
+
+<!-- Slide 7: Closing -->
+<div class="slide" data-index="6">
+  <p class="kicker">Call to Action</p>
+  <h1>欢迎来访<br><strong>csurfing.xyz</strong></h1>
+  <p>一起探索 Agent 工程的前沿。</p>
+  <div style="margin-top:24px">
+    <p class="sub">GitHub: C-surfing · 评论区已就绪</p>
+    <p class="sub" style="margin-top:4px">持续更新中 · 欢迎 Star & 交流</p>
+  </div>
+  <div class="tags" style="margin-top:24px">
+    <span style="border-color:#4A80FF;color:#4A80FF">#Agent</span>
+    <span style="border-color:#4A80FF;color:#4A80FF">#RL</span>
+    <span style="border-color:#4A80FF;color:#4A80FF">#LLM</span>
+    <span style="border-color:#4A80FF;color:#4A80FF">#Engineering</span>
+  </div>
+</div>
+
+</div>
+<div class="page-num" id="pageNum">01 / 07</div>
+<div class="nav-hint">← 方向键 / 滚轮 翻页 →</div>
+
+<script>
+  (function(){
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+
+    const progress = document.getElementById('progress');
+    const pageNum = document.getElementById('pageNum');
+
+    function show(idx) {
+      slides.forEach((s,i) => s.classList.toggle('active', i === idx));
+      progress.style.width = ((idx + 1) / total * 100) + '%';
+      pageNum.textContent = String(idx + 1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+    }
+
+    function next() { if (current < total - 1) { current++; show(current); } }
+    function prev() { if (current > 0) { current--; show(current); } }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
+    });
+
+    document.addEventListener('wheel', e => {
+      if (e.deltaY > 0) next(); else prev();
+    }, { passive: true });
+
+    let touchStartY = 0;
+    document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+    document.addEventListener('touchend', e => {
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dy) > 50) { if (dy < 0) next(); else prev(); }
+    }, { passive: true });
+  })();
+</script>
+</body>
+</html>
