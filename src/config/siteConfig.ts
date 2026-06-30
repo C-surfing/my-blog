@@ -109,16 +109,16 @@ export const siteConfig: SiteConfig = {
 		src: {
 			desktop: [
 				"/assets/desktop-banner/cb-1.webp",
-				"/assets/desktop-banner/cb-2-v2.webp",
+				"/assets/desktop-banner/cb-2-v3.webp",
 				"/assets/desktop-banner/cb-3.webp",
-				"/assets/desktop-banner/cb-4.webp",
+				"/assets/desktop-banner/cb-4-v2.webp",
 				"/assets/desktop-banner/cb-5.webp",
 			], // 桌面横幅图片
 			mobile: [
 				"/assets/mobile-banner/cb-1.webp",
-				"/assets/mobile-banner/cb-2-v2.webp",
+				"/assets/mobile-banner/cb-2-v3.webp",
 				"/assets/mobile-banner/cb-3.webp",
-				"/assets/mobile-banner/cb-4.webp",
+				"/assets/mobile-banner/cb-4-v2.webp",
 				"/assets/mobile-banner/cb-5.webp",
 			], // 移动横幅图片
 		}, // 使用本地横幅图片
