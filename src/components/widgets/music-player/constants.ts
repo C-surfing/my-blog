@@ -45,6 +45,14 @@ export const LOCAL_PLAYLIST: Song[] = [
 		url: "/assets/music/url/the-weeknd-open-hearts.mp3",
 		duration: 0,
 	},
+	{
+		id: 6,
+		title: "TAKE ME (Sweetshirt Remix)",
+		artist: "Sweetshirt",
+		cover: "/favicon/favicon.ico",
+		url: "/assets/music/url/sweetshirt-take-me.mp3",
+		duration: 0,
+	},
 ];
 
 export const DEFAULT_SONG: Song = {
