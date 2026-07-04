@@ -1,0 +1,516 @@
+---
+title: "从\"一个模型干活\"到\"能力系统协作\"：Agent 工程化演变拆解"
+published: 2026-07-04
+description: "从 Single Agent 到 Multi-Agent，从 Free-form 到 Workflow，从 Workflow 到 Skill，再到 Skill 治理——拆解 Agent 工程化背后真正的演变逻辑：不是模型越来越强，而是系统的组织结构越来越清晰。"
+tags: [Agent, Multi-Agent, Workflow, Skill, Architecture, Engineering]
+category: Agent
+draft: false
+pinned: false
+comment: true
+lang: zh-CN
+---
+
+## 写在前面
+
+Agent 的演变可以抓住一条主线：**从"一个模型自由干活"，逐步演化为"多个角色分工 + 流程约束 + 能力模块化组合"**。它不是简单从低级到高级替代，而是在不断解决上一代架构暴露出的矛盾：Single Agent 解决不了复杂任务中的上下文压力，Multi-Agent 引入了协调问题，Workflow 提升了可靠性却牺牲了灵活性，Skill 又把流程里的领域能力抽象出来，实现复用与组合。
+
+但这条路走到 Skill 之后，并不意味着问题结束。恰恰相反，当一个 Agent 系统里积累了越来越多 Skill，新的瓶颈会出现：**Agent 不再缺能力，而是不知道该用哪个能力、该加载多少能力、多个能力之间是否冲突、如何避免上下文被 Skill 本身挤爆**。
+
+所以，Agent 工程化的核心不是"把所有能力都塞给模型"，而是构建一套清晰的能力组织方式：任务分工靠 Multi-Agent，执行可靠性靠 Workflow，能力复用靠 Skill，而 Skill 规模化之后还需要 Registry、Profile、Router 和 Lazy Loading。
+
+---
+
+## 一、Agent 的起点：Single Agent / Free-form Agent
+
+最原始的 Agent 可以理解为一个 **LLM + Prompt + Tools + Memory** 的执行系统。用户给任务后，它自己理解任务、规划步骤、调用工具、观察结果、继续推理，直到输出答案。
+
+核心循环如下图所示：
+
+![Single Agent 核心循环](/images/agent-evolution/01-single-agent-loop.svg)
+
+这类 Agent 最大的优点是 **自由度高**。它可以临场决定下一步做什么，很适合开放任务，比如"帮我调研一个方向""帮我分析一个项目""帮我写一段代码并测试"。但它的问题也非常明显：**所有东西都塞进同一个上下文窗口**，包括用户需求、工具结果、错误日志、搜索内容、临时推理、中间草稿等。任务越复杂，上下文越容易被污染，模型注意力会被稀释。
+
+| 问题 | 具体表现 | 本质 |
+| --- | --- | --- |
+| **上下文污染** | 工具返回的大量无关信息挤占有效信息 | Agent 的"工作记忆"混乱 |
+| **注意力稀释** | 关键信息还在上下文里，但模型抓不住 | 信噪比下降 |
+| **执行不可控** | 同一个任务多跑几次，路径和结果不同 | LLM 是概率生成系统 |
+| **单点失败** | 一步规划错，后续全部跟着错 | 没有角色分工和校验机制 |
+
+所以 Single Agent 的根本矛盾是：**任务复杂度可以无限增长，但单个 Agent 的上下文、注意力和规划能力是有限的**。
+
+---
+
+## 二、第一层演变：Multi-Agent —— 用分工缓解复杂任务压力
+
+Multi-Agent 的直觉很简单：既然一个 Agent 装不下复杂任务，那就把任务拆开，让多个 Agent 各自负责一部分。比如一个复杂任务：
+
+```
+调研竞品 → 分析需求 → 写代码 → 测试 → 生成报告
+```
+
+Single Agent 会把这些事情全部放在一个上下文里做；Multi-Agent 则可以拆成：
+
+| Agent | 负责内容 |
+| --- | --- |
+| **Research Agent** | 搜索资料、整理竞品信息 |
+| **Code Agent** | 写代码、改 bug |
+| **Test Agent** | 执行测试、分析错误日志 |
+| **Review Agent** | 检查结果质量 |
+| **Orchestrator** | 分解任务、调度子 Agent、汇总结果 |
+
+这样做的直接收益是：**每个子 Agent 只看自己需要的信息，局部上下文更干净，专业化程度更高**。这就是所谓的 **横向扩容**：不是让一个 Agent 变得更聪明，而是让多个 Agent 分工协作。
+
+### Multi-Agent 的三种典型协作模式
+
+| 模式 | 结构 | 优点 | 缺点 | 适用场景 |
+| --- | --- | --- | --- | --- |
+| **Orchestrator 模式** | 一个主 Agent 调度多个子 Agent | 最容易实现，结构清晰 | 主 Agent 容易成为瓶颈 | 大多数工程任务 |
+| **Peer-to-Peer 模式** | Agent 之间互相通信协商 | 灵活，适合动态任务 | 通信复杂，容易混乱 | 多角色协商、仿真、博弈 |
+| **Hierarchical 模式** | 多层级 Agent 分解任务 | 能处理超大任务 | 架构复杂，延迟高 | 企业级复杂工作流 |
+
+最常见的是 **Orchestrator 模式**，结构如下图所示：
+
+![Multi-Agent Orchestrator 模式](/images/agent-evolution/02-multi-agent-orchestrator.svg)
+
+### Multi-Agent 的新问题：不是 Agent 越多越好
+
+Multi-Agent 解决了 Single Agent 的容量问题，但引入了新的系统问题：**协调成本**。
+
+| 新问题 | 解释 |
+| --- | --- |
+| **协调开销非线性增长** | Agent 数量越多，通信、汇总、校验成本越高 |
+| **局部最优陷阱** | 每个子 Agent 都觉得自己做对了，但合起来可能是错的 |
+| **任务分解错误放大** | Orchestrator 一开始拆错，后面所有子任务都偏 |
+| **信息不一致** | 不同 Agent 看到的信息不同，结论可能冲突 |
+| **延迟变高** | 多 Agent 通信和多轮调用会增加整体耗时 |
+
+这里有个关键点：**Multi-Agent 不是把复杂度消灭了，而是把复杂度从"单个上下文内部"转移到了"Agent 之间的协调关系"上**。这很像公司组织：一个人做不完，可以组团队；但团队一大，就会出现沟通成本、管理成本、目标不一致。
+
+所以 Multi-Agent 的核心不是"多"，而是 **如何分工、如何通信、如何共享信息、如何做结果校验**。
+
+---
+
+## 三、第二层演变：Workflow —— 用流程约束降低执行不确定性
+
+Multi-Agent 仍然保留了 Agent 的自由探索特性。对于开放任务，这很有用；但对于严肃领域任务，这就是风险。例如：
+
+| 场景 | 为什么不能让 Agent 自由发挥 |
+| --- | --- |
+| **贷款审批** | 不能有时查征信、有时不查 |
+| **医疗辅助诊断** | 不能跳过关键检查项 |
+| **法律合同审查** | 不能随机改变审查顺序 |
+| **代码发布流程** | 不能不测试就上线 |
+
+这时就需要 Workflow。Workflow 的本质是：**把 Agent 的无限探索空间压缩成有限、可控、可复现的执行路径**。
+
+Free-form Agent 像是在森林里自己找路；Workflow 像是给它铺好主干道路、岔路规则和红绿灯。它不一定让 Agent 更聪明，但能让 Agent **更稳定、更可审计、更可复现**。
+
+### Workflow 的四层约束
+
+| 层级 | 形式 | 例子 | 约束强度 |
+| --- | --- | --- | --- |
+| **序列约束** | A → B → C | 先读取数据，再分析，再输出报告 | 低 |
+| **条件分支** | if / else | API 200 正常解析，401 重新认证 | 中 |
+| **状态机** | 状态 + 转移规则 | 草稿 → 审核 → 批准 → 执行 | 高 |
+| **人机协同** | 关键节点人工确认 | 合同发送前必须人工审批 | 最高 |
+
+Workflow 不是简单的流程图，而是对 Agent 行为的 **执行空间约束**。例如一个贷款审批 Workflow：
+
+![Workflow 贷款审批流程](/images/agent-evolution/03-workflow-steps.svg)
+
+在这个结构中，Agent 可以参与某些步骤，比如风险评估时做文本推理，但它不能随便跳过"征信查询"或者"身份核验"。
+
+### Workflow 的新问题：可靠但僵硬
+
+Workflow 提升了确定性，但也带来了僵化问题。
+
+| Workflow 问题 | 解释 |
+| --- | --- |
+| **领域变化导致维护爆炸** | 政策、规则、业务流程一变，Workflow 就要改 |
+| **边缘 case 无法穷举** | 真实用户请求往往不在预设分支里 |
+| **分支爆炸** | 条件越多，路径数量指数级增长 |
+| **能力难复用** | 某个步骤被写死在某个流程里，难以迁移到其他任务 |
+
+最关键的是最后一点：**Workflow 把领域知识编码成了过程**。比如"征信查询"这个能力，在贷款审批 Workflow 里是第二步；但如果反欺诈检测也需要征信查询，就很难直接复用，往往只能复制一段流程。
+
+这就暴露出 Workflow 的本质缺陷：**它解决了执行可靠性，但没有很好解决能力复用问题**。
+
+---
+
+## 四、第三层演变：Skill —— 把流程里的能力抽象出来复用
+
+Skill 的出现，就是为了解决 Workflow 过于过程化的问题。
+
+Workflow 关注的是：
+
+```
+第一步做什么 → 第二步做什么 → 第三步做什么
+```
+
+Skill 关注的是：
+
+```
+我有哪些可复用能力？
+当前任务需要哪些能力？
+这些能力如何组合？
+```
+
+这是一种抽象层次的变化：从 **过程范式** 变成 **能力范式**。
+
+| 对比项 | Workflow | Skill |
+| --- | --- | --- |
+| 核心单位 | 步骤 / 流程 | 能力 / 模块 |
+| 组织方式 | 固定 DAG 或状态机 | 动态发现与组合 |
+| 优点 | 稳定、可控、可审计 | 灵活、可复用、可组合 |
+| 缺点 | 僵硬、维护成本高 | 路由和组合复杂 |
+| 类比 | 写死的主函数 main() | 可调用的函数库 / 插件库 |
+
+举例来说，贷款审批 Workflow 里可能包含这些步骤：
+
+```
+身份核验 → 征信查询 → 收入验证 → 风险评估 → 生成结论
+```
+
+Skill 化之后，这些步骤会变成独立能力：
+
+| Skill | 可复用场景 |
+| --- | --- |
+| **身份核验 Skill** | 贷款审批、账号风控、合同签署 |
+| **征信查询 Skill** | 贷款审批、反欺诈检测、额度评估 |
+| **风险评估 Skill** | 金融风控、保险核保、交易审查 |
+| **报告生成 Skill** | 审批报告、审计报告、合规报告 |
+
+这样，Agent 不再被固定 Workflow 绑死，而是可以根据任务动态组合 Skill。
+
+### Skill 到底是什么
+
+Skill 不是简单的 prompt，也不是单纯的工具。更准确地说，Skill 是一个 **封装了任务知识、操作规范、工具脚本、参考资料的能力包**。
+
+![Skill 能力包结构](/images/agent-evolution/04-skill-components.svg)
+
+一个 Skill 通常包含：
+
+| 组成部分 | 作用 |
+| --- | --- |
+| **元信息** | 描述 Skill 是什么、适合什么任务 |
+| **触发条件** | 告诉 Agent 什么时候应该使用它 |
+| **操作指令** | 告诉 Agent 使用这个 Skill 时应遵守什么流程 |
+| **工具脚本** | 提供可执行能力，比如 Python 脚本、API 调用 |
+| **参考文档** | 提供领域知识、格式规范、示例模板 |
+| **输出约束** | 定义结果应该是什么格式 |
+
+所以 Skill 可以理解为：**给通用 Agent 插入一个垂直领域能力模块**。它让 Agent 不必每次从零开始理解任务，而是加载一套已经整理好的专业知识和执行规则。
+
+### Skill 的新问题：组合本身变复杂
+
+Skill 解决了 Workflow 的复用问题，但又带来新的问题：**能力越多，选择和组合越难**。
+
+| Skill 挑战 | 解释 |
+| --- | --- |
+| **粒度问题** | Skill 太大像 Workflow，太小又导致选择成本爆炸 |
+| **发现问题** | Agent 怎么知道当前该用哪个 Skill |
+| **路由问题** | 用户自然语言请求如何映射到正确 Skill |
+| **组合冲突** | 多个 Skill 的规则可能互相矛盾 |
+| **上下文预算** | 加载太多 Skill 会占满上下文窗口 |
+
+比如用户说："帮我判断这个客户能不能借钱。"
+
+Agent 需要知道这句话背后可能涉及：
+
+```
+身份核验 Skill
++ 征信查询 Skill
++ 收入验证 Skill
++ 风险评估 Skill
++ 额度计算 Skill
+```
+
+这不是关键词匹配能解决的，而是 **语义路由问题**。Agent 必须理解任务意图，然后找到合适的能力组合。
+
+---
+
+## 五、新问题：Skill 越来越多之后 —— 如何选择和管理能力
+
+Skill 的出现解决了 Workflow 的僵化问题：原本写死在流程里的能力，可以被拆出来，变成 Agent 可以动态调用的能力模块。比如"代码审查""测试分析""PDF 解析""论文总结""博客生成"等，都可以被封装成 Skill。
+
+但 Skill 一旦多起来，问题会反过来出现：**Agent 系统不再缺能力，而是能力太多，导致选择成本上升**。
+
+这和人类工具箱很像。只有一把螺丝刀时，选择很简单；但如果工具箱里有 100 个工具，而且有些工具功能相似、有些工具互相冲突、有些工具需要额外依赖，那么真正困难的就不再是"有没有工具"，而是：当前任务到底该用哪个工具？哪些工具不该一起用？工具说明要不要全部读进上下文？工具太多时，Agent 会不会选错？
+
+### Skill 规模化后的五类问题
+
+| 问题 | 表现 | 本质 |
+| --- | --- | --- |
+| **Skill 发现困难** | Agent 不知道有哪些 Skill 可用 | 缺少统一索引 |
+| **Skill 路由错误** | 任务和 Skill 匹配错了 | 语义理解与能力映射失败 |
+| **Skill 粒度混乱** | 有些 Skill 太大，有些太碎 | 能力边界没有设计好 |
+| **Skill 组合冲突** | 多个 Skill 的规则互相矛盾 | 缺少冲突声明与优先级 |
+| **上下文预算爆炸** | 加载太多 Skill，占满上下文 | 缺少按需加载机制 |
+
+这意味着，Skill 架构的下一步不是继续无限添加 Skill，而是要做 **Skill Governance**，也就是 Skill 治理。
+
+### Skill 治理的核心：五层状态管理
+
+Skill 管理最重要的一点是：安装了很多 Skill，不等于每次任务都要让 Agent 看到所有 Skill。
+
+可以把 Skill 分成五种状态：
+
+![Skill 五层状态管理](/images/agent-evolution/05-skill-governance-pyramid.svg)
+
+| 状态 | 含义 | 是否进入上下文 |
+| --- | --- | --- |
+| **Installed** | Skill 已经安装在电脑里 | 不一定 |
+| **Indexed** | Skill 被登记到统一索引里 | 只进入轻量索引 |
+| **Enabled** | 当前任务类型允许使用它 | 进入候选集合 |
+| **Selected** | 本次任务被 Router 选中 | 进入任务计划 |
+| **Loaded** | Agent 真正读取完整 Skill 内容 | 才占用完整上下文 |
+
+这个分层非常关键。很多人使用 Skill 的问题在于把 Installed 和 Loaded 混在一起：电脑里装了 50 个 Skill，就希望 Agent 全部知道、全部读进去。结果不是 Agent 更强，而是上下文被 Skill 说明污染，真正任务信息反而被挤压。
+
+更合理的方式是：**可以安装很多 Skill，但只索引关键信息；每次任务只启用相关 Profile；每次执行只选择 Top-K Skill；真正需要时才加载完整 Skill**。也就是说，Skill 应该像操作系统里的程序：可以安装很多，但不会开机全部运行。
+
+### Skill Registry：先让能力变得"可检索"
+
+Skill 多了之后，第一步不是删除，而是建立 **Skill Registry**。Registry 可以理解为一个能力注册中心，它记录每个 Skill 的基本信息：
+
+```yaml
+name: code-review
+description: 审查 git diff，发现 bug、兼容性问题、安全风险和过度修改
+domain: coding
+triggers:
+  - code review
+  - git diff
+  - 检查 bug
+inputs:
+  - patch.diff
+  - test.log
+outputs:
+  - review.md
+tools:
+  - git
+  - shell
+risk: low
+budget: medium
+```
+
+这样 Agent 不需要靠"记忆"知道有哪些 Skill，而是可以先检索 Registry，再决定是否加载完整 Skill。Registry 的价值在于：**把 Skill 从散落的文件夹，变成可搜索、可过滤、可组合的能力资产**。
+
+### Profile：按任务场景控制 Skill 可见范围
+
+仅有 Registry 还不够，因为 Skill 太多时，即使有索引，候选集合也会很大。下一步需要引入 **Profile**。
+
+Profile 的作用是：根据任务类型限制当前可用 Skill 范围。
+
+| Profile | 允许的 Skill 类型 |
+| --- | --- |
+| coding | 代码修复、测试、代码审查、依赖分析 |
+| research | 论文阅读、网页调研、资料归纳 |
+| blog | 文章结构、技术写作、标题生成、配图建议 |
+| video | 字幕提取、视频总结、讲义生成 |
+| ops | 终端命令、环境检测、部署排错 |
+
+这样，当任务是"修复 npm run build 失败"时，Agent 只需要看到 coding profile 下的 Skill；当任务是"把视频整理成讲义"时，只需要看到 video profile 下的 Skill。这一步的本质是：**先按场景缩小搜索空间，再做语义路由**。
+
+### Skill Router：从候选能力中选 Top-K
+
+当 Registry 和 Profile 建好之后，下一步就是 **Skill Router**。Router 的任务不是执行，而是回答一个问题：**当前任务最应该使用哪些 Skill？**
+
+一个简单的 Skill Router 可以按下面流程工作：
+
+```
+用户任务
+  ↓
+识别任务类型：coding / research / blog / video / ops
+  ↓
+加载对应 Profile
+  ↓
+从 Registry 中筛选候选 Skill
+  ↓
+根据 description / triggers 做语义匹配
+  ↓
+选择 Top-K Skill
+  ↓
+把选中的 Skill 提供给 Planner / Executor
+```
+
+这里的 Top-K 很重要。不是相关 Skill 都加载，而是选最相关的 3 到 5 个。否则 Skill 越多，Agent 越容易混乱。一个合理的输出可以是：
+
+```json
+{
+  "profile": "coding",
+  "selected": [
+    { "name": "minimal-fix", "reason": "任务要求修复构建失败，应避免无关重构" },
+    { "name": "run-tests", "reason": "需要验证 npm run build 是否通过" },
+    { "name": "code-review", "reason": "需要检查 diff 是否存在风险" }
+  ],
+  "rejected": [
+    { "name": "auto-refactor", "reason": "与最小修改原则冲突" }
+  ]
+}
+```
+
+这就把 Skill 使用从"模型自己猜"变成了 **可解释的能力选择**。
+
+### Lazy Loading：不要一开始就读完整 Skill
+
+Skill 过多时，另一个关键策略是 **Lazy Loading**，也就是按需加载。
+
+可以把 Skill 内容分成四层：
+
+| 层级 | 内容 | 什么时候加载 |
+| --- | --- | --- |
+| **L0 Index** | name、description、path | 所有 Skill 都可以进入 |
+| **L1 Summary** | 触发条件、输入输出、风险等级 | Router 初筛后加载 |
+| **L2 Instruction** | 完整 Skill 使用说明 | Skill 被选中后加载 |
+| **L3 Resources** | 脚本、模板、参考文档 | 真正执行时才加载 |
+
+这套机制解决的是上下文预算问题。Agent 不需要一开始读完所有 Skill，它只需要先知道"有哪些能力可能相关"，然后逐层深入。这和人类查文档类似：先看目录，再看摘要，再看具体章节，最后才打开附录和代码。
+
+### Skill 粒度：不要把 Skill 做成另一个 Workflow
+
+Skill 的粒度设计也很关键。如果 Skill 太大，它就会变成另一个 Workflow；如果 Skill 太小，Agent 每次任务都要组合十几个微型 Skill，路由成本会爆炸。
+
+比较合理的方式是三层 Skill 架构：
+
+| 层级 | 例子 | 作用 |
+| --- | --- | --- |
+| **原子 Skill** | 运行测试、读取 PDF、提取字幕 | 单一动作 |
+| **组合 Skill** | 修复构建失败、视频转讲义、论文精读 | 常见任务组合 |
+| **场景 Skill** | 博客发布流程、项目交付流程 | 完整场景方案 |
+
+Agent 应该优先看到 **组合 Skill** 和 **场景 Skill**，只有执行时才深入调用原子 Skill。否则 Skill 表面上变多了，实际上只是把 Workflow 拆成了一堆碎片，复杂度并没有下降。
+
+### Skill 冲突：能力组合也需要规则
+
+多个 Skill 同时使用时，可能产生冲突。例如：
+
+| Skill A | Skill B | 冲突 |
+| --- | --- | --- |
+| minimal-fix | auto-refactor | 一个要求最小修改，一个倾向重构 |
+| academic-writing | social-media-writing | 一个要求严谨，一个要求传播感 |
+| safe-shell | fast-dev | 一个强调命令安全，一个强调快速执行 |
+| chinese-blog | english-docs | 输出语言和格式要求冲突 |
+
+所以，每个 Skill 不应该只声明"我能做什么"，还应该声明"我不适合和谁一起用""遇到冲突时谁优先"。
+
+```yaml
+conflicts:
+  - skill: auto-refactor
+    reason: 当前 skill 要求最小修改，不能主动大规模重构
+    resolution: minimal-fix wins unless user explicitly asks refactor
+```
+
+这会让 Skill 组合从隐式冲突变成 **显式协调**。
+
+---
+
+## 六、把演变串起来：三条路径的底层逻辑
+
+回顾整篇文章，我们看到三条清晰的演变路径：
+
+![Agent 工程化演变全景](/images/agent-evolution/06-evolution-overview.svg)
+
+| 演变 | 解决的核心问题 | 代价 | 本质 |
+| --- | --- | --- | --- |
+| **Single Agent → Multi-Agent** | 一个 Agent 装不下复杂任务 | 协调成本上升 | 横向分工 |
+| **Free-form Agent → Workflow** | Agent 执行不稳定 | 灵活性下降 | 纵向约束 |
+| **Workflow → Skill** | 流程能力不可复用 | 组合复杂度上升 | 能力抽象 |
+
+这三条路径不是互相排斥的，而是经常组合出现。一个成熟 Agent 系统通常会同时包含：
+
+```
+Multi-Agent：多个角色分工
+Workflow：关键流程约束
+Skill：领域能力复用
+Memory：保存历史偏好、经验和知识
+Tool：连接外部系统
+Evaluator：检查结果质量
+```
+
+如果把 Skill 治理也补上，演变线就更完整了：
+
+| 阶段 | 核心问题 | 解决方式 | 新问题 |
+| --- | --- | --- | --- |
+| Single Agent | 上下文装不下复杂任务 | Multi-Agent 分工 | 协调成本 |
+| Multi-Agent | 分工后执行仍不稳定 | Workflow 约束 | 流程僵化 |
+| Workflow | 能力被写死在流程里 | Skill 抽象 | Skill 过载 |
+| Skill | 能力太多、选择困难 | Registry + Profile + Router + Lazy Loading | 能力治理复杂化 |
+
+**Skill 并不是 Agent 架构演进的终点。** Skill 之后真正进入的是 **能力治理阶段**：如何组织能力、发现能力、约束能力、组合能力。这也是 Agent 工程化中非常重要的一步——因为真正落地的 Agent 系统不会只有几个 Skill，而是会不断积累几十个、上百个 Skill。此时，系统质量不再取决于"能不能写一个 Skill"，而取决于 **Skill 能否被正确选择、正确加载、正确组合、正确评估**。
+
+### 用一个例子串起来
+
+假设任务是：**"帮我完成一个 AI 项目的调研、代码实现、测试和报告生成。"**
+
+**Single Agent 做法：**
+```
+一个 Agent 从头做到尾：调研 → 写代码 → 测试 → 改错 → 写报告
+```
+问题是上下文会很乱，搜索资料、代码、报错日志、报告草稿全部堆在一起。
+
+**Multi-Agent 做法：**
+```
+Orchestrator 分配任务：
+  Research Agent：调研
+  Code Agent：写代码
+  Test Agent：测试
+  Report Agent：写报告
+  Review Agent：检查质量
+```
+效果更好，但 Orchestrator 要协调所有 Agent，可能出现沟通成本和结果不一致。
+
+**Workflow 做法：**
+```
+Step 1：确认需求
+Step 2：调研资料
+Step 3：生成方案
+Step 4：写代码
+Step 5：运行测试
+Step 6：修复错误
+Step 7：生成报告
+Step 8：人工确认
+```
+流程稳定，但如果任务中途出现新情况，固定 Workflow 可能不灵活。
+
+**Skill 做法：**
+```
+调用以下能力：
+  文献调研 Skill
+  代码生成 Skill
+  测试分析 Skill
+  错误修复 Skill
+  报告生成 Skill
+```
+Agent 可以根据任务动态组合能力，但前提是它能正确选择 Skill，并处理 Skill 之间的冲突。
+
+### 最重要的理解：不是"更复杂就更先进"
+
+很多人容易误解为 `Single Agent < Multi-Agent < Workflow < Skill`。这个理解不准确。
+
+| 任务类型 | 更适合的架构 |
+| --- | --- |
+| 简单问答、轻量工具调用 | **Single Agent** |
+| 大型调研、代码工程、多步骤复杂任务 | **Multi-Agent** |
+| 金融审批、医疗流程、合规审查 | **Workflow** |
+| 多场景复用的领域任务 | **Skill** |
+| 企业级复杂自动化 | **Multi-Agent + Workflow + Skill** |
+
+它们不是谁替代谁，而是解决不同矛盾。
+
+---
+
+## 写在最后
+
+Agent 的演变不是一条"越来越高级"的直线，而是一条不断处理系统矛盾的工程路径。
+
+- **Single Agent** 让模型具备了自主调用工具的能力，但复杂任务会带来上下文污染和单点失败
+- **Multi-Agent** 通过角色分工缓解了单体压力，但引入了协调成本和一致性问题
+- **Workflow** 用流程约束提高了可靠性，但也让领域能力容易被写死在流程中
+- **Skill** 把能力抽象出来，提升了复用和组合能力，但 Skill 规模化之后，又会出现发现、路由、冲突和上下文预算问题
+
+所以，Agent 工程化真正要解决的不是"让模型一次性知道更多"，而是让系统具备更好的组织结构：**该分工时分工，该约束时约束，该复用时复用，该加载时再加载**。
+
+如果用一句话概括：
+
+> **Single Agent 是一个人自由探索，Multi-Agent 是团队分工协作，Workflow 是按流程稳定执行，Skill 是把专家能力封装成模块，而 Skill 治理则是让这些能力在规模化之后仍然可控、可找、可用、可组合。**

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" font-family="Arial, sans-serif">
+  <rect width="800" height="450" fill="#FFFFFF"/>
+  <defs>
+    <marker id="arrow-default" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#555555"/>
+    </marker>
+    <marker id="arrow-c0" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#2563EB"/>
+    </marker>
+    <marker id="arrow-c1" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#10B981"/>
+    </marker>
+    <marker id="arrow-c2" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#7C3AED"/>
+    </marker>
+    <marker id="arrow-c3" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#EA580C"/>
+    </marker>
+    <marker id="arrow-c4" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#F59E0B"/>
+    </marker>
+    <marker id="arrow-c5" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#37474F"/>
+    </marker>
+  </defs>
+  <path d="M 338.4,82.0 L 195.6,133.0" stroke="#2563EB" stroke-width="2" fill="none" marker-end="url(#arrow-c0)"/>
+  <path d="M 378.0,82.0 L 327.0,133.0" stroke="#2563EB" stroke-width="2" fill="none" marker-end="url(#arrow-c0)"/>
+  <path d="M 417.6,82.0 L 458.4,133.0" stroke="#2563EB" stroke-width="2" fill="none" marker-end="url(#arrow-c0)"/>
+  <path d="M 457.2,82.0 L 589.8,133.0" stroke="#2563EB" stroke-width="2" fill="none" marker-end="url(#arrow-c0)"/>
+  <path d="M 183.0,187.0 Q 254.0,250.1 348.7,258.0" stroke="#10B981" stroke-width="2" fill="none" marker-end="url(#arrow-c1)"/>
+  <path d="M 322.5,187.0 Q 329.0,241.7 381.7,258.0" stroke="#F59E0B" stroke-width="2" fill="none" marker-end="url(#arrow-c4)"/>
+  <path d="M 462.0,187.0 Q 413.4,205.9 414.7,258.0" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrow-c2)"/>
+  <path d="M 601.5,187.0 Q 512.0,195.3 447.7,258.0" stroke="#EC4899" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <path d="M 400.0,302.0 L 400.0,358.0" stroke="#6366F1" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <rect x="250.0" y="38.0" width="300.0" height="44.0" fill="#DBEAFE" stroke="#2563EB" stroke-width="2" rx="8"/>
+  <text x="400.0" y="64.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Skill 名称：code-review</text>
+  <rect x="40.0" y="133.0" width="160.0" height="54.0" fill="#D1FAE5" stroke="#10B981" stroke-width="2" rx="8"/>
+  <text x="120.0" y="156.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">元信息</text>
+  <text x="120.0" y="172.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">描述、触发条件、领域</text>
+  <rect x="220.0" y="133.0" width="160.0" height="54.0" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" rx="8"/>
+  <text x="300.0" y="156.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">操作指令</text>
+  <text x="300.0" y="172.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">使用流程和规范</text>
+  <rect x="400.0" y="133.0" width="160.0" height="54.0" fill="#F3E8FF" stroke="#7C3AED" stroke-width="2" rx="8"/>
+  <text x="480.0" y="156.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">工具脚本</text>
+  <text x="480.0" y="172.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">可执行能力</text>
+  <rect x="580.0" y="133.0" width="160.0" height="54.0" fill="#FCE7F3" stroke="#EC4899" stroke-width="2" rx="8"/>
+  <text x="660.0" y="156.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">参考文档</text>
+  <text x="660.0" y="172.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">领域知识、模板</text>
+  <rect x="290.0" y="258.0" width="220.0" height="44.0" fill="#E0E7FF" stroke="#6366F1" stroke-width="2" rx="8"/>
+  <text x="400.0" y="276.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">输出约束</text>
+  <text x="400.0" y="292.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">结果格式定义</text>
+  <rect x="220.0" y="358.0" width="360.0" height="44.0" fill="#F0FDF4" stroke="#22C55E" stroke-width="2" rx="8"/>
+  <text x="400.0" y="384.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">→ Agent 加载 Skill → 获得垂直领域能力</text>
+  <text x="400.0" y="30.0" font-size="15" fill="#1E293B" text-anchor="middle">Skill = 封装了任务知识 + 操作规范 + 工具脚本 + 参考资料的能力包</text>
+</svg>
