@@ -141,6 +141,8 @@ $$
 - 绕 $y$ 轴：$y$ 不变，$x\to\sqrt{x^2+z^2}$
 - 绕 $z$ 轴：$z$ 不变，$x\to\sqrt{x^2+y^2}$
 
+**⚠️ 易错**：绕 $x=1$ 旋转**不是**绕 $x$ 轴旋转！此时到轴的距离是 $\sqrt{(x-1)^2+y^2}$，而不是 $\sqrt{y^2+z^2}$。
+
 **典型题**（§8-5 自测题）：
 
 将 $yOz$ 面上的曲线 $\begin{cases} z = a y^2 \\ x = 0 \end{cases}$ 分别绕 $y$ 轴和 $z$ 轴旋转一周：
@@ -204,11 +206,25 @@ $$
 **判断极限存在的题型**：$\lim_{(x,y)\to(0,0)}\frac{xy}{\sqrt{x^2+y^2}}$ 
 > 极坐标：$\lim_{r\to0}\frac{r^2\cos\theta\sin\theta}{r}=0$，极限存在为 0
 
+**警惕题型**（常见选择题陷阱）：
+| 极限表达式 | 沿 $y=kx$ | 结论 |
+|:---|:---|:---|
+| $\frac{xy}{x^2+y^2}$ | $\frac{k}{1+k^2}$ 依赖 $k$ | **不存在** |
+| $\frac{xy}{\sin(x^2+y^2)}$ | 依赖路径 | **不存在** |
+| $\frac{xy}{\sqrt{x^2+y^2}}$ | $\to0$ | 存在（为0） |
+
+**核心不等式**：$|xy| \le \frac{x^2+y^2}{2}$，常用于夹逼法证明极限为0。
+
 ### 2.2 偏导数与全微分
 
 **偏导数定义**：$f_x(x_0,y_0)=\lim_{\Delta x\to0}\frac{f(x_0+\Delta x,y_0)-f(x_0,y_0)}{\Delta x}$
 
 **全微分**：$\mathrm{d}z = f_x\mathrm{d}x + f_y\mathrm{d}y$
+
+**微分易混淆点**：
+- $\frac{\mathrm{d}y}{\mathrm{d}x}=f'(x)$ 形式上像分数，但**先有导数再定义微分**，不是除法
+- 二元函数中 $\mathrm{d}y$ 是自变量 $y$ 的**微分**（即 $\Delta y$ 的线性主部），不是因变量
+- 一元中 $\mathrm{d}x = \Delta x$，但二元中 $\mathrm{d}x,\mathrm{d}y$ 是自变量增量
 
 **重要关系**：偏导连续 $\Rightarrow$ 可微 $\Rightarrow$ 连续、偏导存在
 但反过来都不成立！偏导存在不一定连续（反例：$f(x,y)=\frac{xy}{x^2+y^2}$ 在原点偏导为0但不连续）
@@ -281,7 +297,26 @@ $$
 > y\frac{\partial z}{\partial x} - x\frac{\partial z}{\partial y} = \frac{2xy - x(2y-f+\frac{z}{y}f')}{f'-2z} = \frac{xf - \frac{xz}{y}f'}{f'-2z}
 > $$
 
+**复杂隐函数形式**（期末测验）：已知 $x^2+u^2 = f(x,u) + g(x,y,u)$，$f,g$ 可微，求 $\frac{\partial u}{\partial x}, \frac{\partial u}{\partial y}$。
+
+> 移项：$F = x^2+u^2 - f(x,u) - g(x,y,u) = 0$
+>
+> $F_x = 2x - f_x - g_x$
+>
+> $F_y = -g_y$
+>
+> $F_u = 2u - f_u - g_u$
+>
+> 所以 $\frac{\partial u}{\partial x} = \frac{f_x+g_x-2x}{2u-f_u-g_u}$，$\frac{\partial u}{\partial y} = \frac{g_y}{2u-f_u-g_u}$
+>
+> **关键**：方法完全一样，只是 $f$ 和 $g$ 可能是抽象函数，求导时要把 $f_x,f_u$ 当作抽象偏导符号。
+
 **关键**：求 $F_x,F_y,F_z$ 时把 $x,y,z$ 当独立变量；求 $z_x,z_y$ 时才用公式。
+
+**通用防乱原则**（对整章多元微分）：
+- **复合函数题**：先设中间变量，列推导树图，$f_1,f_2$ 不是常数，二阶时继续链式
+- **隐函数题**：先将 $x,y,z$ 当独立变量求 $F_x,F_y,F_z$，再用公式 $z_x=-F_x/F_z$
+- **拉格朗日**：遇到线性约束或可分离项时，设法消元或用比例关系
 
 ### 2.5 方向导数与梯度（§6.7 重点）
 
@@ -374,7 +409,7 @@ $$
 
 > **几何法**：径向长度 $\mathrm{d}r$，角度方向弧长 $r\mathrm{d}\theta$，小面积 $= \mathrm{d}r \cdot r\mathrm{d}\theta$
 >
-> **雅可比法**：$\frac{\partial(x,y)}{\partial(r,\theta)} = \begin{vmatrix} \cos\theta & -r\sin\theta \\ \sin\theta & r\cos\theta \end{vmatrix} = r$
+> **雅可比法**：坐标变换的雅可比行列式 $|\frac{\partial(x,y)}{\partial(r,\theta)}| = |\cos\theta \cdot r\cos\theta - (-r\sin\theta) \cdot \sin\theta| = r(\cos^2\theta+\sin^2\theta)=r$
 
 **典型题**（§10-1 自测题）：估计 $\iint_D (x^2+y^2)\mathrm{d}x\mathrm{d}y$，其中 $D:x^2+y^2\le 1$。
 
@@ -418,6 +453,8 @@ $$
 | $x^2+y^2+z^2$、球、锥 | 球面坐标（$\mathrm{d}V = r^2\sin\theta\mathrm{d}r\mathrm{d}\theta\mathrm{d}\varphi$） |
 | 椭球 | 广义球坐标（拉伸） |
 
+**坐标系选择口诀**："有圆不用柱面，有球不用球面" —— 出现 $x^2+y^2$ 优先考虑柱面（圆）；出现 $x^2+y^2+z^2$ 优先考虑球面（球）。
+
 **投影法（先一后二） vs 截面法（先二后一）选择技巧**：
 
 | 方法 | 流程 | 适用场景 |
@@ -443,7 +480,7 @@ $$
 | 圆锥与球 $z=\sqrt{x^2+y^2},\ x^2+y^2+z^2\le R^2$ | 球面 | $0\le r\le R,\ 0\le\theta\le\pi/4,\ 0\le\varphi\le2\pi$ |
 | 旋转抛物面 $z=x^2+y^2$ 与平面 $z=1$ 所围 | 柱面 | $0\le\rho\le1,\ 0\le\varphi\le2\pi,\ \rho^2\le z\le 1$ |
 
-**⚠️ 易错**：柱面坐标**忘乘 $\rho$**，球面坐标**忘乘 $r^2\sin\theta$**
+**⚠️ 易错**：柱面坐标**忘乘 $\rho$**，球面坐标**忘乘 $r^2\sin\theta$**，上下曲面写反。
 
 **对称性与轮换对称性**：
 
@@ -664,6 +701,9 @@ $\Sigma$ 取**外侧**。
 **投影法**：
 - $\iint_\Sigma R\mathrm{d}x\mathrm{d}y$：投影到 $xOy$ 面，上侧正下侧负
 - $\iint_\Sigma P\mathrm{d}y\mathrm{d}z$：投影到 $yOz$ 面，$x>0$ 侧正 $x<0$ 侧负
+- $\iint_\Sigma Q\mathrm{d}z\mathrm{d}x$：投影到 $zOx$ 面，$y>0$ 侧正 $y<0$ 侧负
+
+**投影符号判断**（口诀）：法向量与坐标轴正向夹角锐角取正，钝角取负。如果曲面由方程 $F(x,y,z)=0$ 给出，法向量取梯度方向，再与坐标轴比夹角。
 
 ### 4.6 对称性速查
 
@@ -940,6 +980,23 @@ $$
 - $f(x,y)=\frac{xy}{x^2+y^2}$ 在原点？→ 沿 $y=kx$ 得 $\frac{k}{1+k^2}$ 与 $k$ 有关 → **极限不存在**
 - 函数沿什么方向方向导数最大？→ **梯度方向**
 - $\sum a_n(x-1)^n$ 在 $x=3$ 收敛，$x=-2$ 处？→ 收敛半径 $R\ge2$，$x=-2$ 到中心 $x=1$ 距离 $=3>R$，发散
+
+**选择题完整解析**（期末测验12题）：
+
+| 题号 | 答案 | 核心依据 | 秒杀技巧 |
+|:---:|:---:|:---|:---|
+| 1 | **A** | 向量叉乘 $(-3,6,-3)$ | 直接计算叉积 $\mathbf{a}\times\mathbf{b}$ |
+| 2 | **C** | 投影系数 $\frac{\mathbf{a}\cdot\mathbf{b}}{\lVert\mathbf{b}\rVert^2}=-\frac16$ | 先点积再除模平方 |
+| 3 | **B** | 两平面法向量叉乘得 $(-2,3,7)$ | 叉积得直线方向向量 |
+| 4 | **B** | 消去 $z$，配方得 $2(x+1)^2+(y+2)^2=7$ | 消 $z$ 后配方看形状 |
+| 5 | **A** | 沿 $y=kx$ 极限为0，偏导均为0 | 极坐标得 $r\cos\theta\sin\theta\to0$ |
+| 6 | **D** | 偏导连续$\Rightarrow$可微$\Rightarrow$连续、偏导存在 | 概念层级关系 |
+| 7 | **B** | 切平面 $x-y+2z=\frac\pi2$ | 法向量即梯度方向 |
+| 8 | **A** | 方向导数最大 = 与梯度同向 | 直接选梯度方向 |
+| 9 | **B** | 若默认 $f\ge0$ 则选 B | 题面有争议，$f\ge0$ 时可比 |
+| 10 | **B** | 极角变化量 $-\pi$（顺时针上半椭圆） | $\mathrm{d}\theta=\frac{x\mathrm{d}y-y\mathrm{d}x}{x^2+y^2}$ |
+| 11 | **C** | 比值小于1但不趋于常数 | 反例：调和级数 $\sum\frac1n$ |
+| 12 | **A** | 正弦级数=奇延拓，$s(-\frac{\pi}{2})=-s(\frac{\pi}{2})$ | 奇延拓 $s(-x)=-s(x)$ |
 
 ### 7.3 最容易扣分的 12 个地方
 
