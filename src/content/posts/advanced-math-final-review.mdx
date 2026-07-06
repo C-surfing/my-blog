@@ -1,8 +1,8 @@
 ---
 title: "高数（下）期末复习笔记：二次曲面、偏导数、曲线曲面积分与幂级数"
 published: 2026-07-06
-description: "高数下期末全面复习，覆盖空间解析几何（单叶双曲面/双叶双曲面/锥面/旋转抛物面等的快速判断）、二阶连续偏导数、曲线曲面第一二类积分、幂级数求和等核心知识点，附典型例题与解题技巧。"
-tags: [高数, 期末复习, 二次曲面, 曲线积分, 曲面积分, 幂级数, 偏导数]
+description: "高数下期末全面复习，根据考试题型分模块整理。覆盖空间解析几何（单叶双曲面/双叶双曲面/锥面/旋转抛物面等的快速判断）、向量运算、平面与直线、二阶连续偏导数、隐函数求导、方向导数与梯度、拉格朗日乘数法、重积分、曲线曲面第一二类积分（格林/高斯/挖洞法）、幂级数求和与傅里叶级数等核心知识点，附自测题原题与完整解题步骤。"
+tags: [高数, 期末复习, 二次曲面, 曲线积分, 曲面积分, 幂级数, 偏导数, 向量代数, 重积分, 傅里叶级数]
 category: 学习
 draft: false
 pinned: false
@@ -12,545 +12,710 @@ lang: zh-CN
 
 ## 写在前面
 
-高数下期末复习，内容多且杂。空间解析几何要记曲面形状，多元函数微分要算偏导，曲线曲面积分有四类不同的方法，级数又要展开又要求和。这篇文章的目标就是**把每块的"判断方法"和"解题套路"整理清楚**——看到题目知道第一步做什么，第二步做什么，不至于在考场上不知道从何下手。
+这篇文章基于我与 ChatGPT 的多轮对话、学校提供的自测题（第八章~第十二章）及期末练习题整理而成。内容**严格按考试题型分布**组织，每章都有核心知识点 + 典型例题（选自自测题原题）+ 解题技巧 + 常见错误。
 
-文章内容整合自多个 ChatGPT 对话片段和网上资源，按知识模块组织，每个模块都有核心方法 + 典型例题 + 易错点。
+### 考试概况
+
+| 项目 | 内容 |
+|:---|:---|
+| **范围** | 5.1 向量及其线性运算 — 9.9 一般周期的傅里叶级数（7.6 和 9.7 节不考） |
+| **选择题** | 12 道 × 3 分 = 36 分 |
+| **解答题** | 第 1-2 题 7 分 × 2 + 第 3-7 题 8 分 × 5 = 54 分 |
+| **综合题** | 10 分 |
+
+### 选择题知识点分布
+
+| 章节 | 内容 | 题数 |
+|:---|:---|:---:|
+| 第5章 | 向量代数与空间解析几何 | 2 |
+| 第6章(6.1-6.5) | 偏导数与微分 | 2 |
+| 第6章(6.6-6.8) | 微分学应用 | 1 |
+| 第7章(7.1-7.3) | 重积分 | 1 |
+| 第7章(7.4-7.5) | 数量值函数积分 | 1 |
+| 第8章 | 向量值函数积分 | 2 |
+| 第9章(9.1-9.3,9.8-9.9) | 常数项级数和傅里叶级数 | 2 |
+| 第9章(9.4-9.5) | 幂级数 | 1 |
+
+### 解答题知识点分布
+
+| 题号 | 章节 | 重点 | 分值 |
+|:---:|:---|:---|:---:|
+| 1 | 5.1-5.6 向量代数与空间解析几何 | 5.3平面 / 5.4直线 | 7 |
+| 2 | 6.1-6.5 偏导数与微分 | 6.3复合函数 / 6.5隐函数 | 7 |
+| 3 | 6.6-6.8 微分学应用 | 6.7方向导数梯度 / 6.8多元极值 | 8 |
+| 4 | 7.2-7.3 重积分 | | 8 |
+| 5 | 7.4-7.5 数量值函数积分 | | 8 |
+| 6 | 8.1-8.5 向量值函数积分 | | 8 |
+| 7 | 9.4-9.5 幂级数 | | 8 |
 
 ---
 
-## 一、空间解析几何与二次曲面
+## 第一部分：向量代数与空间解析几何（第5章）
 
-### 1.1 二次曲面快速识别：三步法
+### 1.1 向量运算
 
-拿到一个二次方程，三步判断它是什么曲面：
-
-**第 1 步：标准化**
-
-把方程写成标准形式——右边要么是 1，要么是 0，要么是一次项。例如 $3x^2 - 2y^2 - z^2 = -6$ 要化为 $-\frac{x^2}{2} + \frac{y^2}{3} + \frac{z^2}{6} = 1$。
-
-**第 2 步：看右边**
-
-- 右边 $= \mathbf{1}$ → 可能是椭球面、单叶双曲面、双叶双曲面
-- 右边 $= \mathbf{0}$ → 椭圆锥面
-- 右边 $= \textbf{一次项}$（如 $z$）→ 抛物面
-
-**第 3 步：数平方项的符号**
-
-| 右边 | 平方项结构 | 曲面名称 | 记忆口诀 |
-|:---|:---|:---|:---|
-| $=1$ | $+,+,+$ | **椭球面** | 全正，封闭 |
-| $=1$ | $+,+,-$ | **单叶双曲面** | 两正一负，连通的一片 |
-| $=1$ | $+,-,-$ | **双叶双曲面** | 一正两负，分开的两片 |
-| $=0$ | $+,+,-$ | **椭圆锥面** | 右边为0，两正一负 |
-| $=z$ | 两项同号 | **椭圆抛物面** | 像碗 |
-| $=z$ | 两项异号 | **双曲抛物面（马鞍面）** | 像马鞍 |
-
-**注意**：标准化时，如果系数出现在分母上（$\frac{x^2}{a^2} + \frac{y^2}{b^2} + \frac{z^2}{c^2} = 1$），就用分母；如果系数直接乘在平方项上（$2x^2 + y^2 = z$），那就可以直接读系数。
-
-### 1.2 各曲面详解
-
-#### 椭球面
-
+#### 向量积（叉积）
 $$
-\frac{x^2}{a^2} + \frac{y^2}{b^2} + \frac{z^2}{c^2} = 1
+\mathbf{a} \times \mathbf{b} = |\mathbf{a}||\mathbf{b}|\sin\theta \cdot \mathbf{n}
 $$
 
-**特征**：三个平方项系数全正，封闭曲面。截面都是椭圆。当 $a=b=c=R$ 时退化为球面 $x^2+y^2+z^2=R^2$。
+**关键性质**：$\mathbf{a} \times \mathbf{a} = \mathbf{0}$，$\mathbf{b} \times \mathbf{a} = -(\mathbf{a} \times \mathbf{b})$
 
-#### 单叶双曲面
+**典型例题**：求 $|(\mathbf{a}-\mathbf{b})\times(\mathbf{a}+\mathbf{b})|$
 
+> 展开：$(\mathbf{a}-\mathbf{b})\times(\mathbf{a}+\mathbf{b}) = \mathbf{a}\times\mathbf{a} + \mathbf{a}\times\mathbf{b} - \mathbf{b}\times\mathbf{a} - \mathbf{b}\times\mathbf{b}$
+>
+> $= 0 + \mathbf{a}\times\mathbf{b} - (-\mathbf{a}\times\mathbf{b}) - 0 = 2(\mathbf{a}\times\mathbf{b})$
+>
+> 所以 $|(\mathbf{a}-\mathbf{b})\times(\mathbf{a}+\mathbf{b})| = 2|\mathbf{a}\times\mathbf{b}| = 2|\mathbf{a}||\mathbf{b}|\sin\theta$
+
+#### 混合积
 $$
-\frac{x^2}{a^2} + \frac{y^2}{b^2} - \frac{z^2}{c^2} = 1
-$$
-
-**特征**：**两正一负**，曲面是**连通**的（像一座中间收腰的塔）。可以这样想——负号对应哪个轴，哪个轴就是"穿过"的方向。
-
-**重要性质**：单叶双曲面是**直纹面**——它由直线扫出来，工程上经常用它来造冷却塔。
-
-**典型题**：$3x^2 - 2y^2 - z^2 = -6$ 是什么曲面？
-
-> 标准化：$-\frac{x^2}{2} + \frac{y^2}{3} + \frac{z^2}{6} = 1$，右边为1，系数为 $-,+,+$（把负号移到左边就是两正一负）→ **单叶双曲面**。
-
-#### 双叶双曲面
-
-$$
-\frac{x^2}{a^2} + \frac{y^2}{b^2} - \frac{z^2}{c^2} = -1
-\quad\text{或}\quad
--\frac{x^2}{a^2} - \frac{y^2}{b^2} + \frac{z^2}{c^2} = 1
+[\mathbf{a}\ \mathbf{b}\ \mathbf{c}] = (\mathbf{a}\times\mathbf{b})\cdot\mathbf{c}
 $$
 
-**特征**：**一正两负**，曲面分成上下两片（或左右两片）。注意右边是 $-1$ 时，要在右边补个负号看正负结构。
+几何意义：三个向量张成的平行六面体的有向体积。
 
-**记忆**：负号多的一片会被"撕开"成两片。
+#### 向量投影
 
-#### 椭圆锥面
+**Prj**$_b a = \frac{\mathbf{a}\cdot\mathbf{b}}{|\mathbf{b}|}$（带符号投影）
+**Prj**$_b a$ 在 $\mathbf{b}$ 上的投影系数：$\frac{\mathbf{a}\cdot\mathbf{b}}{|\mathbf{b}|^2}$
 
-$$
-\frac{x^2}{a^2} + \frac{y^2}{b^2} - \frac{z^2}{c^2} = 0
-$$
+#### 方向余弦与方向角
 
-**特征**：右边为 0，两正一负。截面是椭圆，从原点向外延伸。当 $a=b$ 时就是**圆锥面** $x^2+y^2 = \frac{a^2}{c^2}z^2$。
+方向余弦：$\cos\alpha = \frac{a_x}{|\mathbf{a}|},\ \cos\beta = \frac{a_y}{|\mathbf{a}|},\ \cos\gamma = \frac{a_z}{|\mathbf{a}|}$
 
-**区分**：和单叶双曲面很像，但右边是 0 不是 1；和双叶双曲面也很像，但双叶是两边分离的。
+满足：$\cos^2\alpha + \cos^2\beta + \cos^2\gamma = 1$
 
-#### 椭圆抛物面
+### 1.2 平面方程（§5.3 重点）
 
-$$
-z = \frac{x^2}{a^2} + \frac{y^2}{b^2}
-$$
-
-**特征**：像开口向上的**碗**。一次项 $z$ 对应哪个轴，开口就朝哪个方向。正系数越大，开口越"扁"。
-
-#### 双曲抛物面（马鞍面）
-
-$$
-z = \frac{x^2}{a^2} - \frac{y^2}{b^2}
-$$
-
-**特征**：两个平方项**异号**，形状像**马鞍**。一个方向向上弯，一个方向向下弯。原点就是**鞍点**——沿 $x$ 方向看是极小值，沿 $y$ 方向看是极大值。
-
-#### 旋转抛物面
-
-旋转抛物面是椭圆抛物面的特殊情况。当 $a=b$ 时，$z = \frac{x^2+y^2}{a^2}$，由抛物线 $z = \frac{x^2}{a^2}$ 绕 $z$ 轴旋转得到。
-
-**判断方法**：出现 $x^2+y^2$ 且 $z$ 是一次项 → 旋转抛物面。
-
-### 1.3 柱面的判断
-
-**核心原则**：缺哪个变量，母线就平行于哪个轴。例如方程 $F(y,z)=0$ 不含 $x$，曲线的母线与 $x$ 轴平行。
-
-| 方程形式 | 缺少变量 | 母线方向 |
+| 形式 | 方程 | 适用场景 |
 |:---|:---|:---|
-| $F(y,z)=0$ | 缺 $x$ | $\parallel x$ 轴 |
-| $F(x,z)=0$ | 缺 $y$ | $\parallel y$ 轴 |
-| $F(x,y)=0$ | 缺 $z$ | $\parallel z$ 轴 |
+| **点法式** | $A(x-x_0)+B(y-y_0)+C(z-z_0)=0$ | 已知一点和法向量 |
+| **一般式** | $Ax+By+Cz+D=0$ | 默认形式 |
+| **截距式** | $\frac{x}{a}+\frac{y}{b}+\frac{z}{c}=1$ | 求截距 |
+| **三点式** | 行列式形式 | 过三点 |
 
-典型柱面：
-- **圆柱面**：$x^2+y^2=R^2$（缺 $z$）
-- **椭圆柱面**：$\frac{x^2}{a^2}+\frac{y^2}{b^2}=1$（缺 $z$）
-- **双曲柱面**：$\frac{x^2}{a^2} - \frac{y^2}{b^2} = 1$（缺 $z$）
-- **抛物柱面**：$y=ax^2$（缺 $z$）
+**特殊平面**：
+- 过 $z$ 轴：$Ax+By=0$（缺 $z$ 且无常数项）
+- 平行于 $x$ 轴：$By+Cz+D=0$（缺 $x$）
+- 平行于 $xOz$ 面：$By+D=0$（法向量只有 $y$ 分量）
 
-### 1.4 旋转曲面
+### 1.3 直线方程（§5.4 重点）
 
-**核心原则**：绕哪个轴旋转，就保留哪个轴对应的变量；另外两个变量替换成**该点到旋转轴的距离**。
+| 形式 | 方程 | 适用场景 |
+|:---|:---|:---|
+| **对称式** | $\frac{x-x_0}{m}=\frac{y-y_0}{n}=\frac{z-z_0}{p}$ | 已知一点和方向向量 |
+| **参数式** | $x=x_0+mt,\ y=y_0+nt,\ z=z_0+pt$ | 参数化计算 |
+| **一般式** | 两平面交线 | 一般给题形式 |
 
-- 绕 $x$ 轴旋转：$x$ 不变，$y \to \sqrt{y^2+z^2}$ 或 $z \to \sqrt{y^2+z^2}$
-- 绕 $y$ 轴旋转：$y$ 不变，$x \to \sqrt{x^2+z^2}$
-- 绕 $z$ 轴旋转：$z$ 不变，$x \to \sqrt{x^2+y^2}$
+**方向向量**：$\mathbf{s} = (m,n,p)$
 
-**易错**：绕 $x=1$ 旋转不是绕 $x$ 轴旋转，此时到轴的距离是 $\sqrt{(x-1)^2+y^2}$。
+### 1.4 二次曲面识别（§5.6 重点）
 
-**例题**：将 $x^2 + y^2 = 4$ 绕 $y$ 轴旋转一周，得到什么？
+**三步法**：标准化 → 看右边 → 数符号
 
-> $y$ 不变，$x \to \sqrt{x^2+z^2}$，得 $(\sqrt{x^2+z^2})^2 + y^2 = 4$，即 $x^2+y^2+z^2=4$，**球面**。
+| 条件 | 曲面 | 记忆 |
+|:---|:---|:---|
+| $\sum + = 1$ | **椭球面** | 全正封闭 |
+| $++, - = 1$ | **单叶双曲面** | 两正一负，连通一片 |
+| $+, -,- = 1$ | **双叶双曲面** | 一正两负，分离两片 |
+| $++, - = 0$ | **椭圆锥面** | 右边为0 |
+| $z = \sum +$ | **椭圆抛物面** | 像碗 |
+| $z = \sum -$ | **双曲抛物面（马鞍面）** | 像马鞍 |
 
-### 1.5 解题技巧与易错点总结
+**典型例题**（自测题）：方程 $3x^2 - 2y^2 - z^2 = -6$ 表示什么曲面？
 
-1. **先标准化再判断**：不要看到 $3x^2-2y^2-z^2=-6$ 就认为是双叶，标准化的过程必须做。
-2. **柱面看"缺谁"**：方程中少哪个变量，母线就平行于哪个轴。
-3. **旋转曲面看"绕谁"**：绕哪个轴，哪个变量不变。
-4. **单叶 vs 双叶**：两正一负是单叶（连通），一正两负是双叶（分两片）。
-5. **锥面 vs 双曲面**：锥面右边是 0，双曲面右边是 $\pm 1$。
+> 标准化：两边除以 $-6$ 得 $-\frac{x^2}{2} + \frac{y^2}{3} + \frac{z^2}{6} = 1$
+>
+> 右边为 1，系数结构为 $-,+,+$（即两正一负）→ **单叶双曲面**，选 D
+
+### 1.5 柱面与旋转曲面
+
+**柱面**：缺谁平行谁
+- $F(x,y)=0$（缺 $z$）：母线 $\parallel z$ 轴
+- $F(y,z)=0$（缺 $x$）：母线 $\parallel x$ 轴
+
+**旋转曲面**：绕谁保留谁
+- 绕 $x$ 轴：$x$ 不变，$y\to\sqrt{y^2+z^2}$
+- 绕 $y$ 轴：$y$ 不变，$x\to\sqrt{x^2+z^2}$
+- 绕 $z$ 轴：$z$ 不变，$x\to\sqrt{x^2+y^2}$
+
+**典型题**（§8-5 自测题）：
+
+将 $yOz$ 面上的曲线 $\begin{cases} z = a y^2 \\ x = 0 \end{cases}$ 分别绕 $y$ 轴和 $z$ 轴旋转一周：
+
+- 绕 $y$ 轴：$y$ 不变，$x\to\sqrt{x^2+z^2}$，得 $\pm\sqrt{x^2+z^2} = a y^2$，即 $x^2+z^2 = a^2 y^4$，或 $x^2+z^2 = 2p y$（若 $a y^2$）
+- 绕 $z$ 轴：$z$ 不变，$x\to\sqrt{x^2+y^2}$，得 $z = a(x^2+y^2)$，此为**旋转抛物面**
+
+### 1.6 直线与平面的关系
+
+**直线与平面夹角**：$\sin\varphi = \frac{|\mathbf{s}\cdot\mathbf{n}|}{|\mathbf{s}||\mathbf{n}|}$
+
+**直线与平面平行**：$\mathbf{s}\perp\mathbf{n} \iff \mathbf{s}\cdot\mathbf{n}=0$，且点不在平面上
+
+**直线与平面垂直**：$\mathbf{s}\parallel\mathbf{n}$
+
+**直线在平面上的投影**：过直线做垂直于平面的平面，两面交线即为投影
+
+### 1.7 解答题典型：平面方程
+
+**例题**（自测题一）：求过点 $(1,2,1)$，且与直线 $\frac{x-1}{2}=\frac{y}{-3}=\frac{z+2}{1}$ 垂直的平面方程。
+
+> 直线的方向向量即为平面的法向量：$\mathbf{n}=(2,-3,1)$
+>
+> 点法式：$2(x-1)-3(y-2)+1(z-1)=0$
+>
+> 整理得：$2x-3y+z-2+6-1=0$，即 $2x-3y+z+3=0$
+
+**切平面与法线**（§9-6 自测题）：
+
+曲面 $z=f(x,y)$ 在点 $(x_0,y_0,z_0)$ 处：
+- 法向量：$\mathbf{n} = (f_x, f_y, -1)$
+- 切平面：$f_x(x-x_0)+f_y(y-y_0)-(z-z_0)=0$
+- 法线：$\frac{x-x_0}{f_x}=\frac{y-y_0}{f_y}=\frac{z-z_0}{-1}$
+
+**截距和问题**（经典题）：求曲面 $\sqrt{x}+\sqrt{y}+\sqrt{z}=\sqrt{2}$ 上任一点处切平面与三坐标轴的截距之和。
+
+> 设切点 $M_0(x_0,y_0,z_0)$，法向量 $(\frac{1}{\sqrt{x_0}},\frac{1}{\sqrt{y_0}},\frac{1}{\sqrt{z_0}})$
+>
+> 切平面：$\frac{x}{\sqrt{x_0}}+\frac{y}{\sqrt{y_0}}+\frac{z}{\sqrt{z_0}}=\sqrt{2}$
+>
+> 化为截距式：$\frac{x}{\sqrt{2x_0}}+\frac{y}{\sqrt{2y_0}}+\frac{z}{\sqrt{2z_0}}=1$
+>
+> 截距和 $= \sqrt{2}(\sqrt{x_0}+\sqrt{y_0}+\sqrt{z_0}) = \sqrt{2}\cdot\sqrt{2} = 2$
 
 ---
 
-## 二、多元函数微分学
+## 第二部分：多元函数微分学（第6章）
 
-### 2.1 二元函数的极限
+### 2.1 二元函数的极限与连续
 
-**存在性判定**：沿**任何路径**趋近时极限值都相同。
+**证明极限存在**：夹逼定理 / 极坐标代换 $x=r\cos\theta,\ y=r\sin\theta$
 
-- **证明存在**：夹逼定理、极坐标代换（$x=r\cos\theta, y=r\sin\theta, r\to 0$）
-- **证明不存在**：找到两条不同路径，极限值不同
+**证明不存在**：找两条不同路径极限值不同
 
-**核心不等式**：$|xy| \le \frac{x^2+y^2}{2}$，常用于夹逼。
+**典型题**（自测题）：$f(x,y)=\begin{cases} \frac{xy}{x^2+y^2}, & (x,y)\neq(0,0) \\ 0, & (x,y)=(0,0) \end{cases}$ 在原点是否连续？
 
-**典型题型**：
-- $\lim_{(x,y)\to(0,0)} \frac{xy}{x^2+y^2}$ → 沿 $y=kx$ 得 $\frac{k}{1+k^2}$，依赖于 $k$，**极限不存在**
-- $\lim_{(x,y)\to(0,0)} \frac{xy}{\sqrt{x^2+y^2}}$ → 用极坐标得 $\lim_{r\to0} r\cos\theta\sin\theta = 0$，**极限存在为 0**
-- $\lim_{(x,y)\to(0,0)} \frac{xy}{\sin(x^2+y^2)}$ → 沿不同路径不一致，**极限不存在**
+> 沿 $y=kx$ 路径：$\lim_{x\to0}\frac{kx^2}{x^2+k^2x^2}=\frac{k}{1+k^2}$，随 $k$ 变化 → 极限不存在 → 不连续
+>
+> 选 C（在原点极限不存在）
 
-**连续性**：函数在一点连续 $\iff \lim_{(x,y)\to(x_0,y_0)} f(x,y) = f(x_0,y_0)$。极限不存在则必不连续。
+**判断极限存在的题型**：$\lim_{(x,y)\to(0,0)}\frac{xy}{\sqrt{x^2+y^2}}$ 
+> 极坐标：$\lim_{r\to0}\frac{r^2\cos\theta\sin\theta}{r}=0$，极限存在为 0
 
 ### 2.2 偏导数与全微分
 
-**偏导数**：固定一个变量，对另一个求导。
+**偏导数定义**：$f_x(x_0,y_0)=\lim_{\Delta x\to0}\frac{f(x_0+\Delta x,y_0)-f(x_0,y_0)}{\Delta x}$
 
-$$
-f_x(x,y) = \lim_{\Delta x\to0} \frac{f(x+\Delta x, y) - f(x,y)}{\Delta x}
-$$
+**全微分**：$\mathrm{d}z = f_x\mathrm{d}x + f_y\mathrm{d}y$
 
-**全微分**：一阶线性近似
+**重要关系**：偏导连续 $\Rightarrow$ 可微 $\Rightarrow$ 连续、偏导存在
+但反过来都不成立！偏导存在不一定连续（反例：$f(x,y)=\frac{xy}{x^2+y^2}$ 在原点偏导为0但不连续）
 
-$$
-\mathrm{d}z = f_x(x,y)\,\mathrm{d}x + f_y(x,y)\,\mathrm{d}y
-$$
+**典型选择题**（自测题）：若 $f(x,y)$ 在点 $(x_0,y_0)$ 处的两个偏导数都存在，则（ ）
 
-**可微的条件**：偏导数连续 ⇒ 可微 ⇒ 连续、偏导存在（但反过来不成立）。
+> A. 在某个邻域内有界 B. 在该点连续 C. 可微 D. 全微分存在
+>
+> 答案：都不一定成立。选"都不对"的选项。这道题考的正是"偏导存在 $\nRightarrow$ 可微"
 
-**做题模板**：
-1. 求 $f_x$ 和 $f_y$
-2. 代入给定点 $(x_0,y_0)$
-3. 写出全微分 $\mathrm{d}z$
-4. 用自变量增量 $(\Delta x,\Delta y)$ 替代 $(\mathrm{d}x,\mathrm{d}y)$ 计算
+### 2.3 复合函数求导：链式法则（§6.3 重点）
 
-### 2.3 复合函数求导（链式法则）
+**核心方法**：设中间变量，列偏导树图。
 
-**题型**：$z = x f(xy, \frac{x}{y})$，求 $\frac{\partial^2 z}{\partial x \partial y}$。
+**例题**（自测题一）：设 $z = x f(xy, \frac{x}{y})$，其中 $f$ 具有二阶连续偏导数，求 $\frac{\partial^2 z}{\partial x\partial y}$。
 
-**步骤**：
-1. 设中间变量 $u=xy,\ v=\frac{x}{y}$
-2. 列偏导表：$\frac{\partial }{\partial x} = \frac{\partial}{\partial u}\cdot y + \frac{\partial}{\partial v}\cdot\frac{1}{y}$
-3. 一阶偏导：$z_x = f + x y f_1 + \frac{x}{y} f_2$
-4. 二阶时对 $f_1, f_2$**继续求导**——它们是 $u,v$ 的复合函数，不是常数！
+> 设 $u=xy,\ v=\frac{x}{y}$
+>
+> **一阶**：$\frac{\partial z}{\partial x}= f + x\cdot y\cdot f_1 + x\cdot\frac{1}{y}\cdot f_2 = f + xy f_1 + \frac{x}{y}f_2$
+>
+> **二阶**（对 $y$）：
+> $$
+> \frac{\partial^2 z}{\partial x\partial y} = f_1\cdot x + x f_1 + xy\left(f_{11}\cdot x + f_{12}\cdot(-\frac{x}{y^2})\right) + (-\frac{x}{y^2})f_2 + \frac{x}{y}\left(f_{21}\cdot x + f_{22}\cdot(-\frac{x}{y^2})\right)
+> $$
+>
+> 利用 $f_{12}=f_{21}$（二阶连续可导），化简得：
+> $$
+> \frac{\partial^2 z}{\partial x\partial y} = 2x f_1 - \frac{2x}{y^2} f_2 + x^2 y f_{11} - \frac{x^2}{y^3} f_{22}
+> $$
 
-**完整二阶**（假设 $f$ 二阶连续可导，$f_{12}=f_{21}$）：
+**⚠️ 易错**：$f_1$ 和 $f_2$ 仍然是 $u,v$ 的复合函数，求二阶导时要继续链式法则，不能当常数！
 
-$$
-\frac{\partial^2 z}{\partial x\partial y} = 2x f_1 - \frac{2x}{y^2} f_2 + x^2 y f_{11} - \frac{x^2}{y^3} f_{22}
-$$
-
-**防乱要点**：
-- 先设中间变量，列清楚导数表
-- 二阶时，$f_1$ 和 $f_2$ 仍然是 $u,v$ 的函数，要继续链式法则
-- 利用 $f_{12}=f_{21}$ 化简
-
-### 2.4 隐函数求导
+### 2.4 隐函数求导（§6.5 重点）
 
 **核心公式**：由 $F(x,y,z)=0$ 确定 $z=z(x,y)$：
-
 $$
-\frac{\partial z}{\partial x} = -\frac{F_x}{F_z},\qquad \frac{\partial z}{\partial y} = -\frac{F_y}{F_z}
+\frac{\partial z}{\partial x} = -\frac{F_x}{F_z},\quad \frac{\partial z}{\partial y} = -\frac{F_y}{F_z}
 $$
 
-**注意**：千万**不要忘记负号**！
+**⚠️ 千万不能忘记负号！**
 
-**例题**：$x^2+y^2+z^2 = y f(\frac{z}{y})$，求 $\frac{\partial z}{\partial x}, \frac{\partial z}{\partial y}$。
+**典型题**（自测题）：设 $x^2+y^2+z^2 = y f(\frac{z}{y})$，其中 $f$ 具有一阶连续导数，求 $\frac{\partial z}{\partial x},\ \frac{\partial z}{\partial y}$，以及 $y\frac{\partial z}{\partial x} - x\frac{\partial z}{\partial y}$。
 
-> 移项：$F = x^2+y^2+z^2 - y f(z/y)=0$
+> 移项：$F = x^2+y^2+z^2 - y f(\frac{z}{y}) = 0$
 >
-> $F_x = 2x,\quad F_z = 2z - f'$
+> $F_x = 2x$
 >
 > $F_y = 2y - f + \frac{z}{y}f'$
 >
-> 于是 $\frac{\partial z}{\partial x} = \frac{2x}{f'-2z},\quad \frac{\partial z}{\partial y} = \frac{2y - f + \frac{z}{y}f'}{f'-2z}$
+> $F_z = 2z - f'$
+>
+> 所以 $\frac{\partial z}{\partial x} = \frac{2x}{f'-2z},\quad \frac{\partial z}{\partial y} = \frac{2y-f+\frac{z}{y}f'}{f'-2z}$
+>
+> $$
+> y\frac{\partial z}{\partial x} - x\frac{\partial z}{\partial y} = \frac{2xy - x(2y-f+\frac{z}{y}f')}{f'-2z} = \frac{xf - \frac{xz}{y}f'}{f'-2z}
+> $$
 
-**关键**：求 $F_x,F_y,F_z$ 时把 $x,y,z$ 当独立变量；求 $z_x,z_y$ 时才用隐函数公式。
+**关键**：求 $F_x,F_y,F_z$ 时把 $x,y,z$ 当独立变量；求 $z_x,z_y$ 时才用公式。
 
-### 2.5 方向导数与梯度
+### 2.5 方向导数与梯度（§6.7 重点）
 
-**梯度**：$\nabla f = (f_x, f_y, f_z)$，方向导数的"最快"方向。
+**梯度**：$\nabla f = (f_x, f_y, f_z)$，方向导数的最大方向
 
-**方向导数**：$D_{\mathbf{l}} f = f_x\cos\alpha + f_y\cos\beta + f_z\cos\gamma$
+**方向导数**：
+$$
+D_{\mathbf{l}} f = f_x\cos\alpha + f_y\cos\beta + f_z\cos\gamma
+$$
 
+其中 $\cos\alpha,\cos\beta,\cos\gamma$ 是方向 $\mathbf{l}$ 的方向余弦。
+
+**性质**：
 - 沿梯度方向，方向导数最大，值为 $|\nabla f|$
 - 沿梯度反方向，方向导数最小，值为 $-|\nabla f|$
-- 沿与梯度垂直的方向，方向导数为 0
+- 垂直梯度方向，方向导数为 0
 
-### 2.6 拉格朗日乘数法
+**典型选择题**（自测题）：函数 $f(x,y)$ 在点 $(x_0,y_0)$ 处沿什么方向的方向导数最大？
+> 沿梯度方向，选 A（最大）
 
-**核心思想**：求 $f(x,y,z)$ 在约束 $g(x,y,z)=0$ 下的极值。
+**计算题**（期末练习题）：求函数 $u=xy^2+yz^3$ 在点 $(1,2,-1)$ 处沿 $\mathbf{l}=(4,3,6)$ 方向的方向导数。
 
-**步骤**：
-1. 构造拉格朗日函数 $L = f + \lambda g$
-2. 解 $\nabla L = 0$（即 $L_x=L_y=L_z=L_\lambda=0$）
-3. 比较候选点的函数值
-
-**实用技巧**：如果 $f$ 是线性函数，$g$ 是二次曲面，可以先优化线性部分。
-
-**例题**（经典）：求椭球 $2x^2+y^2+z^2=1$ 上的点到平面 $2x+y-z=6$ 的最远/最近距离。
-
-> 距离 $d = \frac{|2x+y-z-6|}{\sqrt{6}}$。由于 $2x+y-z$ 在椭球上的最大值不超过 2（验证：$2x+y-z \le \sqrt{(2^2+1^2+(-1)^2)(2x^2+y^2+z^2)} = \sqrt{6}$），所以 $2x+y-z-6 < 0$，$d = \frac{6 - (2x+y-z)}{\sqrt{6}}$。
+> $\nabla u = (y^2, 2xy+z^3, 3yz^2)$，在 $(1,2,-1)$ 处为 $(4, 3, 3)$
 >
-> 所以只需优化 $\phi = 2x+y-z$ 在椭球上的最大值（最近）和最小值（最远）。
+> $\mathbf{l}$ 的方向余弦：$\cos\alpha=\frac{4}{\sqrt{4^2+3^2+6^2}}=\frac{4}{\sqrt{61}},\ \cos\beta=\frac{3}{\sqrt{61}},\ \cos\gamma=\frac{6}{\sqrt{61}}$
 >
-> 拉格朗日：$\nabla\phi = \lambda\nabla g \Rightarrow (2,1,-1) = \lambda(4x,2y,2z)$
->
-> 得 $x=y=-z$，设 $x=y=t,\ z=-t$，代入椭球得 $4t^2=1 \Rightarrow t=\pm\frac12$。
->
-> 两点：$M_1(\frac12,\frac12,-\frac12)$（$\phi=2$，最近距离 $\frac{4}{\sqrt{6}}$），$M_2(-\frac12,-\frac12,\frac12)$（$\phi=-2$，最远距离 $\frac{8}{\sqrt{6}}$）。
+> $D_{\mathbf{l}}u = 4\cdot\frac{4}{\sqrt{61}} + 3\cdot\frac{3}{\sqrt{61}} + 3\cdot\frac{6}{\sqrt{61}} = \frac{16+9+18}{\sqrt{61}} = \frac{43}{\sqrt{61}}$
 
-**核心技巧**：先优化线性部分，而非直接优化距离平方，计算量大减。
+### 2.6 多元函数极值：拉格朗日乘数法（§6.8 重点）
+
+**拉格朗日函数**：$L(x,y,z,\lambda) = f(x,y,z) + \lambda g(x,y,z)$
+
+解 $\nabla L = 0$ 得极值候选点。
+
+**经典题**（自测题）：求曲面 $\sqrt{x}+\sqrt{y}+\sqrt{z}=\sqrt{2}$ 上任一点处的切平面与三坐标轴截距之和。
+
+> 已在 1.7 中解答。
+
+**经典题**（自测题一）：求椭球面 $x^2+2y^2+z^2=1$ 上距平面 $x+y-z=1$ 最近点和最远点。
+
+> 距离 $d = \frac{|x+y-z-1|}{\sqrt{3}}$，等价于优化 $\phi = x+y-z$ 在椭球上的最值。
+>
+> 拉格朗日：$\nabla\phi = \lambda\nabla g \Rightarrow (1,1,-1) = \lambda(2x,4y,2z)$
+>
+> 得 $x = \frac{1}{2\lambda},\ y = \frac{1}{4\lambda},\ z = -\frac{1}{2\lambda}$
+>
+> 代入椭球：$\frac{1}{4\lambda^2} + 2\cdot\frac{1}{16\lambda^2} + \frac{1}{4\lambda^2} = 1 \Rightarrow \frac{1}{4\lambda^2}+\frac{1}{8\lambda^2}+\frac{1}{4\lambda^2}=1 \Rightarrow \frac{5}{8\lambda^2}=1$
+>
+> $\Rightarrow \lambda = \pm\frac{\sqrt{5}}{2\sqrt{2}}$
+>
+> 代入得最近点和最远点，计算对应距离。
 
 ---
 
-## 三、曲线积分与曲面积分
+## 第三部分：重积分（第7章）
 
-### 3.1 四类积分对比总表
+### 3.1 二重积分
 
-| 类型 | 形式 | 本质 | 方向？ | 核心方法 |
+**直角坐标**：
+- $X$ 型：$\iint_D f(x,y)\mathrm{d}x\mathrm{d}y = \int_a^b \mathrm{d}x\int_{y_1(x)}^{y_2(x)} f(x,y)\mathrm{d}y$
+- $Y$ 型：$\iint_D f(x,y)\mathrm{d}x\mathrm{d}y = \int_c^d \mathrm{d}y\int_{x_1(y)}^{x_2(y)} f(x,y)\mathrm{d}x$
+
+**极坐标**：$x=r\cos\theta,\ y=r\sin\theta$，$\mathrm{d}x\mathrm{d}y = r\mathrm{d}r\mathrm{d}\theta$
+
+**积分估值定理**：$m\cdot S \le \iint_D f(x,y)\mathrm{d}\sigma \le M\cdot S$，其中 $m,M$ 是 $f$ 在 $D$ 上的最小、最大值。
+
+**典型题**（§10-1 自测题）：估计 $\iint_D (x^2+y^2)\mathrm{d}x\mathrm{d}y$，其中 $D:x^2+y^2\le 1$。
+
+> 在 $D$ 上 $0\le x^2+y^2\le 1$，$S=\pi$，所以 $0\le I\le \pi$
+
+### 3.2 交换积分次序
+
+**典型题**（§10-2 自测题）：$\int_0^1 \mathrm{d}y\int_y^{\sqrt{y}} \frac{\sin x}{x}\mathrm{d}x$
+
+> 积分区域：$0\le y\le 1,\ y\le x\le \sqrt{y}$
+>
+> 改写为 $X$ 型：$0\le x\le 1,\ x^2\le y\le x$
+>
+> $I = \int_0^1 \frac{\sin x}{x} \mathrm{d}x \int_{x^2}^x \mathrm{d}y = \int_0^1 \frac{\sin x}{x}(x-x^2)\mathrm{d}x = \int_0^1 \sin x (1-x)\mathrm{d}x$
+>
+> $= [-\cos x(1-x)]_0^1 + \int_0^1 \cos x \mathrm{d}x = 1 + \sin 1$
+
+### 3.3 三重积分
+
+**坐标系选择原则**：
+
+| 区域特征 | 坐标系 |
+|:---|:---|
+| 长方体、四面体 | 直角坐标 |
+| $x^2+y^2$、圆柱、旋转抛物面 | 柱面坐标（$\mathrm{d}V = \rho \mathrm{d}\rho\mathrm{d}\varphi\mathrm{d}z$） |
+| $x^2+y^2+z^2$、球、锥 | 球面坐标（$\mathrm{d}V = r^2\sin\theta\mathrm{d}r\mathrm{d}\theta\mathrm{d}\varphi$） |
+| 椭球 | 广义球坐标（拉伸） |
+
+**⚠️ 易错**：柱面坐标**忘乘 $\rho$**，球面坐标**忘乘 $r^2\sin\theta$**
+
+**对称性**：
+- 区域关于 $xOy$ 面对称，$f$ 关于 $z$ 为奇函数 $\Rightarrow$ 积分为 0
+- 偶函数 $\Rightarrow$ 积分为一半的 2 倍
+
+**轮换对称性**：若区域关于 $x,y,z$ 对称，则 $\iint_\Omega x^2\mathrm{d}V = \iint_\Omega y^2\mathrm{d}V = \iint_\Omega z^2\mathrm{d}V$
+
+---
+
+## 第四部分：曲线积分与曲面积分（第7-8章）
+
+### 4.1 四类积分一览
+
+| 类型 | 记号 | 本质 | 方向性 | d 的公式 |
 |:---|:---|:---|:---:|:---|
-| **第一类曲线** | $\int_L f\,\mathrm{d}s$ | 沿弧长累加标量 | 无关 | 参数化，算 $\mathrm{d}s$ |
-| **第二类曲线** | $\int_L P\mathrm{d}x+Q\mathrm{d}y+R\mathrm{d}z$ | 做功 | **有关** | 参数化 / 格林 / 路径无关 |
-| **第一类曲面** | $\iint_\Sigma f\,\mathrm{d}S$ | 沿面积累加标量 | 无关 | 投影，算 $\mathrm{d}S$ |
+| **第一类曲线** | $\int_L f\mathrm{d}s$ | 沿弧长累加标量 | 无关 | $\mathrm{d}s=\sqrt{x'^2+y'^2+z'^2}\mathrm{d}t$ |
+| **第二类曲线** | $\int_L P\mathrm{d}x+Q\mathrm{d}y+R\mathrm{d}z$ | 做功 | **有关** | 参数化 / 格林 |
+| **第一类曲面** | $\iint_\Sigma f\mathrm{d}S$ | 沿面积累加标量 | 无关 | $\mathrm{d}S=\sqrt{1+z_x^2+z_y^2}\mathrm{d}x\mathrm{d}y$ |
 | **第二类曲面** | $\iint_\Sigma P\mathrm{d}y\mathrm{d}z+Q\mathrm{d}z\mathrm{d}x+R\mathrm{d}x\mathrm{d}y$ | 通量 | **有关** | 投影 / 高斯 |
 
-### 3.2 第一类曲线积分（对弧长）
+### 4.2 第一类曲线积分（对弧长）
 
-**公式**：$\mathrm{d}s = \sqrt{x'(t)^2 + y'(t)^2 + z'(t)^2}\,\mathrm{d}t$
-
-**不依赖于方向**，方向反了 $\mathrm{d}s$ 不变。
-
-**解题步骤**：
-1. 先看能否化简——利用曲线方程和对称性
-2. 参数化，算 $\mathrm{d}s$
-3. 化为定积分
+**步骤**：参数化 $\to$ 算 $\mathrm{d}s$ $\to$ 化为定积分。
 
 **常见参数化**：
-- 圆：$x=R\cos\theta,\ y=R\sin\theta \to \mathrm{d}s = R\,\mathrm{d}\theta$
-- 椭圆：$x=a\cos\theta,\ y=b\sin\theta \to \mathrm{d}s = \sqrt{a^2\sin^2\theta+b^2\cos^2\theta}\,\mathrm{d}\theta$
+- 圆 $x=R\cos\theta,\ y=R\sin\theta$：$\mathrm{d}s=R\mathrm{d}\theta$
+- 椭圆 $x=a\cos\theta,\ y=b\sin\theta$：$\mathrm{d}s=\sqrt{a^2\sin^2\theta+b^2\cos^2\theta}\mathrm{d}\theta$
 
-**典型例题**：$\oint_L (2xy+3x^2+4y^2)\,\mathrm{d}s$，其中 $L$ 是椭圆 $\frac{x^2}{4}+\frac{y^2}{3}=1$，周长为 $a$。
+**对称性**：偶倍奇零
 
-> - $2xy$ 关于 $x,y$ 均为奇函数，曲线对称 → 积分为 0
-> - 在椭圆上恒有 $3x^2+4y^2=12$（由椭圆方程 $\frac{x^2}{4}+\frac{y^2}{3}=1$ 乘以 12 得到）
-> - $\oint_L 12\,\mathrm{d}s = 12a$
+**典型题**（§11-1 自测题）：设 $L$ 为下半圆周 $y=-\sqrt{1-x^2}$，求 $\int_L (x^2+y^2)\mathrm{d}s$。
 
-### 3.3 第二类曲线积分（对坐标）
+> 在 $L$ 上 $x^2+y^2=1$，$\int_L 1\cdot\mathrm{d}s = \text{下半圆周长} = \pi$
+>
+> 或者参数化：$x=\cos\theta,\ y=\sin\theta,\ \pi\le\theta\le 2\pi$，$\mathrm{d}s=\mathrm{d}\theta$
+>
+> $\int_\pi^{2\pi} 1\mathrm{d}\theta = \pi$
 
-**定义**：$\int_L \mathbf{F}\cdot\mathrm{d}\mathbf{r} = \int_L P\mathrm{d}x + Q\mathrm{d}y + R\mathrm{d}z$
-
-**方向反则结果变号**（与第一类不同）。
-
-**三大方法**：
-
-1. **直接参数化**：适用于简单曲线
-2. **格林公式**：闭曲线的首选
-3. **路径无关**：当 $\frac{\partial P}{\partial y} = \frac{\partial Q}{\partial x}$ 时，积分与路径无关
+### 4.3 第二类曲线积分（对坐标）
 
 **决策树**：
-- 闭曲线 → 格林公式
-  - 内部有奇点 → 挖洞法
-- 非闭曲线 → 补线后用格林，再减辅助线 或 路径无关
+- **闭曲线** $\to$ **格林公式**
+  - 内部有奇点 $\to$ **挖洞法**
+- **非闭曲线** $\to$ 补线后用格林 / 路径无关 / 直接参数化
 
-#### 格林公式
+**格林公式**：$\oint_L P\mathrm{d}x+Q\mathrm{d}y = \iint_D (\frac{\partial Q}{\partial x}-\frac{\partial P}{\partial y})\mathrm{d}x\mathrm{d}y$
 
+**注意**：$L$ 是**正向**（逆时针），顺时针要加负号。
+
+**挖洞法**：当原点（或某点）有奇点时：
+1. 在奇点周围挖一条小曲线 $l$（取方便计算的形状）
+2. 环域上旋度 $=0 \Rightarrow$ 外积分 $= -$ 内积分
+3. 参数化计算内积分
+
+**重要恒等式**：$\frac{x\mathrm{d}y - y\mathrm{d}x}{x^2+y^2} = \mathrm{d}\theta$（极角微分）
+
+**典型题**（挖洞法）：$\oint_L \frac{x\mathrm{d}y - y\mathrm{d}x}{x^2+4y^2}$，$L$ 包围原点。
+
+> 挖小椭圆 $l: x=2\cos t,\ y=\sin t$
+>
+> 代入得 $I = \pi$
+
+**典型题**（§11-1 自测题）：$\int_L (2a-y)\mathrm{d}x + x\mathrm{d}y$，$L$ 为摆线 $x=a(t-\sin t),\ y=a(1-\cos t)$ 上 $t$ 从 $0$ 到 $2\pi$ 的一段。
+
+> 直接参数化：$\mathrm{d}x=a(1-\cos t)\mathrm{d}t,\ \mathrm{d}y=a\sin t\mathrm{d}t$
+>
+> $I = \int_0^{2\pi} [(2a-a+ a\cos t)\cdot a(1-\cos t) + a(t-\sin t)\cdot a\sin t]\mathrm{d}t$
+>
+> 计算得 $-2\pi a^2$
+
+### 4.4 第一类曲面积分（对面积）
+
+**公式**（曲面 $z=z(x,y)$）：
 $$
-\oint_L P\,\mathrm{d}x + Q\,\mathrm{d}y = \iint_D \left(\frac{\partial Q}{\partial x} - \frac{\partial P}{\partial y}\right)\mathrm{d}x\mathrm{d}y
-$$
-
-其中 $L$ 是**正向**（逆时针）闭曲线。
-
-**注意**：
-- 如果 $L$ 是顺时针，前面要加负号
-- $P,Q$ 在区域内要有连续偏导——否则用挖洞法
-
-#### 挖洞法
-
-当被积函数在原点（或某点）有奇点时：
-1. 在奇点周围挖一条小曲线 $l$（取方便计算的形状，比如圆或椭圆）
-2. 在 $L$ 与 $l$ 围成的环域上用格林公式，旋度 $=0 \Rightarrow$ 外积分 $=$ $-$ 内积分
-3. 用参数化计算内积分，反号即得结果
-
-**典型例题**：$\oint_L \frac{x\,\mathrm{d}y - y\,\mathrm{d}x}{x^2+4y^2}$，$L$ 包围原点。
-
-> 挖小椭圆 $l: x=2\cos t,\ y=\sin t$，代入计算得 $I = \pi$。
-
-**重要恒等式**：$\frac{x\,\mathrm{d}y - y\,\mathrm{d}x}{x^2+y^2} = \mathrm{d}\theta$（极角的微分），这个恒等式在计算中经常用到。
-
-### 3.4 第一类曲面积分（对面积）
-
-**公式**：
-- 曲面 $z=z(x,y)$：$\mathrm{d}S = \sqrt{1+z_x^2+z_y^2}\,\mathrm{d}x\mathrm{d}y$
-- 隐式曲面 $F(x,y,z)=0$：$\mathrm{d}S = \frac{\sqrt{F_x^2+F_y^2+F_z^2}}{|F_z|}\,\mathrm{d}x\mathrm{d}y$
-
-**核心口诀**：一投二带三计算。
-
-**球面特殊情况**：$\mathrm{d}S = R^2\sin\varphi\,\mathrm{d}\theta\,\mathrm{d}\varphi$（球坐标下）。
-
-**解题步骤**：
-1. 判断对称性，利用"偶倍奇零"化简
-2. 将曲面投影到坐标平面
-3. 计算 $\mathrm{d}S$
-4. 化为二重积分
-
-### 3.5 第二类曲面积分（对坐标）
-
-**本质**：有向通量 $\iint_\Sigma \mathbf{F}\cdot\mathbf{n}\,\mathrm{d}S$
-
-**三种方法**：
-
-| 方法 | 说明 |
-|:---|:---|
-| **直接投影法** | 分别投影到三个坐标平面，注意符号 |
-| **合一投影法** | 利用第一二类关系，投影到好算的平面 |
-| **高斯公式** | 闭曲面的首选 |
-
-#### 高斯公式
-
-$$
-\iint_\Sigma P\,\mathrm{d}y\mathrm{d}z + Q\,\mathrm{d}z\mathrm{d}x + R\,\mathrm{d}x\mathrm{d}y = \iiint_\Omega \left(\frac{\partial P}{\partial x} + \frac{\partial Q}{\partial y} + \frac{\partial R}{\partial z}\right)\mathrm{d}V
+\mathrm{d}S = \sqrt{1+z_x^2+z_y^2}\,\mathrm{d}x\mathrm{d}y
 $$
 
-其中 $\Sigma$ 是**外侧**闭曲面。
+**球面特殊情况**：$\mathrm{d}S = R^2\sin\varphi\,\mathrm{d}\theta\mathrm{d}\varphi$
+
+**口诀**：一投二带三计算。
+
+**典型题**：$\iint_\Sigma \frac{1}{1+x+y}\mathrm{d}S$，$\Sigma$ 为平面 $x+y+z=1$ 在第一卦限部分。
+
+> $z=1-x-y$，$z_x=z_y=-1$，$\mathrm{d}S=\sqrt{3}\mathrm{d}x\mathrm{d}y$
+>
+> $\iint_\Sigma \frac{1}{1+x+y}\sqrt{3}\mathrm{d}x\mathrm{d}y$，$D: x\ge0,\ y\ge0,\ x+y\le1$
+>
+> $= \sqrt{3}\int_0^1\mathrm{d}x\int_0^{1-x}\frac{\mathrm{d}y}{1+x+y} = \sqrt{3}\ln 2$
+
+### 4.5 第二类曲面积分（对坐标）
 
 **决策树**：
-- 闭曲面 → 高斯公式
-- 非闭曲面 → 补面后用高斯，再减辅助面
+- **闭曲面** $\to$ **高斯公式**
+- **非闭曲面** $\to$ 补面后用高斯 / 直接投影
 
-**投影法注意事项**：
-- $\iint_\Sigma R\,\mathrm{d}x\mathrm{d}y$ 投影到 $xOy$ 面，上侧取正下侧取负
-- $\iint_\Sigma P\,\mathrm{d}y\mathrm{d}z$ 投影到 $yOz$ 面，法向量与 $x$ 轴正向夹角锐角取正
-- 复杂曲面要分成前后/左右部分分别计算
+**高斯公式**：
+$$
+\iint_\Sigma P\mathrm{d}y\mathrm{d}z+Q\mathrm{d}z\mathrm{d}x+R\mathrm{d}x\mathrm{d}y = \iiint_\Omega (\frac{\partial P}{\partial x}+\frac{\partial Q}{\partial y}+\frac{\partial R}{\partial z})\mathrm{d}V
+$$
 
-**典型例题**：$\iint_\Sigma \frac{x}{x^2+y^2+z^2}\,\mathrm{d}y\mathrm{d}z$，$\Sigma$ 是 $x^2+y^2+z^2=1,\ z\ge0$ 的上半球面外侧。
+$\Sigma$ 取**外侧**。
 
-> 在球面上 $x^2+y^2+z^2=1$，积分化为 $\iint_\Sigma x\,\mathrm{d}y\mathrm{d}z$。投影到 $yOz$ 面，右半球（$x>0$）取正，左半球（$x<0$）取负。但左半球上 $x$ 也为负，负负得正，两部分贡献相同。在 $yOz$ 半圆盘上用极坐标计算得 $\frac{2\pi}{3}$。
+**投影法**：
+- $\iint_\Sigma R\mathrm{d}x\mathrm{d}y$：投影到 $xOy$ 面，上侧正下侧负
+- $\iint_\Sigma P\mathrm{d}y\mathrm{d}z$：投影到 $yOz$ 面，$x>0$ 侧正 $x<0$ 侧负
 
-### 3.6 对称性速查表
+### 4.6 对称性速查
 
-| 积分类型 | 对称性规则 | 可带入方程？ |
+| 积分类型 | 对称性规则 | 可代入方程？ |
 |:---|:---|:---:|
-| 二重积分 | 偶倍奇零 | ❌ |
-| 三重积分 | 偶倍奇零 | ❌ |
+| 二重/三重积分 | 偶倍奇零 | ❌ |
 | 第一类曲线积分 | 偶倍奇零 | ✅ |
-| 第二类曲线积分 | 可用格林带入 | ✅ |
+| 第二类曲线积分 | 格林公式代入 | ✅ |
 | 第一类曲面积分 | 偶倍奇零 | ✅ |
-| 第二类曲面积分 | **偶零奇倍** | ✅ |
+| **第二类曲面积分** | **偶零奇倍** | ✅ |
 
-**注意**：第二类曲面积分的对称性和其他类型**相反**。因为上下曲面的通量方向相同（都是外侧或内侧），所以偶函数时两片同号叠加，奇函数时互相抵消。
-
-**轮换对称性**：当被积函数和区域都有对称性时，可以交换变量（如 $\iint x^2\,\mathrm{d}V = \iint y^2\,\mathrm{d}V$）。加法形式好用，乘法形式不太能用。
+**⚠️ 重点**：第二类曲面积分对称性和其他类型**相反**！因为是通量，上下曲面的指向相同（都朝外/朝内），偶函数时两片同号叠加。
 
 ---
 
-## 四、幂级数求和
+## 第五部分：无穷级数（第9章）
 
-### 4.1 五大基础展开式
+### 5.1 常数项级数审敛法
 
-这些是幂级数求和的基础，看到级数时先往这几个方向想。
+**正项级数**：
+- 比较审敛法（与 $p$-级数 $\sum\frac{1}{n^p}$ 比较）
+- 比值审敛法（达朗贝尔）：$\lim_{n\to\infty}\frac{u_{n+1}}{u_n}=\rho$，$\rho<1$ 收敛，$\rho>1$ 发散
+- 根值审敛法（柯西）：$\lim_{n\to\infty}\sqrt[n]{u_n}=\rho$
 
-**1. 几何级数（基石）**
+**$p$-级数**：$\sum_{n=1}^\infty \frac{1}{n^p}$，$p>1$ 收敛，$p\le 1$ 发散
 
-$$
-\sum_{n=0}^{\infty} x^n = \frac{1}{1-x},\quad |x| < 1
-$$
+**交错级数**（莱布尼茨）：若 $u_n$ 递减趋于 0，则 $\sum(-1)^{n-1}u_n$ 收敛。
 
-一切幂级数求和都可以归结到它。
+**绝对收敛与条件收敛**：$\sum|u_n|$ 收敛 $\Rightarrow$ $\sum u_n$ 绝对收敛；$\sum u_n$ 收敛但 $\sum|u_n|$ 发散 $\Rightarrow$ 条件收敛。
 
-**2. 指数级数**
+**典型题**（§12-1 自测题）：判定 $\sum_{n=1}^\infty \frac{n}{5^n}$ 的收敛性。
 
-$$
-e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!},\quad x \in \mathbb{R}
-$$
+> 比值审敛法：$\lim_{n\to\infty}\frac{(n+1)/5^{n+1}}{n/5^n} = \lim_{n\to\infty}\frac{n+1}{5n} = \frac{1}{5} < 1 \Rightarrow$ 收敛
 
-**3. 对数级数**
+**典型题**（§12-2 自测题）：判定 $\sum_{n=1}^\infty \frac{n!}{n^n}$ 的收敛性。
 
-$$
-\ln(1+x) = \sum_{n=1}^{\infty} \frac{(-1)^{n-1} x^n}{n},\quad -1 < x \le 1
-$$
+> 比值法：$\lim_{n\to\infty}\frac{(n+1)!/(n+1)^{n+1}}{n!/n^n} = \lim_{n\to\infty}\frac{n^n}{(n+1)^n} = \frac{1}{e} < 1 \Rightarrow$ 收敛
 
-**4. 三角级数**
+### 5.2 幂级数（§9.4-9.5 重点）
 
-$$
-\sin x = \sum_{n=0}^{\infty} \frac{(-1)^n x^{2n+1}}{(2n+1)!},\quad
-\cos x = \sum_{n=0}^{\infty} \frac{(-1)^n x^{2n}}{(2n)!}
-$$
+#### 求收敛半径
 
-**5. $\arctan x$ 级数**
+比值法：$R = \lim_{n\to\infty}\left|\frac{a_n}{a_{n+1}}\right|$ 或 $\frac{1}{R} = \lim_{n\to\infty}\left|\frac{a_{n+1}}{a_n}\right|$
+
+注意：求完 $R$ 后要单独验证**端点** $x=\pm R$ 的收敛性。
+
+#### 五大基础展开式
 
 $$
-\arctan x = \sum_{n=1}^{\infty} \frac{(-1)^{n-1} x^{2n-1}}{2n-1},\quad |x| \le 1
+\frac{1}{1-x} = \sum_{n=0}^\infty x^n,\ |x|<1
 $$
 
-这个在考试中很常见，需要特别记住。
+$$
+e^x = \sum_{n=0}^\infty \frac{x^n}{n!},\ x\in\mathbb{R}
+$$
 
-### 4.2 两个核心方法
+$$
+\ln(1+x) = \sum_{n=1}^\infty \frac{(-1)^{n-1}x^n}{n},\ -1<x\le 1
+$$
 
-**先导后积**：对级数逐项求导，变成几何级数，再积分回来。
+$$
+\sin x = \sum_{n=0}^\infty \frac{(-1)^n x^{2n+1}}{(2n+1)!},\ \cos x = \sum_{n=0}^\infty \frac{(-1)^n x^{2n}}{(2n)!}
+$$
 
-适用于通项含 $n$ 在"分子"的（如 $\sum n x^n$）。
+$$
+\arctan x = \sum_{n=1}^\infty \frac{(-1)^{n-1} x^{2n-1}}{2n-1},\ |x|\le 1
+$$
 
-**先积后导**：对级数逐项积分，变成几何级数，再求导回来。
+#### 两个核心方法
 
-适用于通项含 $n$ 在"分母"的（如 $\sum \frac{x^n}{n}$）。
+- **先导后积**：含 $n$ 在分子（如 $\sum n x^{n-1}$），求导变几何级数再积分
+- **先积后导**：含 $n$ 在分母（如 $\sum \frac{x^n}{n}$），积分变几何级数再求导
 
-### 4.3 典型例题
+#### 典型题（自测题二）：求 $\sum_{n=1}^\infty \frac{(-1)^{n-1} x^{2n}}{2n-1}$ 的收敛域与和函数。
 
-**例题 1**：求 $\sum_{n=1}^{\infty} \frac{(-1)^{n-1} x^{2n}}{2n-1}$ 的和函数。
-
-> 注意到 $\arctan x = \sum_{n=1}^{\infty} \frac{(-1)^{n-1} x^{2n-1}}{2n-1}$，而题目中的级数比它多了一个 $x$ 因子。
+> 收敛半径 $R=1$，端点 $x=\pm1$ 均收敛（莱布尼茨），收敛域 $[-1,1]$
 >
-> 所以 $S(x) = x \cdot \arctan x$。
+> 注意到 $\arctan x = \sum_{n=1}^\infty \frac{(-1)^{n-1} x^{2n-1}}{2n-1}$
 >
-> 收敛域：$|x| \le 1$（端点用莱布尼茨判别法验证）。
+> 所以 $S(x) = x\cdot\arctan x,\ -1\le x\le 1$
+
+#### 典型题（期末练习题）：求幂级数 $\sum_{n=1}^\infty \frac{(-1)^{n-1}x^{2n}}{n}$ 的和函数。
+
+> 令 $t=x^2$，则 $\sum_{n=1}^\infty \frac{(-1)^{n-1}t^n}{n} = \ln(1+t)$
 >
-> **答案**：$S(x) = x\arctan x,\ -1 \le x \le 1$。
+> 所以 $S(x) = \ln(1+x^2)$，收敛域 $|x|\le 1$
 
-**例题 2**：求 $\sum_{n=1}^{\infty} n x^{n-1}$ 的和函数。
+### 5.3 函数展开成幂级数
 
-> 这是一个几何级数的导数：$\sum_{n=1}^{\infty} n x^{n-1} = \left(\sum_{n=0}^{\infty} x^n\right)' = \left(\frac{1}{1-x}\right)' = \frac{1}{(1-x)^2}$。
+**直接法**：泰勒级数 $f(x) = \sum_{n=0}^\infty \frac{f^{(n)}(x_0)}{n!}(x-x_0)^n$
+
+**间接法**：利用已知展开式，通过变量代换、四则运算、逐项求导/积分。
+
+**典型题**（自测题二）：将 $f(x) = \ln(1+x-2x^2)$ 展开为 $x$ 的幂级数。
+
+> $\ln(1+x-2x^2) = \ln(1+2x)(1-x) = \ln(1+2x) + \ln(1-x)$
 >
-> 收敛域：$|x| < 1$。
-
-**例题 3**：求 $\sum_{n=1}^{\infty} \frac{x^n}{n}$ 的和函数。
-
-> 先积后导：$\sum_{n=1}^{\infty} \frac{x^n}{n} = \int_0^x \sum_{n=0}^{\infty} t^n \,\mathrm{d}t = \int_0^x \frac{1}{1-t}\,\mathrm{d}t = -\ln(1-x)$。
+> $\ln(1+2x) = \sum_{n=1}^\infty \frac{(-1)^{n-1}(2x)^n}{n},\ |x|<\frac12$
 >
-> 收敛域：$-1 \le x < 1$。
+> $\ln(1-x) = -\sum_{n=1}^\infty \frac{x^n}{n},\ |x|<1$
+>
+> 合并同类项，收敛域取交集 $|x|<\frac12$
 
-### 4.4 解题步骤总结
+### 5.4 傅里叶级数（§9.8-9.9）
 
-1. **求收敛半径**：用比值法或根值法 $\lim_{n\to\infty} \left|\frac{a_{n+1}}{a_n}\right|$ 得 $R$
-2. **验证端点**：代入 $x=\pm R$，用常数项级数审敛法判断是否收敛
-3. **求和函数**：
-   - 先看能否配成已知展开式
-   - 含 $n$ 在分子的求导，含 $n$ 在分母的积分
-   - 凑出 $\frac{1}{1-x},\ \ln(1+x),\ \arctan x,\ e^x$ 等
-4. **写出答案**：和函数 + 收敛域（缺一不可）
+#### 周期为 $2\pi$ 的傅里叶级数
 
-### 4.5 常见误区
+$$
+f(x) \sim \frac{a_0}{2} + \sum_{n=1}^\infty (a_n\cos nx + b_n\sin nx)
+$$
 
-1. **忘记收敛域**——和函数必须附带收敛域
-2. **端点忘验证**——比值法只给开区间，端点要单独判断
-3. **指数没对齐**——$\sum \frac{x^{2n}}{2n-1}$ 需要先提 $x$ 因子才能匹配 $\arctan x$
-4. **$\frac{1}{1-x}$ 的展开 $\sum_{n=0}^{\infty} x^n$，下标从 0 开始**，不要写错
+$$
+a_n = \frac{1}{\pi}\int_{-\pi}^\pi f(x)\cos nx\,\mathrm{d}x,\quad b_n = \frac{1}{\pi}\int_{-\pi}^\pi f(x)\sin nx\,\mathrm{d}x
+$$
+
+#### 正弦级数与余弦级数
+
+- **奇延拓**（正弦级数）：$a_n=0,\ b_n = \frac{2}{\pi}\int_0^\pi f(x)\sin nx\,\mathrm{d}x$
+- **偶延拓**（余弦级数）：$b_n=0,\ a_n = \frac{2}{\pi}\int_0^\pi f(x)\cos nx\,\mathrm{d}x$
+
+**⚠️ 典型错误**（期末测验题）：$f(x)=x^2$ 在 $(0,\pi)$ 上展开为正弦级数，求 $s(-\frac{\pi}{2})$。
+
+> 正弦级数 $\Rightarrow$ 奇延拓，所以 $s(-x) = -s(x)$
+>
+> $s(-\frac{\pi}{2}) = -s(\frac{\pi}{2}) = -(\frac{\pi}{2})^2 = -\frac{\pi^2}{4}$
+>
+> 不是直接代入 $x^2$ 计算！
+
+#### 一般周期的傅里叶级数（$T=2l$）
+
+$$
+f(x) \sim \frac{a_0}{2} + \sum_{n=1}^\infty (a_n\cos\frac{n\pi x}{l} + b_n\sin\frac{n\pi x}{l})
+$$
+
+$$
+a_n = \frac{1}{l}\int_{-l}^l f(x)\cos\frac{n\pi x}{l}\,\mathrm{d}x,\quad b_n = \frac{1}{l}\int_{-l}^l f(x)\sin\frac{n\pi x}{l}\,\mathrm{d}x
+$$
 
 ---
 
-## 五、综合易错点与考场提醒
+## 第六部分：自测题精选与详解
 
-### 5.1 最容易扣分的地方
+### 6.1 自测题一（向量与解析几何为主）
 
-1. **柱面坐标 $\iiint$ 忘乘 $\rho$**：$\mathrm{d}V = \rho\,\mathrm{d}\rho\,\mathrm{d}\varphi\,\mathrm{d}z$
-2. **球面坐标 $\iiint$ 忘乘 $r^2\sin\theta$**：$\mathrm{d}V = r^2\sin\theta\,\mathrm{d}r\,\mathrm{d}\theta\,\mathrm{d}\varphi$
-3. **隐函数求导忘负号**：$z_x = -F_x/F_z$
+**填空题**：
+1. 设矢量 $\mathbf{a},\mathbf{b}$ 的模分别是 $2\sqrt{2}$ 和 $2$，则 ______
+2. 过点 $(1,2,-1)$ 与某矢量平行的平面方程
+6. 微分方程 $y'' - 4y = 0$ 的通解：$y = C_1 e^{2x} + C_2 e^{-2x}$
+
+**选择题**：
+- 方程 $x^2 - y^2 + z^2 = 1$ 表示：两正一负 $=1$ → **单叶双曲面**
+- $f(x,y)=\frac{xy}{x^2+y^2}$ 在原点间断的原因：沿不同路径极限不同 → **极限不存在**
+- 函数沿梯度方向的方向导数：**最大**
+
+### 6.2 自测题二（积分与级数为主）
+
+**填空题核心**：
+- 极坐标变换 $x=r\cos\theta,\ y=r\sin\theta$，$\mathrm{d}x\mathrm{d}y = r\mathrm{d}r\mathrm{d}\theta$
+- 幂级数求和常用配凑法
+
+**选择题核心**：
+- 格林公式使用条件
+- 级数绝对收敛与条件收敛的判断
+
+### 6.3 期末练习题精讲
+
+**一、填空**：
+1. 已知 $\mathbf{a}=(1,2,3),\ \mathbf{b}=(\frac12,1,k)$，当 $k=$ 时，$\mathbf{a}\parallel\mathbf{b}$。
+   > $k=3$（对应分量成比例）
+2. 微分方程 $y'' - 4y = 0$ 的通解：$y=C_1e^{2x}+C_2e^{-2x}$
+3. 曲面 $e^z - z + xy = 3$ 在 $(1,2,0)$ 处的切平面方程：
+   > $F = e^z - z + xy - 3$，$F_x=y=2,\ F_y=x=1,\ F_z=e^z-1=0$
+   > 切平面：$2(x-1) + 1(y-2) + 0(z-0) = 0$，即 $2x+y-4=0$
+4. $f(x,y,z)=e^{xyz}+xy+yz$，求 $f_x$：
+   > $f_x = yze^{xyz} + y$
+5. 方向导数计算（已做）
+6. $\iint_D xy\,\mathrm{d}\sigma$，$D:x^2+y^2\le1,\ x\ge0$：
+   > 极坐标：$\int_{-\pi/2}^{\pi/2}\cos\theta\sin\theta\,\mathrm{d}\theta\int_0^1 r^3\mathrm{d}r = 0$（对称性）
+7. 幂级数 $\sum_{n=1}^\infty a_n(x-1)^n$ 在 $x=3$ 处收敛 → 在 $x=-2$ 处？
+
+---
+
+## 第七部分：综合题与考场策略
+
+### 7.1 综合题思路
+
+综合题通常是**多知识点的混合**，例如：
+- 空间解析几何 + 拉格朗日乘数法（求曲面上到平面最远/最近距离）
+- 曲线积分 + 格林公式 + 挖洞法
+- 曲面积分 + 高斯公式
+- 幂级数求和 + 数项级数求和（用幂级数求和去算数项级数）
+
+### 7.2 最容易扣分的 12 个地方
+
+1. **柱面坐标忘乘 $\rho$**：$\mathrm{d}V = \rho\,\mathrm{d}\rho\,\mathrm{d}\varphi\,\mathrm{d}z$
+2. **球面坐标忘乘 $r^2\sin\theta$**：$\mathrm{d}V = r^2\sin\theta\,\mathrm{d}r\,\mathrm{d}\theta\,\mathrm{d}\varphi$
+3. **隐函数求导忘负号**：$\frac{\partial z}{\partial x} = -\frac{F_x}{F_z}$
 4. **格林公式方向搞反**：逆时针为正，顺时针为负
-5. **高斯公式忘了是闭曲面**：非闭曲面要补面
-6. **第二类曲面积分对称性记反**：一类"偶倍奇零"，二类"偶零奇倍"
+5. **高斯公式忘了闭曲面**：非闭曲面要补面
+6. **第二类曲面积分对称性记反**：二类是"偶零奇倍"不是"偶倍奇零"
 7. **幂级数求和后忘写收敛域**
-8. **复合函数求二阶偏导忘了 $f_1,f_2$ 还是复合函数**
+8. **复合函数二阶偏导忘了 $f_1,f_2$ 还是复合函数**
+9. **第一类与第二类积分混淆**：一类对标量（$\mathrm{d}s,\mathrm{d}S$），二类对坐标（$\mathrm{d}x,\mathrm{d}y,\mathrm{d}z$）
+10. **傅里叶级数搞混延拓**：正弦级数 = 奇延拓
+11. **二次曲面没标准化就判断**
+12. **交换积分次序时积分限写反**
 
-### 5.2 考场时间分配建议
+### 7.3 考场时间分配
 
-| 模块 | 建议用时 | 策略 |
+| 题型 | 建议用时 | 策略 |
 |:---|:---:|:---|
-| 选择题 | 15-20min | 技巧优先（特殊值、排除法） |
-| 填空题 | 15-20min | 注意单位、符号 |
-| 曲线曲面积分 | 20-25min | 先定类型（一类还是二类），再选方法 |
-| 多元函数微分 | 15-20min | 链式法则画树图，隐函数用公式 |
-| 幂级数 | 10-15min | 先求收敛域，再求和函数 |
-| 其他（重积分等） | 15-20min | 坐标系选择是关键 |
+| 选择题 12 道 | 20-25min | 特殊值、排除法、对称性优先 |
+| 解答题第1题（向量） | 10min | 平面/直线方程直接写 |
+| 解答题第2题（偏导） | 10-12min | 链式法则画树图 |
+| 解答题第3题（应用） | 10-12min | 方向导数/拉格朗日 |
+| 解答题第4题（重积分） | 12-15min | 坐标系选择关键 |
+| 解答题第5题（积分） | 12-15min | 先定类型再选方法 |
+| 解答题第6题（曲线曲面） | 12-15min | 格林/高斯优先 |
+| 解答题第7题（幂级数） | 10-12min | 先求收敛域 |
+| 综合题 | 10-15min | 分部做，能写多少写多少 |
 
-### 5.3 考前速查清单
+### 7.4 考前速查清单
 
-- [ ] 二次曲面：三步法（标准化 → 看右边 → 数符号）
+- [ ] 二次曲面：三步法（标准化→看右边→数符号）
 - [ ] 柱面：缺谁平行谁
 - [ ] 旋转曲面：绕谁保留谁
-- [ ] 偏导数连续 ⇒ 可微 ⇒ 连续、偏导存在
-- [ ] 隐函数：$z_x = -F_x/F_z$（负号！！）
-- [ ] 曲线积分：先看类型（一类还是二类）
-- [ ] 闭曲线 ⇒ 格林；非闭 ⇒ 补线或路径无关
-- [ ] 闭曲面 ⇒ 高斯；非闭 ⇒ 补面
-- [ ] 幂级数求和：先导后积 / 先积后导 + 收敛域
+- [ ] 隐函数：$\partial z/\partial x = -F_x/F_z$（负号！！）
+- [ ] 复合函数二阶：$f_1,f_2$还要继续求导
+- [ ] 方向导数公式：$f_x\cos\alpha+f_y\cos\beta+f_z\cos\gamma$
+- [ ] 拉格朗日：$L=f+\lambda g$，解 $\nabla L=0$
+- [ ] 曲线积分：先看类型（一类=标量，二类=向量）
+- [ ] 闭曲线 $\Rightarrow$ 格林；非闭 $\Rightarrow$ 补线/路径无关
+- [ ] 闭曲面 $\Rightarrow$ 高斯；非闭 $\Rightarrow$ 补面
+- [ ] 挖洞法：外围积分 = - 内围积分（注意方向）
+- [ ] 幂级数求和：先导后积/先积后导 + **收敛域**
+- [ ] 傅里叶：正弦级数=奇延拓，余弦级数=偶延拓
+- [ ] $\mathrm{d}S = \sqrt{1+z_x^2+z_y^2}\,\mathrm{d}x\mathrm{d}y$
+- [ ] $\mathrm{d}s = \sqrt{x'^2+y'^2+z'^2}\,\mathrm{d}t$
 
 ---
 
 ## 参考来源
 
-- ChatGPT 对话：微分与导数 / 三重积分 / 曲线曲面积分 / 期末测验解析
-- 中国科学技术大学《二次曲面》讲义（staff.ustc.edu.cn）
+- ChatGPT 对话：微分与导数 / 三重积分 / 曲线曲面积分 / 高数期末题 / 期末测验解析
+- 学校自测题：第八章~第十二章自测题及解答（PDF）
+- 学校自测题：高数下-自测题一、二及答案
+- 期末练习题及参考答案
+- 知识点汇总：曲线曲面积分、重积分、对称性等课件
+- 期末考试介绍（题型与范围说明）
+- 中国科学技术大学《二次曲面》讲义
 - 知乎专栏《九种标准二次曲面》（张敬信）
 - CSDN《高数下刷题技巧-重积分与曲面曲线积分》
 - CSDN《幂级数求和函数的实战技巧》
