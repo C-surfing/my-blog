@@ -689,11 +689,54 @@ $$
 
 ### 4.2 第一类曲线积分（对弧长）
 
-**步骤**：参数化 $\to$ 算 $\mathrm{d}s$ $\to$ 化为定积分。
+#### 核心公式（参数方程形式）
 
-**常见参数化**：
-- 圆 $x=R\cos\theta,\ y=R\sin\theta$：$\mathrm{d}s=R\mathrm{d}\theta$
-- 椭圆 $x=a\cos\theta,\ y=b\sin\theta$：$\mathrm{d}s=\sqrt{a^2\sin^2\theta+b^2\cos^2\theta}\mathrm{d}\theta$
+设曲线 $L$ 的参数方程为 $x=\varphi(t),\ y=\psi(t)\ (\alpha\le t\le\beta)$，$\varphi(t),\psi(t)$ 在 $[\alpha,\beta]$ 上有一阶连续导数，则
+
+$$
+\boxed{\int_L f(x,y)\,\mathrm{d}s = \int_\alpha^\beta f(\varphi(t),\psi(t))\sqrt{[\varphi'(t)]^2+[\psi'(t)]^2}\,\mathrm{d}t}
+$$
+
+> **直观理解**：弧长元素 $\mathrm{d}s = \sqrt{[\varphi'(t)]^2+[\psi'(t)]^2}\,\mathrm{d}t$，即**速度 × 时间**。把所有小弧段上的 $f$ 值累加起来。
+
+**⚠️ 注意**：定积分的下限 $\alpha$ **一定要小于**上限 $\beta$（弧长与方向无关，$\mathrm{d}s>0$，所以 $t$ 必须从小到大积分）。
+
+**特殊形式**：
+
+| 曲线方程 | 代入公式 | $\mathrm{d}s$ |
+|:---|:---|:---|
+| $y=\psi(x),\ a\le x\le b$ | $\displaystyle\int_a^b f(x,\psi(x))\sqrt{1+[\psi'(x)]^2}\,\mathrm{d}x$ | $\sqrt{1+y'^2}\,\mathrm{d}x$ |
+| $x=\varphi(y),\ c\le y\le d$ | $\displaystyle\int_c^d f(\varphi(y),y)\sqrt{1+[\varphi'(y)]^2}\,\mathrm{d}y$ | $\sqrt{1+x'^2}\,\mathrm{d}y$ |
+| $\Gamma:x=\varphi(t),y=\psi(t),z=\omega(t)$ | $\displaystyle\int_\alpha^\beta f(\varphi,\psi,\omega)\sqrt{\varphi'^2+\psi'^2+\omega'^2}\,\mathrm{d}t$ | $\sqrt{x'^2+y'^2+z'^2}\,\mathrm{d}t$ |
+
+#### 弧长元素速记
+
+$$
+\boxed{\mathrm{d}s = \sqrt{\left(\frac{\mathrm{d}x}{\mathrm{d}t}\right)^2 + \left(\frac{\mathrm{d}y}{\mathrm{d}t}\right)^2}\,\mathrm{d}t}
+$$
+
+$- $ 对于平面曲线 $y=y(x)$：$\mathrm{d}s = \sqrt{1+(y')^2}\,\mathrm{d}x$
+$- $ 对于极坐标曲线 $r=r(\theta)$：$\mathrm{d}s = \sqrt{r^2 + (r')^2}\,\mathrm{d}\theta$
+$- $ 对于空间曲线：$\mathrm{d}s = \sqrt{x'^2+y'^2+z'^2}\,\mathrm{d}t$
+
+> **记忆口诀**：弧长微元 $\mathrm{d}s$ = 各方向速度平方和开方 × 时间微元
+
+#### 计算步骤
+
+1. **参数化**曲线（选最自然的参数：直线用 $x$，圆用 $\theta$，摆线用 $t$）
+2. **算弧长元素** $\mathrm{d}s$（注意不要漏了根号）
+3. **代入被积函数** $f(x,y)$
+4. **化为定积分**（注意 $\alpha<\beta$）
+5. **计算定积分**
+
+#### 经典弧长元素
+
+| 曲线 | 参数化 | $\mathrm{d}s$ |
+|:---|:---|:---|
+| 圆 $x^2+y^2=R^2$ | $x=R\cos\theta,\ y=R\sin\theta$ | $R\,\mathrm{d}\theta$ |
+| 椭圆 $\frac{x^2}{a^2}+\frac{y^2}{b^2}=1$ | $x=a\cos\theta,\ y=b\sin\theta$ | $\sqrt{a^2\sin^2\theta+b^2\cos^2\theta}\,\mathrm{d}\theta$ |
+| 直线 $y=kx+b$ | $x=x,\ y=kx+b$ | $\sqrt{1+k^2}\,\mathrm{d}x$ |
+| 摆线（旋轮线） | $x=a(t-\sin t),\ y=a(1-\cos t)$ | $\sqrt{2}a\sqrt{1-\cos t}\,\mathrm{d}t$ |
 
 **对称性**：偶倍奇零
 
