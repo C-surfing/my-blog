@@ -1020,6 +1020,182 @@ $$
 a_n = \frac{1}{l}\int_{-l}^l f(x)\cos\frac{n\pi x}{l}\,\mathrm{d}x,\quad b_n = \frac{1}{l}\int_{-l}^l f(x)\sin\frac{n\pi x}{l}\,\mathrm{d}x
 $$
 
+#### 傅里叶系数计算的核心技巧
+
+> 傅里叶展开的本质**不是把函数展成幂级数**，而是算系数 $a_n,b_n$。计算 $a_n,b_n$ 的核心是积分，不是幂级数展开。见到 $\int f(x)\cos nx\,\mathrm{d}x$ 或 $\int f(x)\sin nx\,\mathrm{d}x$，用**分部积分**，不要试图把 $\cos nx$ 展成幂级数。
+
+**傅里叶级数 vs 幂级数**：
+
+| | 傅里叶级数 | 幂级数 |
+|:---|:---|:---|
+| 形式 | $\frac{a_0}{2}+\sum(a_n\cos nx+b_n\sin nx)$ | $\sum a_n(x-x_0)^n$ |
+| 核心方法 | 正交性、积分求系数 | 泰勒公式、求导积分、变量替换 |
+| 适用场景 | 周期函数、分段函数 | 解析函数 |
+
+##### 第一步：先用奇偶性省一半工作
+
+在 $[-\pi,\pi]$ 上：
+
+| $f(x)$ 类型 | 结果 |
+|:---|:---|
+| **偶函数** $f(-x)=f(x)$ | $b_n=0$，只算 $a_0,a_n$ |
+| **奇函数** $f(-x)=-f(x)$ | $a_0=a_n=0$，只算 $b_n$ |
+| 一般函数 | $a_n,b_n$ 都要算 |
+
+> **例**：$f(x)=3x^2+1$ 是偶函数 $\Rightarrow b_n=0$（因为 $(3x^2+1)\sin nx$ 是奇函数，对称区间积分为 0）。
+
+##### 第二步：多项式乘三角函数的积分技术
+
+令 $\int x^m\cos nx\,\mathrm{d}x$ 或 $\int x^m\sin nx\,\mathrm{d}x$：
+
+**选 $u$ 的原则**：多项式做 $u$（求导变简单），三角函数做 $\mathrm{d}v$（积分不会变复杂）。
+
+$$
+\begin{array}{c|c}
+u = x^m & \mathrm{d}v = \cos nx\,\mathrm{d}x \\
+\downarrow & \downarrow \\
+\mathrm{d}u = mx^{m-1}\,\mathrm{d}x & v = \frac{1}{n}\sin nx
+\end{array}
+$$
+
+分部积分公式：$\int u\,\mathrm{d}v = uv - \int v\,\mathrm{d}u$
+
+**列表法（适合 $x^2\cos nx$、$x^2\sin nx$ 等）**：
+
+对 $\int x^2\cos nx\,\mathrm{d}x$，列两列：
+
+| 求导列 | 积分列 | 符号 |
+|:---|:---|:---:|
+| $x^2$ | $\cos nx$ | $+$ |
+| $2x$ | $\frac{1}{n}\sin nx$ | $-$ |
+| $2$ | $-\frac{1}{n^2}\cos nx$ | $+$ |
+| $0$ | $-\frac{1}{n^3}\sin nx$ | |
+
+沿箭头乘起来，符号交替 $+,-,+$：
+
+$$
+\int x^2\cos nx\,\mathrm{d}x = x^2\cdot\frac{\sin nx}{n} - 2x\cdot\left(-\frac{\cos nx}{n^2}\right) + 2\cdot\left(-\frac{\sin nx}{n^3}\right)
+$$
+
+$$
+\boxed{\int x^2\cos nx\,\mathrm{d}x = \frac{x^2\sin nx}{n} + \frac{2x\cos nx}{n^2} - \frac{2\sin nx}{n^3} + C}
+$$
+
+##### 常用不定积分公式
+
+**一次多项式**：
+
+$$
+\int x\cos nx\,\mathrm{d}x = \frac{x\sin nx}{n} + \frac{\cos nx}{n^2} + C
+$$
+
+$$
+\int x\sin nx\,\mathrm{d}x = -\frac{x\cos nx}{n} + \frac{\sin nx}{n^2} + C
+$$
+
+**二次多项式**：
+
+$$
+\int x^2\cos nx\,\mathrm{d}x = \frac{x^2\sin nx}{n} + \frac{2x\cos nx}{n^2} - \frac{2\sin nx}{n^3} + C
+$$
+
+$$
+\int x^2\sin nx\,\mathrm{d}x = -\frac{x^2\cos nx}{n} + \frac{2x\sin nx}{n^2} + \frac{2\cos nx}{n^3} + C
+$$
+
+##### 完整示例：$f(x)=3x^2+1$ 在 $[-\pi,\pi]$ 上的傅里叶展开
+
+偶函数 $\Rightarrow b_n=0$，只需算 $a_0,a_n$。
+
+**1. 算 $a_0$**：
+
+$$
+a_0 = \frac{1}{\pi}\int_{-\pi}^{\pi} (3x^2+1)\,\mathrm{d}x = \frac{2}{\pi}\int_0^{\pi} (3x^2+1)\,\mathrm{d}x
+$$
+
+$$
+= \frac{2}{\pi}[x^3+x]_0^{\pi} = \frac{2}{\pi}(\pi^3+\pi) = 2\pi^2 + 2
+$$
+
+所以 $\dfrac{a_0}{2} = \pi^2 + 1$。
+
+**2. 算 $a_n$**：
+
+$$
+a_n = \frac{1}{\pi}\int_{-\pi}^{\pi} (3x^2+1)\cos nx\,\mathrm{d}x = \frac{2}{\pi}\int_0^{\pi} (3x^2+1)\cos nx\,\mathrm{d}x
+$$
+
+用上面公式：
+
+$$
+\int_0^{\pi} x^2\cos nx\,\mathrm{d}x = \left[\frac{x^2\sin nx}{n} + \frac{2x\cos nx}{n^2} - \frac{2\sin nx}{n^3}\right]_0^{\pi}
+$$
+
+由于 $\sin n\pi=0,\ \sin 0=0$，只剩中间项：
+
+$$
+\int_0^{\pi} x^2\cos nx\,\mathrm{d}x = \frac{2\pi\cos n\pi}{n^2} = \frac{2\pi(-1)^n}{n^2}
+$$
+
+而 $\int_0^{\pi} \cos nx\,\mathrm{d}x = \left[\frac{\sin nx}{n}\right]_0^{\pi} = 0$。
+
+所以：
+
+$$
+\int_0^{\pi} (3x^2+1)\cos nx\,\mathrm{d}x = 3\cdot\frac{2\pi(-1)^n}{n^2} + 0 = \frac{6\pi(-1)^n}{n^2}
+$$
+
+因此：
+
+$$
+a_n = \frac{2}{\pi}\cdot\frac{6\pi(-1)^n}{n^2} = \frac{12(-1)^n}{n^2}
+$$
+
+**3. 写出展开式**：
+
+$$
+\boxed{3x^2+1 = \pi^2+1 + \sum_{n=1}^\infty \frac{12(-1)^n}{n^2}\cos nx,\quad x\in[-\pi,\pi]}
+$$
+
+> **关键点**：计算过程中 $\sin n\pi=0$ 消掉了所有含 $\sin$ 的项，$\cos n\pi=(-1)^n$ 是唯一剩下的符号。这是傅里叶系数定积分最常见的简化模式。
+
+##### 考试快速流程
+
+| 题目特征 | 先做什么 |
+|:---|:---|
+| 给 $f(x)$ 让展开为傅里叶级数 | 先写出 $a_0,a_n,b_n$ 公式 |
+| $f(x)$ 是偶函数 | 直接 $b_n=0$，只算 $a_0,a_n$ |
+| $f(x)$ 是奇函数 | 直接 $a_0=a_n=0$，只算 $b_n$ |
+| $f(x)$ 是分段函数 | 按分段区间拆积分 |
+| 遇到 $x^m\cos nx$ 或 $x^m\sin nx$ | 列表法分部积分，多项式求导到 $0$ |
+| 上下限是 $0$ 到 $\pi$ | 利用 $\sin n\pi=0,\ \cos n\pi=(-1)^n$ 消项 |
+| $n=0$ 需要单独处理 | $a_0$ 不能把 $n=0$ 代入 $a_n$ 公式，要单独算 |
+
+##### 递推公式
+
+设 $C_m = \int x^m\cos nx\,\mathrm{d}x,\ S_m = \int x^m\sin nx\,\mathrm{d}x$，则：
+
+$$
+C_m = \frac{x^m\sin nx}{n} - \frac{m}{n}S_{m-1}
+$$
+
+$$
+S_m = -\frac{x^m\cos nx}{n} + \frac{m}{n}C_{m-1}
+$$
+
+适合处理 $x^3\cos nx,\ x^4\sin nx$ 等高次情况。
+
+##### 常见错误
+
+| 错误 | 正确做法 |
+|:---|:---|
+| $\int\cos nx\,\mathrm{d}x$ 写成 $\sin nx$ | 应是 $\frac{1}{n}\sin nx$ |
+| $\int\sin nx\,\mathrm{d}x$ 写成 $\cos nx$ | 应是 $-\frac{1}{n}\cos nx$ |
+| 分部积分忘记 $uv-\int v\,\mathrm{d}u$ 的负号 | 每次写完整公式 |
+| 把 $n=0$ 代入 $a_n$ 公式 | $a_0$ 单独用 $\frac{1}{\pi}\int f(x)\,\mathrm{d}x$ 算 |
+| 没先判断奇偶性直接硬算 | 先看 $f(x)$ 奇偶，可省一半工作量 |
+| 忘了 $\cos n\pi = (-1)^n$ | 这是傅里叶必用结论 |
+
 ---
 
 ## 第六部分：自测题精选与详解
