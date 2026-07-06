@@ -1277,29 +1277,48 @@ $$
 
 ### 5.2 幂级数（§9.4-9.5 重点）
 
-#### 求收敛半径
+幂级数问题分为两大部分：**求和函数**（给级数求表达式）和**函数展开**（给表达式求级数），互为逆运算。
 
-比值法：$R = \lim_{n\to\infty}\left|\frac{a_n}{a_{n+1}}\right|$ 或 $\frac{1}{R} = \lim_{n\to\infty}\left|\frac{a_{n+1}}{a_n}\right|$
+#### 收敛半径与收敛域
 
-注意：求完 $R$ 后要单独验证**端点** $x=\pm R$ 的收敛性。
+**标准型** $\sum a_n x^n$：比值法 $R = \lim\limits_{n\to\infty}\left|\dfrac{a_n}{a_{n+1}}\right|$ 或 $R = \dfrac{1}{\lim\limits_{n\to\infty}\sqrt[n]{|a_n|}}$
 
-**⚠️ 陷阱**：比值 $\left|\frac{a_{n+1}}{a_n}\right|$ 小于 1 但**不趋于常数**时，不能用比值法求半径（例如调和级数 $\sum\frac1n$ 的 $\frac{a_{n+1}}{a_n}=\frac{n}{n+1}\to1$ 虽然始终 $<1$ 但级数发散）。始终要以**极限值**为准。
+**缺项型**（如 $\sum a_n x^{2n}$、$\sum a_n x^{2n+1}$）：直接用比值法对通项 $u_n(x)$ 取极限：
 
-**收敛半径的几何意义**：$|x-x_0|<R$ 内绝对收敛，$|x-x_0|>R$ 发散，$|x-x_0|=R$ 需单独判断。
+$$
+\lim_{n\to\infty}\left|\frac{u_{n+1}(x)}{u_n(x)}\right| < 1 \Rightarrow |x|^k < \text{某值} \Rightarrow R
+$$
 
-**阿贝尔定理**：
+> **例**：求 $\sum_{n=1}^\infty \frac{x^{2n}}{n\cdot4^n}$ 的收敛半径。
+>
+> $u_n=\frac{x^{2n}}{n\cdot4^n}$，$\left|\frac{u_{n+1}}{u_n}\right| = \left|\frac{x^{2(n+1)}}{(n+1)4^{n+1}}\cdot\frac{n4^n}{x^{2n}}\right| = \frac{n}{n+1}\cdot\frac{|x|^2}{4} \to \frac{|x|^2}{4}$
+>
+> $\frac{|x|^2}{4}<1 \Rightarrow |x|<2 \Rightarrow R=2$。端点 $x=\pm2$：$\sum\frac{(\pm2)^{2n}}{n\cdot4^n}=\sum\frac{4^n}{n\cdot4^n}=\sum\frac1n$ 发散，收敛域 $(-2,2)$。
 
-若 $\sum a_n x^n$ 在 $x=x_0(\neq0)$ 处收敛，则在 $|x|<|x_0|$ 内**绝对收敛**；
-若在 $x=x_0$ 处发散，则在 $|x|>|x_0|$ 内**发散**。
+**步骤总结**：
+1. 用比值法（或根值法）求 $R$
+2. 单独验证端点 $x=\pm R$（或 $x_0\pm R$）
+3. 写出收敛域（注意开闭）
 
-> **应用**：已知 $\sum a_n(x-1)^n$ 在 $x=3$ 处收敛，判断 $x=-2$ 处的敛散性。
-> 
-> 收敛半径 $R\ge|3-1|=2$。$|-2-1|=3>2$，可能在收敛域外，无法直接判断——需知道具体 $R$ 是否 $\ge3$。
+**⚠️ 陷阱**：
+- 缺项型不能直接套 $R=\lim|a_n/a_{n+1}|$（那个公式只适用于 $\sum a_n x^n$ 形式）
+- 比值 $<1$ 但极限为 1 的级数可能发散（如 $\sum\frac1n$）
+- 端点必须代入原级数单独判断
+
+#### 阿贝尔定理
+
+若 $\sum a_n x^n$ 在 $x=x_0(\neq0)$ 处收敛，则 $|x|<|x_0|$ 内**绝对收敛**；
+若在 $x=x_0$ 处发散，则 $|x|>|x_0|$ 内**发散**。
+
+> **应用**：已知 $\sum a_n(x-1)^n$ 在 $x=3$ 收敛，$x=-1$ 发散，求收敛域。
+>
+> $R\ge|3-1|=2$，且 $R\le|-1-1|=2$，故 $R=2$。端点 $x=-1$ 发散，$x=3$ 收敛，收敛域 $(-1,3]$。
 
 #### 五大基础展开式
 
 $$
-\frac{1}{1-x} = \sum_{n=0}^\infty x^n,\ |x|<1
+\frac{1}{1-x} = \sum_{n=0}^\infty x^n,\ |x|<1 \qquad
+\frac{1}{1+x} = \sum_{n=0}^\infty (-1)^n x^n,\ |x|<1
 $$
 
 $$
@@ -1315,43 +1334,265 @@ $$
 $$
 
 $$
-\arctan x = \sum_{n=1}^\infty \frac{(-1)^{n-1} x^{2n-1}}{2n-1},\ |x|\le 1
+\arctan x = \sum_{n=0}^\infty \frac{(-1)^n x^{2n+1}}{2n+1},\ |x|\le 1
 $$
 
-#### 两个核心方法
+**二项级数**（补充）：
 
-- **先导后积**：含 $n$ 在分子（如 $\sum n x^{n-1}$），求导变几何级数再积分
-- **先积后导**：含 $n$ 在分母（如 $\sum \frac{x^n}{n}$），积分变几何级数再求导
+$$
+(1+x)^\alpha = 1 + \alpha x + \frac{\alpha(\alpha-1)}{2!}x^2 + \cdots + \frac{\alpha(\alpha-1)\cdots(\alpha-n+1)}{n!}x^n + \cdots,\ |x|<1
+$$
 
-#### 典型题（自测题二）：求 $\sum_{n=1}^\infty \frac{(-1)^{n-1} x^{2n}}{2n-1}$ 的收敛域与和函数。
+> 特例：$(1-x)^{-1} = \sum x^n$，$(1+x)^{-1} = \sum (-1)^n x^n$，$(1-x)^{-2} = \sum (n+1)x^n$
 
-> 收敛半径 $R=1$，端点 $x=\pm1$ 均收敛（莱布尼茨），收敛域 $[-1,1]$
+#### 幂级数求和的六大方法
+
+**方法一：直接利用已知展开式**
+
+观察级数形式是否与某个已知展开式匹配，通过变量代换得到。
+
+> **例**：求 $\sum_{n=0}^\infty \frac{(-1)^n x^{2n+1}}{(2n+1)!}$ 的和函数。
 >
-> 注意到 $\arctan x = \sum_{n=1}^\infty \frac{(-1)^{n-1} x^{2n-1}}{2n-1}$
+> 匹配 $\sin x$ 的展开式 $\Rightarrow S(x)=\sin x$，$x\in\mathbb{R}$。
+
+> **例**：求 $\sum_{n=0}^\infty \frac{x^{2n}}{(2n)!}$ 的和函数。
 >
-> 所以 $S(x) = x\cdot\arctan x,\ -1\le x\le 1$
+> 注意到 $\cos x = \sum_{n=0}^\infty \frac{(-1)^n x^{2n}}{(2n)!}$，但这里没有 $(-1)^n$。
+>
+> 回忆 $\cosh x = \frac{e^x+e^{-x}}{2} = \sum_{n=0}^\infty \frac{x^{2n}}{(2n)!}$，故 $S(x)=\cosh x$。
 
-#### 典型题（期末练习题）：求幂级数 $\sum_{n=1}^\infty \frac{(-1)^{n-1}x^{2n}}{n}$ 的和函数。
+**方法二：先积后导**（适用于分母含 $n$）
 
+$$
+\boxed{S(x) = \sum \frac{x^n}{\text{含 n 的分母}} \xrightarrow{\text{逐项积分}} \sum \frac{x^{n+1}}{n+1} = -\ln(1-x)}
+$$
+
+> **例**：求 $\sum_{n=1}^\infty \frac{x^n}{n}$ 的和函数。
+>
+> $$
+> S(x) = \sum_{n=1}^\infty \frac{x^n}{n},\ S'(x) = \sum_{n=1}^\infty x^{n-1} = \sum_{n=0}^\infty x^n = \frac{1}{1-x}
+> $$
+>
+> $$
+> S(x) = \int_0^x \frac{1}{1-t}\,\mathrm{d}t = -\ln(1-x),\ |x|<1
+> $$
+
+> **变式**：$\sum_{n=1}^\infty \frac{(-1)^{n-1}x^n}{n} = \ln(1+x)$，$\sum_{n=1}^\infty \frac{x^{2n}}{n} = -\ln(1-x^2)$
+
+**方法三：先导后积**（适用于分子含 $n$ 或 $n+1$ 等）
+
+$$
+\boxed{S(x) = \sum n x^{n-1} \xrightarrow{\text{逐项积分}} \sum x^n = \frac{x}{1-x} \xrightarrow{\text{求导}} \frac{1}{(1-x)^2}}
+$$
+
+> **例**：求 $\sum_{n=1}^\infty n x^{n-1}$ 的和函数。
+>
+> 逐项积分：$\int_0^x S(t)\,\mathrm{d}t = \sum_{n=1}^\infty x^n = \frac{x}{1-x}$
+>
+> 再求导：$S(x) = \frac{\mathrm{d}}{\mathrm{d}x}\left(\frac{x}{1-x}\right) = \frac{1}{(1-x)^2},\ |x|<1$
+
+> **例**：求 $\sum_{n=1}^\infty \frac{n}{2^n}$（常数项级数求和）。
+>
+> 令 $x=\frac12$ 代入 $\sum n x^{n-1} = \frac{1}{(1-x)^2}$ 得 $\sum_{n=1}^\infty n\left(\frac12\right)^{n-1} = \frac{1}{(1-\frac12)^2}=4$
+>
+> 故 $\sum_{n=1}^\infty \frac{n}{2^n} = \frac12\cdot4 = 2$
+
+**方法四：拆项法**（将系数拆成已知级数的组合）
+
+> **例**：求 $\sum_{n=0}^\infty (2n+1)x^n$ 的和函数，$|x|<1$。
+>
+> $$
+> S(x) = 2\sum_{n=0}^\infty n x^n + \sum_{n=0}^\infty x^n = 2x\sum_{n=1}^\infty n x^{n-1} + \frac{1}{1-x}
+> $$
+>
+> 由方法三知 $\sum n x^{n-1} = \frac{1}{(1-x)^2}$，故
+>
+> $$
+> S(x) = \frac{2x}{(1-x)^2} + \frac{1}{1-x} = \frac{1+x}{(1-x)^2}
+> $$
+
+**方法五：变量代换法**（通过换元化为已知形式）
+
+> **例**：求 $\sum_{n=1}^\infty \frac{(-1)^{n-1}x^{2n}}{n}$ 的和函数。
+>
 > 令 $t=x^2$，则 $\sum_{n=1}^\infty \frac{(-1)^{n-1}t^n}{n} = \ln(1+t)$
 >
-> 所以 $S(x) = \ln(1+x^2)$，收敛域 $|x|\le 1$
+> 所以 $S(x) = \ln(1+x^2)$，收敛域 $|x|\le 1$。
+
+> **例**：求 $\sum_{n=1}^\infty \frac{x^{2n-1}}{2n-1}$ 的和函数，$|x|<1$。
+>
+> 令 $S(x)=\sum_{n=1}^\infty \frac{x^{2n-1}}{2n-1}$，先导后积：
+>
+> $S'(x) = \sum_{n=1}^\infty x^{2n-2} = \sum_{n=0}^\infty x^{2n} = \frac{1}{1-x^2}$
+>
+> $S(x) = \int_0^x \frac{1}{1-t^2}\,\mathrm{d}t = \frac12\ln\frac{1+x}{1-x}$
+
+**方法六：微分方程法**（适用于系数规律复杂的级数）
+
+对 $S(x)$ 求导后得到 $S(x)$ 满足的微分方程，求解得出 $S(x)$。
+
+> **例**：求 $\sum_{n=1}^\infty \frac{x^{n}}{n(n+1)}$ 的和函数。
+>
+> $$
+> S(x) = \sum_{n=1}^\infty \frac{x^{n}}{n(n+1)},\ |x|<1
+> $$
+>
+> $$
+> xS(x) = \sum_{n=1}^\infty \frac{x^{n+1}}{n(n+1)},\ (xS(x))' = \sum_{n=1}^\infty \frac{x^{n}}{n} = -\ln(1-x)
+> $$
+>
+> $$
+> xS(x) = -\int_0^x \ln(1-t)\,\mathrm{d}t = x + (1-x)\ln(1-x)
+> $$
+>
+> $$
+> S(x) = 1 + \frac{1-x}{x}\ln(1-x),\ x\neq0,\ S(0)=0
+> $$
+
+#### 求和方法的选用策略
+
+| 系数特征 | 推荐方法 | 示例 |
+|:---|:---|:---|
+| $\frac{1}{n}$ 型 | 先积后导 | $\sum\frac{x^n}{n} = -\ln(1-x)$ |
+| $n$ 或 $n+1$ 型 | 先导后积 | $\sum n x^{n-1} = \frac{1}{(1-x)^2}$ |
+| $2n+1$、$n^2$ 等多项式型 | 拆项法 | $\sum(2n+1)x^n = \frac{1+x}{(1-x)^2}$ |
+| 含 $x^{2n}$ 或 $x^{2n+1}$ | 变量代换 $t=x^2$ | $\sum\frac{x^{2n}}{n}=-\ln(1-x^2)$ |
+| $\frac{1}{n(n+1)}$ 等复杂分母 | 微分方程法 / 拆项法 | 先积分再处理 |
+| 含 $n!$、阶乘系数 | 利用 $e^x$、$\sin x$、$\cos x$ 展开式 | $\sum\frac{x^n}{n!}=e^x$ |
+
+#### 典型题综合
+
+**题1**：求 $\sum_{n=1}^\infty \frac{2n-1}{2^n}$。
+
+> 令 $x=\frac12$ 代入 $\sum (2n-1)x^{n-1}$。
+> $\sum (2n-1)x^{n-1}=2\sum n x^{n-1} - \sum x^{n-1} = \frac{2}{(1-x)^2} - \frac{1}{1-x}$
+> $x=\frac12$ 得原级数 $= \frac{2}{(1/2)^2} - \frac{1}{1/2} = 8-2=6$
+
+**题2**：求 $\sum_{n=1}^\infty \frac{n^2}{n!}$。
+
+> $\sum_{n=1}^\infty \frac{n^2}{n!} = \sum_{n=1}^\infty \frac{n(n-1)+n}{n!} = \sum_{n=2}^\infty \frac{1}{(n-2)!} + \sum_{n=1}^\infty \frac{1}{(n-1)!}$
+> $= e + e = 2e$
+
+**题3**：求 $\sum_{n=0}^\infty \frac{(n+1)^2}{n!}x^n$ 的和函数。
+
+> 拆项：$(n+1)^2 = n(n-1) + 3n + 1$
+> $S(x)=\sum_{n=2}^\infty\frac{x^n}{(n-2)!} + 3\sum_{n=1}^\infty\frac{x^n}{(n-1)!} + \sum_{n=0}^\infty\frac{x^n}{n!}$
+> $= x^2 e^x + 3x e^x + e^x = (x^2+3x+1)e^x$
 
 ### 5.3 函数展开成幂级数
 
-**直接法**：泰勒级数 $f(x) = \sum_{n=0}^\infty \frac{f^{(n)}(x_0)}{n!}(x-x_0)^n$
+#### 直接法（泰勒级数）
 
-**典型题**：将 $e^x$ 展开为 $(x-1)$ 的幂级数（即在 $x=1$ 处泰勒展开）。
+$$
+f(x) = \sum_{n=0}^\infty \frac{f^{(n)}(x_0)}{n!}(x-x_0)^n
+$$
 
-> $e^x$ 的各阶导数均为 $e^x$，在 $x=1$ 处 $f^{(n)}(1)=e$
+> **适用**：简单初等函数在 $x_0=0$ 处展开（麦克劳林级数）。实际考试中**几乎不用**（求高阶导太复杂），多用间接法。
+
+#### 间接法 —— 核心方法
+
+利用已知展开式，通过以下操作得到新函数的展开式：
+
+| 技巧 | 操作 | 示例 |
+|:---|:---|:---|
+| **代换法** | 将 $x$ 替换为 $-x$、$x^2$、$2x$ 等 | $\frac{1}{1+x}=\sum(-x)^n$，$\frac{1}{1+x^2}=\sum(-1)^n x^{2n}$ |
+| **四则运算** | 乘除、加减组合已知展开式 | $\frac{x}{1-x}=x\sum x^n=\sum x^{n+1}$ |
+| **逐项求导** | 对已知展开式求导 | $\frac{1}{(1-x)^2}=(\frac{1}{1-x})'=\sum(n+1)x^n$ |
+| **逐项积分** | 对已知展开式积分 | $\ln(1+x)=\int_0^x\frac{1}{1+t}\mathrm{d}t=\sum\frac{(-1)^{n-1}x^n}{n}$ |
+
+#### 间接法典型题型
+
+**类型1：有理函数展开** —— 先化为部分分式，再用 $\frac{1}{1\pm x}$ 展开
+
+> **例**：将 $f(x)=\frac{1}{x^2-3x+2}$ 展开为 $x$ 的幂级数。
 >
 > $$
-> e^x = e\sum_{n=0}^\infty \frac{(x-1)^n}{n!},\quad \text{收敛区间 } (-\infty, +\infty)
+> f(x)=\frac{1}{(x-1)(x-2)} = \frac{1}{1-x} - \frac{1}{2-x} = \frac{1}{1-x} - \frac12\cdot\frac{1}{1-\frac{x}{2}}
+> $$
+>
+> $$
+> = \sum_{n=0}^\infty x^n - \frac12\sum_{n=0}^\infty \left(\frac{x}{2}\right)^n = \sum_{n=0}^\infty \left(1-\frac{1}{2^{n+1}}\right)x^n,\ |x|<1
 > $$
 
-**间接法**：利用已知展开式，通过变量代换、四则运算、逐项求导/积分。
+**类型2：对数函数展开** —— 先求导化为有理函数，展开后再积分
 
-**典型题**（自测题二）：将 $f(x) = \ln(1+x-2x^2)$ 展开为 $x$ 的幂级数。
+> **例**：将 $f(x)=\ln(1+x-2x^2)$ 展开为 $x$ 的幂级数。
+>
+> $$
+> \ln(1+x-2x^2)=\ln(1+2x)(1-x)=\ln(1+2x)+\ln(1-x)
+> $$
+>
+> $$
+> \ln(1+2x)=\sum_{n=1}^\infty\frac{(-1)^{n-1}(2x)^n}{n},\ |x|<\frac12
+> $$
+>
+> $$
+> \ln(1-x)=-\sum_{n=1}^\infty\frac{x^n}{n},\ |x|<1
+> $$
+>
+> 合并得 $\ln(1+x-2x^2)=\sum_{n=1}^\infty\frac{(-1)^{n-1}2^n-1}{n}x^n$，收敛域 $|x|<\frac12$。
+
+**类型3：反三角函数展开** —— 先求导化为有理函数，再积分
+
+> **例**：将 $f(x)=\arctan x$ 展开为 $x$ 的幂级数。
+>
+> $f'(x)=\frac{1}{1+x^2}=\sum_{n=0}^\infty(-1)^n x^{2n}$
+>
+> $f(x)=\int_0^x\frac{1}{1+t^2}\mathrm{d}t=\sum_{n=0}^\infty(-1)^n\frac{x^{2n+1}}{2n+1},\ |x|\le1$
+
+**类型4：复合函数展开** —— 先对内部变量代换，再处理外层
+
+> **例**：将 $f(x)=e^{-x^2}$ 展开为 $x$ 的幂级数。
+>
+> $e^t=\sum_{n=0}^\infty\frac{t^n}{n!}$，令 $t=-x^2$ 得
+>
+> $e^{-x^2}=\sum_{n=0}^\infty\frac{(-1)^n x^{2n}}{n!},\ x\in\mathbb{R}$
+
+**类型5：展开为 $(x-x_0)$ 的幂级数** —— 令 $t=x-x_0$，化为关于 $t$ 的展开
+
+> **例**：将 $f(x)=\frac{1}{x}$ 展开为 $(x-1)$ 的幂级数。
+>
+> 令 $t=x-1$，则 $x=1+t$，$f(x)=\frac{1}{1+t}=\sum_{n=0}^\infty(-1)^n t^n$
+>
+> 所以 $\frac{1}{x}=\sum_{n=0}^\infty(-1)^n (x-1)^n,\ |x-1|<1$
+
+#### 展开式速查表
+
+| 函数 | 幂级数展开 | 收敛域 |
+|:---|:---|:---:|
+| $\frac{1}{1-x}$ | $\sum_{n=0}^\infty x^n$ | $(-1,1)$ |
+| $\frac{1}{1+x}$ | $\sum_{n=0}^\infty (-1)^n x^n$ | $(-1,1)$ |
+| $\frac{1}{1-x^2}$ | $\sum_{n=0}^\infty x^{2n}$ | $(-1,1)$ |
+| $\frac{1}{(1-x)^2}$ | $\sum_{n=0}^\infty (n+1)x^n$ | $(-1,1)$ |
+| $e^x$ | $\sum_{n=0}^\infty \frac{x^n}{n!}$ | $\mathbb{R}$ |
+| $\ln(1+x)$ | $\sum_{n=1}^\infty \frac{(-1)^{n-1}x^n}{n}$ | $(-1,1]$ |
+| $\ln(1-x)$ | $-\sum_{n=1}^\infty \frac{x^n}{n}$ | $[-1,1)$ |
+| $\sin x$ | $\sum_{n=0}^\infty \frac{(-1)^n x^{2n+1}}{(2n+1)!}$ | $\mathbb{R}$ |
+| $\cos x$ | $\sum_{n=0}^\infty \frac{(-1)^n x^{2n}}{(2n)!}$ | $\mathbb{R}$ |
+| $\arctan x$ | $\sum_{n=0}^\infty \frac{(-1)^n x^{2n+1}}{2n+1}$ | $[-1,1]$ |
+| $(1+x)^\alpha$ | $\sum_{n=0}^\infty \binom{\alpha}{n} x^n$ | $(-1,1)$ |
+
+> **注**：展开后**必须写收敛域**！漏写扣分。
+
+#### 幂级数展开 vs 求和的关系
+
+$$
+\boxed{\text{函数展开} \xrightarrow{\text{已知 } f(x) \text{ 求 } \sum a_n x^n} \quad \text{幂级数求和} \xrightarrow{\text{已知 } \sum a_n x^n \text{ 求 } S(x)}}
+$$
+
+两者互为逆过程，用到的方法完全对称：
+- 展开用 **代换 + 求导/积分** $\rightarrow$ 求和也用 **代换 + 求导/积分**
+- 记住展开式 = 记住求和结果
+
+#### 易错点汇总
+
+| 错误 | 正确做法 |
+|:---|:---|
+| $\ln(1+x)$ 展开忘写 $(-1)^{n-1}$ | $\ln(1+x)=\sum\frac{(-1)^{n-1}x^n}{n}$ |
+| $\frac{1}{1-x}$ 和 $\frac{1}{1+x}$ 展开混淆 | $\frac{1}{1-x}=+\sum x^n$，$\frac{1}{1+x}=\sum(-1)^n x^n$ |
+| 展开后不写收敛域 | 每题最后必须写收敛域 |
+| 间接法中积分后忘加 $f(0)$ | $\int_0^x$ 定积分自动处理，但注意 $f(0)$ 是否有定义 |
+| 级数下标不对齐 | $\sum_{n=0}^\infty$ 和 $\sum_{n=1}^\infty$ 第一项不同，注意核对 |
 
 > $\ln(1+x-2x^2) = \ln(1+2x)(1-x) = \ln(1+2x) + \ln(1-x)$
 >
