@@ -319,6 +319,16 @@ $$
 >
 > 代入得最近点和最远点，计算对应距离。
 
+**拉格朗日变量代换技巧**（不同题型）：求 $u = xyz$ 在约束 $\frac1x + \frac1y + \frac1z = 1$ 下的最小值（$x,y,z>0$）。
+
+> 令 $a=\frac1x,\ b=\frac1y,\ c=\frac1z$，约束化为 $a+b+c=1$，目标函数 $u=\frac{1}{abc}$
+>
+> 由均值不等式，$a=b=c=\frac13$ 时 $abc$ 最大，从而 $u$ 最小
+>
+> $u_{\min} = 27$
+>
+> **关键技巧**：遇到分式约束，先做倒数代换化为简单形式，再用拉格朗日或均值不等式。
+
 ---
 
 ## 第三部分：重积分（第7章）
@@ -332,6 +342,12 @@ $$
 **极坐标**：$x=r\cos\theta,\ y=r\sin\theta$，$\mathrm{d}x\mathrm{d}y = r\mathrm{d}r\mathrm{d}\theta$
 
 **积分估值定理**：$m\cdot S \le \iint_D f(x,y)\mathrm{d}\sigma \le M\cdot S$，其中 $m,M$ 是 $f$ 在 $D$ 上的最小、最大值。
+
+**极坐标面积元 $\mathrm{d}x\mathrm{d}y = r\mathrm{d}r\mathrm{d}\theta$ 的推导**（理解即可，无需背）：
+
+> **几何法**：径向长度 $\mathrm{d}r$，角度方向弧长 $r\mathrm{d}\theta$，小面积 $= \mathrm{d}r \cdot r\mathrm{d}\theta$
+>
+> **雅可比法**：$\frac{\partial(x,y)}{\partial(r,\theta)} = \begin{vmatrix} \cos\theta & -r\sin\theta \\ \sin\theta & r\cos\theta \end{vmatrix} = r$
 
 **典型题**（§10-1 自测题）：估计 $\iint_D (x^2+y^2)\mathrm{d}x\mathrm{d}y$，其中 $D:x^2+y^2\le 1$。
 
@@ -349,6 +365,21 @@ $$
 >
 > $= [-\cos x(1-x)]_0^1 + \int_0^1 \cos x \mathrm{d}x = 1 + \sin 1$
 
+**典型题（圆心不在原点的圆·极坐标）**：求 $\iint_D \sqrt{R^2-x^2-y^2}\,\mathrm{d}\sigma$，$D: x^2+y^2=Rx$（圆心在 $(R/2,0)$ 过原点的圆）。
+
+> 极坐标变换 $x=r\cos\theta,\ y=r\sin\theta$，边界方程变为 $r = R\cos\theta$
+>
+> 区域：$-\frac{\pi}{2} \le \theta \le \frac{\pi}{2},\ 0 \le r \le R\cos\theta$
+>
+> $$
+> I = \int_{-\pi/2}^{\pi/2}\mathrm{d}\theta\int_0^{R\cos\theta} \sqrt{R^2-r^2}\cdot r\,\mathrm{d}r
+> = \int_{-\pi/2}^{\pi/2} \left[-\frac13(R^2-r^2)^{3/2}\right]_0^{R\cos\theta}\mathrm{d}\theta
+> = \frac{R^3}{3}\int_{-\pi/2}^{\pi/2} (1-|\sin^3\theta|)\mathrm{d}\theta
+> = \frac{R^3(3\pi-4)}{9}
+> $$
+>
+> **关键**：圆心不在原点的圆，用极坐标时边界变为 $r=R\cos\theta$ 或 $r=R\sin\theta$，不能用 $r=R$。
+
 ### 3.3 三重积分
 
 **坐标系选择原则**：
@@ -360,13 +391,40 @@ $$
 | $x^2+y^2+z^2$、球、锥 | 球面坐标（$\mathrm{d}V = r^2\sin\theta\mathrm{d}r\mathrm{d}\theta\mathrm{d}\varphi$） |
 | 椭球 | 广义球坐标（拉伸） |
 
+**常见区域模板**（直接套用，省去每次画图时间）：
+
+| 区域类型 | 坐标系 | 积分限 |
+|:---|:---|:---|
+| 四面体 $x\ge0,y\ge0,z\ge0,\ ax+by+cz\le d$ | 直角 | $0\le x\le d/a,\ 0\le y\le (d-ax)/b,\ 0\le z\le (d-ax-by)/c$ |
+| 球上半部 $x^2+y^2+z^2\le R^2,\ z\ge0$ | 柱面 | $0\le\rho\le R,\ 0\le\varphi\le2\pi,\ 0\le z\le\sqrt{R^2-\rho^2}$ |
+| 抛物面与平面 $z=x^2+y^2,\ z\le c$ | 柱面 | $0\le\rho\le\sqrt{c},\ 0\le\varphi\le2\pi,\ \rho^2\le z\le c$ |
+| 圆锥与球 $z=\sqrt{x^2+y^2},\ x^2+y^2+z^2\le R^2$ | 球面 | $0\le r\le R,\ 0\le\theta\le\pi/4,\ 0\le\varphi\le2\pi$ |
+| 旋转抛物面 $z=x^2+y^2$ 与平面 $z=1$ 所围 | 柱面 | $0\le\rho\le1,\ 0\le\varphi\le2\pi,\ \rho^2\le z\le 1$ |
+
 **⚠️ 易错**：柱面坐标**忘乘 $\rho$**，球面坐标**忘乘 $r^2\sin\theta$**
 
-**对称性**：
-- 区域关于 $xOy$ 面对称，$f$ 关于 $z$ 为奇函数 $\Rightarrow$ 积分为 0
-- 偶函数 $\Rightarrow$ 积分为一半的 2 倍
+**对称性与轮换对称性**：
 
-**轮换对称性**：若区域关于 $x,y,z$ 对称，则 $\iint_\Omega x^2\mathrm{d}V = \iint_\Omega y^2\mathrm{d}V = \iint_\Omega z^2\mathrm{d}V$
+- 区域关于 $xOy$ 面对称，$f$ 关于 $z$ 为奇函数 $\Rightarrow$ 积分为 0；偶函数 $\Rightarrow$ 积分为一半的 2 倍
+- **轮换对称性**：若区域关于 $x,y,z$ 对称（如球体、立方体），且被积函数在轮换下形式不变，则
+  $$
+  \iiint_\Omega x^2\mathrm{d}V = \iiint_\Omega y^2\mathrm{d}V = \iiint_\Omega z^2\mathrm{d}V = \frac13\iiint_\Omega (x^2+y^2+z^2)\mathrm{d}V
+  $$
+
+  **典型应用**：求 $\iiint_\Omega (x^2+y^2)\mathrm{d}V$ 其中 $\Omega: x^2+y^2+z^2\le R^2$。
+  > 由轮换对称性 $\iiint x^2\mathrm{d}V = \iiint y^2\mathrm{d}V$，所以
+  > $$
+  > \iiint (x^2+y^2)\mathrm{d}V = 2\iiint x^2\mathrm{d}V = \frac{2}{3}\iiint (x^2+y^2+z^2)\mathrm{d}V
+  > $$
+  > 球坐标下 $\iiint r^2\cdot r^2\sin\theta\,\mathrm{d}r\mathrm{d}\theta\mathrm{d}\varphi = \frac{4\pi}{5}R^5$，故原积分 $= \frac{8\pi}{15}R^5$
+
+**三重积分球坐标典型题**：$I = \iiint_\Omega (x^2+y^2+z^2)\mathrm{d}v$，$\Omega: x^2+y^2+z^2 \le 1$。
+
+> 球坐标下 $x^2+y^2+z^2=r^2$，$\mathrm{d}v=r^2\sin\varphi\,\mathrm{d}r\mathrm{d}\varphi\mathrm{d}\theta$
+>
+> 被积 $\times$ 体积元得 $r^4\sin\varphi$，积分限 $r\in[0,1],\ \varphi\in[0,\pi],\ \theta\in[0,2\pi]$
+>
+> $I = \int_0^{2\pi}\mathrm{d}\theta\int_0^\pi\sin\varphi\,\mathrm{d}\varphi\int_0^1 r^4\mathrm{d}r = 2\pi \cdot 2 \cdot \frac15 = \frac{4\pi}{5}$
 
 ---
 
@@ -430,6 +488,15 @@ $$
 3. 参数化计算内积分
 
 **重要恒等式**：$\frac{x\mathrm{d}y - y\mathrm{d}x}{x^2+y^2} = \mathrm{d}\theta$（极角微分）
+
+> **理解**：极坐标下 $x=r\cos\theta,\ y=r\sin\theta$，则
+> $$
+> x\mathrm{d}y - y\mathrm{d}x = r\cos\theta(\sin\theta\mathrm{d}r + r\cos\theta\mathrm{d}\theta) - r\sin\theta(\cos\theta\mathrm{d}r - r\sin\theta\mathrm{d}\theta) = r^2\mathrm{d}\theta
+> $$
+> 所以 $\frac{x\mathrm{d}y - y\mathrm{d}x}{x^2+y^2} = \mathrm{d}\theta$。特别地，若曲线 $L$ 不绕原点转动（即 $\theta$ 变化量为 0），则积分值为 0。
+>
+> **应用**：求 $\oint_L \frac{x\mathrm{d}y - y\mathrm{d}x}{x^2+y^2}$，$L$ 是顺时针上半椭圆从 $A(-1,0)$ 到 $B(1,0)$。
+> > 极角从 $\pi$ 降到 $0$，变化量 $-\pi$，故积分 $= -\pi$
 
 **典型题**（挖洞法）：$\oint_L \frac{x\mathrm{d}y - y\mathrm{d}x}{x^2+4y^2}$，$L$ 包围原点。
 
@@ -590,6 +657,10 @@ $\Sigma$ 取**外侧**。
 
 注意：求完 $R$ 后要单独验证**端点** $x=\pm R$ 的收敛性。
 
+**⚠️ 陷阱**：比值 $\left|\frac{a_{n+1}}{a_n}\right|$ 小于 1 但**不趋于常数**时，不能用比值法求半径（例如调和级数 $\sum\frac1n$ 的 $\frac{a_{n+1}}{a_n}=\frac{n}{n+1}\to1$ 虽然始终 $<1$ 但级数发散）。始终要以**极限值**为准。
+
+**收敛半径的几何意义**：$|x-x_0|<R$ 内绝对收敛，$|x-x_0|>R$ 发散，$|x-x_0|=R$ 需单独判断。
+
 #### 五大基础展开式
 
 $$
@@ -744,7 +815,26 @@ $$
 - 曲面积分 + 高斯公式
 - 幂级数求和 + 数项级数求和（用幂级数求和去算数项级数）
 
-### 7.2 最容易扣分的 12 个地方
+### 7.2 选择题快速解题技巧
+
+选择题 12 道，每题 3 分，**性价比极高**——关键是快，不要每题都完整计算。
+
+| 技巧 | 说明 | 适用场景 |
+|:---|:---|:---|
+| **特殊值法** | 代入 $x=0,y=0$ 或 $k=0,\theta=0$ 等简化值 | 向量关系、极限判断 |
+| **排除法** | 先排除明显错误选项 | 所有选择题 |
+| **对称性优先** | 先看区域/曲线是否对称，函数是否奇偶 | 积分类、偏导类 |
+| **图形判断** | 二次曲面先标准化再看符号 | 空间解析几何 |
+| **反例法** | 找一个反例推翻选项 | "以下哪个正确"类 |
+| **量纲分析** | 检查答案量纲是否合理 | 积分结果 |
+
+**典型选择题秒杀**：
+- 方程 $3x^2-2y^2-z^2=-6$ 表示？→ 标准化得两正一负 $=1$ → **单叶双曲面**
+- $f(x,y)=\frac{xy}{x^2+y^2}$ 在原点？→ 沿 $y=kx$ 得 $\frac{k}{1+k^2}$ 与 $k$ 有关 → **极限不存在**
+- 函数沿什么方向方向导数最大？→ **梯度方向**
+- $\sum a_n(x-1)^n$ 在 $x=3$ 收敛，$x=-2$ 处？→ 收敛半径 $R\ge2$，$x=-2$ 到中心 $x=1$ 距离 $=3>R$，发散
+
+### 7.3 最容易扣分的 12 个地方
 
 1. **柱面坐标忘乘 $\rho$**：$\mathrm{d}V = \rho\,\mathrm{d}\rho\,\mathrm{d}\varphi\,\mathrm{d}z$
 2. **球面坐标忘乘 $r^2\sin\theta$**：$\mathrm{d}V = r^2\sin\theta\,\mathrm{d}r\,\mathrm{d}\theta\,\mathrm{d}\varphi$
