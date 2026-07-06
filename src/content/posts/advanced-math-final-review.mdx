@@ -527,6 +527,63 @@ $$
 
 > 在 $D$ 上 $0\le x^2+y^2\le 1$，$S=\pi$，所以 $0\le I\le \pi$
 
+#### 对称性在重积分中的应用
+
+**偶倍奇零**（关于坐标轴/坐标面对称）：
+
+若区域 $D$ 关于 $x$ 轴对称，则
+
+$$
+\iint_D f(x,y)\,\mathrm{d}\sigma = \begin{cases}
+0, & f\text{ 关于 }y\text{ 为奇函数} \\
+2\iint_{D_{y\ge0}} f(x,y)\,\mathrm{d}\sigma, & f\text{ 关于 }y\text{ 为偶函数}
+\end{cases}
+$$
+
+> **例**：$\iint_D xy\,\mathrm{d}\sigma$，$D:x^2+y^2\le1$。区域关于 $x$ 轴和 $y$ 轴都对称，$f(x,y)=xy$ 关于 $y$ 为奇函数 $\Rightarrow$ 积分 $=0$（无需计算）。
+
+**轮换对称性**（核心技巧）：
+
+若积分区域 $D$ 关于直线 $y=x$ 对称（即交换 $x$ 和 $y$ 后区域不变），则
+
+$$
+\iint_D f(x,y)\,\mathrm{d}\sigma = \iint_D f(y,x)\,\mathrm{d}\sigma
+$$
+
+进一步，若 $f(x,y)$ 在 $x,y$ 轮换下形式不变（如 $f(x,y)=x^2+y^2$），则积分值不变。
+
+**典型应用**：当被积函数含 $x^2$ 或 $y^2$ 且区域对称时：
+
+$$
+\iint_D x^2\,\mathrm{d}\sigma = \iint_D y^2\,\mathrm{d}\sigma = \frac12\iint_D (x^2+y^2)\,\mathrm{d}\sigma
+$$
+
+> **经典题**：求 $I = \iint_D x^2\,\mathrm{d}\sigma$，$D: x^2+y^2\le R^2$。
+>
+> 由轮换对称性 $\iint_D x^2\,\mathrm{d}\sigma = \iint_D y^2\,\mathrm{d}\sigma$，所以
+>
+> $$
+> I = \frac12\iint_D (x^2+y^2)\,\mathrm{d}\sigma = \frac12\int_0^{2\pi}\mathrm{d}\theta\int_0^R r^2\cdot r\,\mathrm{d}r = \frac12\cdot 2\pi\cdot\frac{R^4}{4} = \frac{\pi R^4}{4}
+> $$
+
+> **经典题**（推广）：求 $I = \iint_D (x^2+2y^2)\,\mathrm{d}\sigma$，$D: x^2+y^2\le R^2$。
+>
+> $$
+> I = \iint_D x^2\,\mathrm{d}\sigma + 2\iint_D y^2\,\mathrm{d}\sigma = \frac{\pi R^4}{4} + 2\cdot\frac{\pi R^4}{4} = \frac{3\pi R^4}{4}
+> $$
+
+**轮换对称性的判定条件**：
+
+| 条件 | 举例 |
+|:---|:---|
+| 区域关于 $y=x$ 对称 | 圆、正方形、$|x|+|y|\le a$ 等 |
+| 被积函数在 $x,y$ 轮换下形式不变 | $x^2+y^2$、$xy$、$\sin(x+y)$ 等 |
+| 使用技巧 | $\iint x^2 = \iint y^2 = \frac12\iint (x^2+y^2)$ |
+
+> **三重积分中的轮换对称**（见 3.3）：区域关于 $x,y,z$ 对称（如球体），则 $\iiint x^2\,\mathrm{d}V = \iiint y^2\,\mathrm{d}V = \iiint z^2\,\mathrm{d}V = \frac13\iiint (x^2+y^2+z^2)\,\mathrm{d}V$
+
+**⚠️ 易错**：轮换对称性只能在**区域对称**的前提下使用。如果区域是半圆 $x^2+y^2\le R^2,\ y\ge0$，则 $x$ 和 $y$ 不对称，不能用轮换对称！
+
 ### 3.2 交换积分次序
 
 **典型题**（§10-2 自测题）：$\int_0^1 \mathrm{d}y\int_y^{\sqrt{y}} \frac{\sin x}{x}\mathrm{d}x$
