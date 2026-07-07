@@ -141,6 +141,18 @@ $$E = \sum_i \frac{1}{4\pi\varepsilon_0}\frac{q_i}{r_i^2}\hat{r}_i$$
 - ⚠️ 不能直接用高斯定理的场景不要硬用——比如有限长直线，老老实实积分
 - ⚠️ 画高斯面时注意对称性匹配：球对称→球面，柱对称→圆柱面，面对称→柱面
 
+#### 3a. 课后题常见分类（高斯定理）
+
+| 题型 | 出题方式 | 解题关键 |
+|:---|:---|:---|
+| **通量判断题** | 点电荷在闭合面内/外，求通量 | 只看 $q_{内}$，不看曲面形状 |
+| **开曲面通量** | 匀强场穿过三角形、圆面、斜面 | 用 $\Phi = ES\cos\theta$ |
+| **球对称求场** | 球面、球体、球壳分段 | $Q_{内}$ 要随 $r$ 变化 |
+| **柱对称求场** | 无限长线、电缆、圆柱面 | 高斯面用同轴圆柱 |
+| **面对称求场** | 无限大平面、双平板 | 高斯面用薄柱盒 |
+| **叠加+高斯** | 挖空球、带孔平面 | 补全再减去（"负电荷"法） |
+
+
 #### 第四类：电势与电势能
 
 **求电势的两种方法：**
@@ -172,6 +184,132 @@ $$W_{ab} = q(V_a - V_b) = \frac{1}{2}mv_b^2 - \frac{1}{2}mv_a^2$$
 
 ### 四、典型例题
 
+
+#### 第五类题：电势、电势差与电势叠加
+
+电势是标量，比电场强度更容易叠加。定义为：
+
+$$V_A = \frac{E_{pA}}{q_0}$$
+
+若选无穷远处为零电势：
+
+$$V_A = \int_A^\infty E\cdot\mathrm{d}l$$
+
+电势差：
+
+$$V_A - V_B = \int_A^B E\cdot\mathrm{d}l$$
+
+**1. 点电荷电势**
+$$V = \frac{1}{4\pi\varepsilon_0}\frac{q}{r}$$
+
+注意：电势有正负，正电荷产生正电势，负电荷产生负电势。
+
+**2. 点电荷系电势**
+$$V = \sum_i \frac{1}{4\pi\varepsilon_0}\frac{q_i}{r_i}$$
+
+这里是**代数和**，不是矢量和。
+
+**3. 连续带电体电势**
+$$\mathrm{d}V = \frac{1}{4\pi\varepsilon_0}\frac{\mathrm{d}q}{r}$$
+$$V = \int\mathrm{d}V = \frac{1}{4\pi\varepsilon_0}\int\frac{\mathrm{d}q}{r}$$
+
+**4. 必会模型**
+
+| 模型 | 电势结果 |
+|:---|:---|
+| 点电荷 | $V = \frac{1}{4\pi\varepsilon_0}\frac{q}{r}$ |
+| 均匀带电圆环轴线上 | $V = \frac{1}{4\pi\varepsilon_0}\frac{Q}{\sqrt{R^2 + x^2}}$ |
+| 均匀带电球面 | $r>R$: $V = \frac{Q}{4\pi\varepsilon_0 r}$, $r<R$: $V = \frac{Q}{4\pi\varepsilon_0 R}$ |
+| 均匀带电球体 | $r>R$: $V = \frac{Q}{4\pi\varepsilon_0 r}$, $r<R$: $V = \frac{Q}{8\pi\varepsilon_0 R}(3 - \frac{r^2}{R^2})$ |
+| 无限长带电直线 | 不能直接选 $V_\infty=0$，一般求电势差 |
+
+**5. 电势题的两个方法**
+
+| 方法 | 适用情况 | 公式 |
+|:---|:---|:---|
+| **电势叠加法** | 已知电荷分布，求某点电势 | $V = \int \frac{1}{4\pi\varepsilon_0}\frac{\mathrm{d}q}{r}$ |
+| **场强积分法** | 已由高斯定理求出E | $V_A - V_B = \int_A^B E\cdot\mathrm{d}l$ |
+
+求电势常用两种方法：已知电荷分布时用电势叠加，若E容易由高斯定理求出，则用场强积分法。
+
+#### 第六类题：等势面与电势梯度
+
+等势面是电势相同的点构成的面。沿等势面移动电荷时：
+
+$$W = q\Delta V = 0$$
+
+所以电场力不做功。不同电势的等势面不能相交，电场线与等势面垂直，并且电场方向指向电势降低方向。
+
+**1. 核心公式**
+$$E = -\nabla V$$
+
+直角坐标系中：
+$$E = -\left(\frac{\partial V}{\partial x}\hat{i} + \frac{\partial V}{\partial y}\hat{j} + \frac{\partial V}{\partial z}\hat{k}\right)$$
+
+若电势只沿x方向变化：
+$$E_x = -\frac{\mathrm{d}V}{\mathrm{d}x}$$
+
+**2. 常考形式**
+
+| 题型 | 解法 |
+|:---|:---|
+| 给出 $V = ax + by + cz$，求 $E$ | 对x,y,z分别求偏导，再加负号 |
+| 给出 $V(r)$，求径向电场 | $E_r = -\frac{\mathrm{d}V}{\mathrm{d}r}$ |
+| 已知等势面疏密判断场强大小 | 等势面越密，场强越大 |
+| 判断场强方向 | 从高电势指向低电势，并垂直等势面 |
+| 由圆环轴线电势求电场 | 先写 $V(x)$，再 $E_x = -\mathrm{d}V/\mathrm{d}x$ |
+
+**3. 典型例子：圆环轴线场强**
+
+已知：
+$$V(x) = \frac{1}{4\pi\varepsilon_0}\frac{Q}{\sqrt{R^2 + x^2}}$$
+
+则：
+$$E_x = -\frac{\mathrm{d}V}{\mathrm{d}x} = \frac{1}{4\pi\varepsilon_0}\frac{Qx}{(R^2 + x^2)^{3/2}}$$
+
+这个题型非常实用：先求标量电势，再求导得到矢量电场，比直接积分电场更省力。
+
+#### 第七类题：电偶极子
+
+电偶极子由一对等量异号点电荷组成，电偶极矩定义为：
+
+$$p = ql$$
+
+方向从**负电荷指向正电荷**。
+
+**1. 电偶极子远处电势**
+
+当场点距离 $r \gg l$：
+$$V = \frac{1}{4\pi\varepsilon_0}\frac{p\cos\theta}{r^2}$$
+
+其中 $\theta$ 是 $p$ 与场点位置矢量 $r$ 的夹角。
+
+**2. 电偶极子远处电场**
+
+球坐标分量：
+$$E_r = \frac{1}{4\pi\varepsilon_0}\frac{2p\cos\theta}{r^3}$$
+$$E_\theta = \frac{1}{4\pi\varepsilon_0}\frac{p\sin\theta}{r^3}$$
+
+特殊位置：
+
+| 位置 | 电场大小 |
+|:---|:---|
+| 轴线上 | $E = \frac{1}{4\pi\varepsilon_0}\frac{2p}{r^3}$ |
+| 中垂线上 | $E = \frac{1}{4\pi\varepsilon_0}\frac{p}{r^3}$，方向与 $p$ 相反 |
+
+**3. 均匀外电场中的力矩与势能**
+$$M = p \times E$$
+大小：$M = pE\sin\theta$
+
+势能：
+$$U = -p\cdot E = -pE\cos\theta$$
+
+| 状态 | 条件 | 稳定性 |
+|:---|:---|:---|
+| $p \parallel E$ | $\theta = 0$ | 稳定平衡，势能最低 |
+| $p$ 反平行 $E$ | $\theta = \pi$ | 不稳定平衡，势能最高 |
+| 其他角度 | $0 < \theta < \pi$ | 受力矩转向 |
+
 **例题1：** 均匀带电细棒长 $L$，电荷线密度 $\lambda$，求棒延长线上距离一端 $a$ 处的电场强度。
 
 **解：**
@@ -196,6 +334,78 @@ $$W_{ab} = q(V_a - V_b) = \frac{1}{2}mv_b^2 - \frac{1}{2}mv_a^2$$
 - $Q_{内} = Q$
 - $E\cdot 4\pi r^2 = \frac{Q}{\varepsilon_0}$
 - $E = \frac{Q}{4\pi\varepsilon_0 r^2}$（等效于点电荷）
+
+
+### 五、高斯定理求电场模板
+
+**模板1：均匀带电球体求 $E(r)$**
+
+半径R，总电荷Q，体电荷密度均匀。
+
+球外 $r > R$：
+$$E \cdot 4\pi r^2 = \frac{Q}{\varepsilon_0} \quad \Rightarrow \quad E = \frac{1}{4\pi\varepsilon_0}\frac{Q}{r^2}$$
+
+球内 $r < R$：
+$$q_{内} = Q\frac{r^3}{R^3}$$
+$$E \cdot 4\pi r^2 = \frac{Q r^3/R^3}{\varepsilon_0} \quad \Rightarrow \quad E = \frac{1}{4\pi\varepsilon_0}\frac{Qr}{R^3}$$
+
+结论：球内 $E \propto r$，球外 $E \propto 1/r^2$。
+
+**模板2：无限长带电直线求 $E(r)$**
+
+取半径 $r$、长度 $l$ 的同轴圆柱面：
+$$\Phi = E \cdot 2\pi rl$$
+$$q_{内} = \lambda l$$
+$$E \cdot 2\pi rl = \frac{\lambda l}{\varepsilon_0} \quad \Rightarrow \quad E = \frac{\lambda}{2\pi\varepsilon_0 r}$$
+
+方向：$\lambda > 0$ 时径向向外。
+
+**模板3：无限大带电平面求 $E$**
+
+取穿过平面的薄柱盒，高斯面两端面积为 $S$：
+$$\Phi = 2ES$$
+$$q_{内} = \sigma S$$
+$$2ES = \frac{\sigma S}{\varepsilon_0} \quad \Rightarrow \quad E = \frac{\sigma}{2\varepsilon_0}$$
+
+方向：正电荷两侧均背离平面。
+
+**模板4：点电荷系求电势**
+
+几个点电荷 $q_i$ 到场点距离 $r_i$：
+$$V = \sum_i \frac{1}{4\pi\varepsilon_0} \frac{q_i}{r_i}$$
+
+注意这里不分方向，只保留电荷正负号。
+
+**模板5：电场力做功**
+
+电荷 $q_0$ 从A点移到B点：
+$$W_{AB} = q_0(V_A - V_B)$$
+$$\Delta E_p = E_{pB} - E_{pA} = -W_{AB}$$
+
+若正电荷从高电势到低电势，电场力做正功，电势能减少。
+
+### 六、第五章考前必背公式清单
+
+| 公式 | 说明 |
+|:---|:---|
+| $F = k\frac{\lvert q_1 q_2\rvert}{r^2}$ | 库仑定律 |
+| $E = \frac{F}{q_0}$ | 电场强度定义 |
+| $E = k\frac{q}{r^2}\hat{e}_r$ | 点电荷电场 |
+| $E = \sum_i E_i$ | 电场叠加原理 |
+| $\mathrm{d}E = k\frac{\mathrm{d}q}{r^2}\hat{e}_r$ | 连续带电体电场微元 |
+| $\Phi_E = \int_S E\cdot\mathrm{d}S$ | 电通量 |
+| $\oint_S E\cdot\mathrm{d}S = \frac{q_{内}}{\varepsilon_0}$ | 高斯定理 |
+| $\oint_L E\cdot\mathrm{d}l = 0$ | 静电场环路定理 |
+| $V = k\frac{q}{r}$ | 点电荷电势 |
+| $V = \sum_i k\frac{q_i}{r_i}$ | 点电荷系电势 |
+| $V = \int k\frac{\mathrm{d}q}{r}$ | 连续带电体电势 |
+| $V_A - V_B = \int_A^B E\cdot\mathrm{d}l$ | 电势差与电场积分关系 |
+| $W_{AB} = q_0(V_A - V_B)$ | 电场力做功 |
+| $\Delta E_p = -W_{AB}$ | 电势能变化 |
+| $E = -\nabla V$ | 电势梯度 |
+| $p = ql$ | 电偶极矩 |
+| $M = p \times E$ | 电偶极子力矩 |
+| $U = -p\cdot E$ | 电偶极子势能 |
 
 ---
 
