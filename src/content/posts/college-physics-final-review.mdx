@@ -540,14 +540,40 @@ $$V_{壳} = \frac{1}{4\pi\varepsilon_0}\left(\frac{Q}{b} + \frac{-Q}{b} + \frac{
 - ⚠️ 未接地时不能直接用电荷守恒代替电势条件
 - ⚠️ 球壳接地后，若内部有电荷，内表面仍然会感应出等量异号电荷
 
-#### 第二类：有电介质的高斯定理
+**标准流程（正确顺序）：**
 
-**标准流程：**
+$$
+\text{自由电荷} \xrightarrow{\text{有介质高斯定理}} D \xrightarrow{D = \varepsilon E} E \xrightarrow{P = D - \varepsilon_0 E} P \xrightarrow{\sigma' = P\cdot\hat{n}} \sigma'
+$$
 
-1. 自由电荷对称 → 先求 $D$：$\oint D\cdot\mathrm{d}S = Q_{自由}$
-2. 再由 $D = \varepsilon E$ 求 $E$
-3. 由 $E$ 求极化强度 $P = \varepsilon_0\chi_e E$
-4. 束缚电荷面密度 $\sigma' = P\cdot\hat{n}$
+详细步骤：
+
+| 步骤 | 操作 | 公式 | 说明 |
+|:---|:---|:---|:---|
+| 1 | 由自由电荷对称性，求 $D$ | $\oint D\cdot\mathrm{d}S = Q_{自由}$ | 自由电荷是"源" |
+| 2 | 由 $D$ 反推 $E$ | $E = D/\varepsilon = D/(\varepsilon_0\varepsilon_r)$ | 介质削弱电场 |
+| 3 | 由 $D$ 和 $E$ 求极化强度 $P$ | $P = D - \varepsilon_0 E$ | 描述介质极化程度 |
+| 4 | 由 $P$ 求束缚电荷面密度 | $\sigma' = P\cdot\hat{n}$ | $\hat{n}$ 是介质表面外法向 |
+
+**关键解释：$\sigma' = P\cdot\hat{n}$ 是什么意思？**
+
+- $P$ 是"极化强度"矢量，描述介质内部电偶极矩的密度（单位体积内电偶极矩的矢量和）
+- $\hat{n}$ 是介质表面的**外法线方向**（从介质指向外）
+- $P\cdot\hat{n}$ 是 $P$ 在 $\hat{n}$ 方向上的投影，即 $P$ 垂直于表面的分量
+
+**物理含义：**
+- 若 $P$ 与 $\hat{n}$ 同向（$P$ 指向外），$\sigma' > 0$，表面出现**正**束缚电荷
+- 若 $P$ 与 $\hat{n}$ 反向（$P$ 指向内），$\sigma' < 0$，表面出现**负**束缚电荷
+- 束缚电荷来源于介质极化后正负电荷中心的微小错位，不能自由移动
+
+**两种求 $P$ 的等价公式：**
+
+| 公式 | 适用 | 含义 |
+|:---|:---|:---|
+| $P = D - \varepsilon_0 E$ | **通用**（任何介质） | 从已知的 D、E 直接算 |
+| $P = \varepsilon_0\chi_e E$ | 仅各向同性线性介质 | 引入极化率 $\chi_e = \varepsilon_r - 1$ |
+
+**注意：** $P = D - \varepsilon_0 E$ 是更基本的定义式，**不需要知道 $\chi_e$**，只要算出 D 和 E 就能直接得到 P。而 $P = \varepsilon_0\chi_e E$ 需要已知 $\chi_e$ 或 $\varepsilon_r$。
 
 **对比：**
 
