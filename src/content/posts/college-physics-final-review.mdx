@@ -599,11 +599,15 @@ $$
 
 **三种典型电容器：**
 
-| 类型 | 电容 |
-|:---|:---|
-| 平行板电容器 | $C = \frac{\varepsilon_0\varepsilon_r S}{d}$ |
-| 圆柱形电容器 | $C = \frac{2\pi\varepsilon_0\varepsilon_r l}{\ln(b/a)}$ |
-| 球形电容器 | $C = \frac{4\pi\varepsilon_0\varepsilon_r ab}{b-a}$ |
+| 电容器 | 电容公式 | 适用条件 |
+|:---|:---|:---|
+| 平行板电容器 | $C = \frac{\varepsilon S}{d} = \frac{\varepsilon_0\varepsilon_r S}{d}$ | 忽略边缘效应 |
+| 圆柱形电容器 | $C = \frac{2\pi\varepsilon l}{\ln(R_2/R_1)} = \frac{2\pi\varepsilon_0\varepsilon_r l}{\ln(b/a)}$ | 同轴长圆柱 |
+| 球形电容器 | $C = 4\pi\varepsilon\frac{R_1 R_2}{R_2 - R_1} = 4\pi\varepsilon_0\varepsilon_r\frac{ab}{b-a}$ | 同心球壳 |
+| 孤立导体球 | $C = 4\pi\varepsilon R$（外球半径 $R_2 \to \infty$） | 球形电容器外半径无穷大的极限 |
+
+**注意：** 孤立导体球可视为球形电容器 $R_2 \to \infty$ 的极限：
+$$C = \lim_{R_2\to\infty} 4\pi\varepsilon\frac{R_1 R_2}{R_2 - R_1} = 4\pi\varepsilon R_1$$
 
 **电容器串并联：**
 
