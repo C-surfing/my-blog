@@ -904,9 +904,8 @@ $$\Phi = \frac{\mu_0 I l}{2\pi}\ln\frac{a+b}{a}$$
 | **8-1 电磁感应定律** | 什么情况下产生感应电动势？方向怎么判？ | $\varepsilon_i = -\frac{\mathrm{d}\Phi}{\mathrm{d}t}$, $\varepsilon_i = -N\frac{\mathrm{d}\Psi}{\mathrm{d}t}$ | 判断感应电流方向、线圈转动交流电动势 |
 | **8-2 动生/感生电动势** | 来源是洛伦兹力还是变化磁场？ | $\varepsilon = \int (v\times B)\cdot\mathrm{d}l$, $\varepsilon = -\frac{\mathrm{d}\Phi}{\mathrm{d}t}$ | 导体棒切割、转动棒、圆盘发电机 |
 | **8-3 自感与互感** | 电流变化如何反过来影响自身/别的线圈？ | $\varepsilon_L = -L\frac{\mathrm{d}i}{\mathrm{d}t}$, $\varepsilon_{21} = -M\frac{\mathrm{d}i_1}{\mathrm{d}t}$ | 求螺线管/同轴电缆自感、两线圈互感 |
-| **8-4 RL电路** | 电感为什么使电流不能突变？ | $i = \frac{\varepsilon}{R}(1-e^{-t/\tau})$, $i = I_0 e^{-t/\tau}$, $\tau = L/R$ | 通电增长、断电衰减、时间常数 |
-| **8-5 磁场能量** | 磁场也是能量载体 | $W_m = \frac{1}{2}LI^2$, $w_m = \frac{B^2}{2\mu_0}$ | 线圈储能、磁场能量密度 |
-| **8-6 位移电流与麦克斯韦方程** | 变化电场也能激发磁场 | $I_d = \varepsilon_0\frac{\mathrm{d}\Phi_E}{\mathrm{d}t}$, $\oint H\cdot\mathrm{d}l = I_c + I_d$ | 平行板电容器充电磁场、位移电流概念 |
+| **8-4 磁场能量** | 磁场也是能量载体 | $W_m = \\frac{1}{2}LI^2$，$w_m = \\frac{B^2}{2\\mu_0}$ | 线圈储能、磁场能量密度、与电场能量密度比较 |
+| **8-5 位移电流与麦克斯韦方程** | 变化电场也能激发磁场 | $I_d = \\varepsilon_0\\frac{\\mathrm{d}\\Phi_E}{\\mathrm{d}t}$, $\\oint H\\cdot\\mathrm{d}l = I_c + I_d$ | 平行板电容器充电磁场、位移电流概念、麦克斯韦积分方程 |
 
 ### 二、核心公式清单
 
@@ -1056,16 +1055,7 @@ $$\varepsilon_1 = -M\frac{\mathrm{d}I_2}{\mathrm{d}t}, \quad \varepsilon_2 = -M\
 | 4 | 磁链 $\Psi_{21} = N_2\Phi_{21}$ |
 | 5 | $M = \Psi_{21}/I_1$ |
 
-#### 5. RL电路
-
-| 过程 | 电流变化 | 时间常数 |
-|:---|:---|:---|
-| 充电（电流增长） | $i = \frac{\varepsilon}{R}(1 - e^{-t/\tau})$ | $\tau = L/R$ |
-| 放电（电流衰减） | $i = I_0 e^{-t/\tau}$ | $\tau = L/R$ |
-
-**要点：** 电感电流不能突变，$t=0$ 时 $i=0$（充电开始瞬间相当于断路）
-
-#### 6. 磁场能量
+#### 5. 磁场能量
 - 电感储能：$W_m = \frac{1}{2}LI^2$
 - 能量密度：$w_m = \frac{B^2}{2\mu_0}$（真空）或 $w_m = \frac{B^2}{2\mu}$（介质）
 - 场能积分：$W_m = \int w_m \mathrm{d}V$
