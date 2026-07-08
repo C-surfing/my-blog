@@ -947,12 +947,12 @@ $$\Phi = \frac{\mu_0 I l}{2\pi}\ln\frac{a+b}{a}$$
 
 **常见场景：**
 
-| 场景 | 公式 | 说明 |
+| 模型 | 公式 | 说明 |
 |:---|:---|:---|
-| 直导线垂直切割 | $\varepsilon = Blv$ | v⊥B⊥l |
-| 导体棒在导轨上滑动 | $\varepsilon = Blv$ | 注意回路总电阻 |
-| 转动棒 | $\varepsilon = \frac{1}{2}B\omega l^2$ | 一端固定，$\omega$ 角速度 |
-| 圆盘发电机 | $\varepsilon = \frac{1}{2}B\omega R^2$ | 盘心到盘边 |
+| 直导体棒垂直切割磁感线 | $\varepsilon = Blv$ | $B,l,v$ 两两垂直 |
+| 导体棒绕一端转动 | $\varepsilon = \frac{1}{2}B\omega l^2$ | 从转轴到端点积分 |
+| 圆盘发电机 | $\varepsilon = \frac{1}{2}B\omega(R_1^2 - R_2^2)$ | 从内半径 $R_2$ 到外半径 $R_1$ 积分（盘心到盘边时 $R_2=0$） |
+| 任意运动导线 | $\varepsilon = \int (v\times B)\cdot\mathrm{d}l$ | 不能直接套 $Blv$，需对路径积分 |
 | 线圈在磁场中转动 | $\varepsilon = NBS\omega\sin\omega t$ | 交流发电机原理 |
 
 **易错点：**
