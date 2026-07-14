@@ -1,0 +1,762 @@
+---
+title: "Windows 上通过 VMware 安装银河麒麟桌面 V11：从镜像下载到开发环境配置"
+published: 2026-07-14
+description: "在 Windows 宿主机上使用 VMware Workstation 部署银河麒麟桌面 V11 虚拟机的完整记录。涵盖虚拟机方案选型、磁盘空间规划、系统安装、OSTree 维护模式、VMware Tools / SSH 配置、共享文件夹挂载、Wayland 剪贴板问题处理以及 VPN 网络配置等实际开发中遇到的难题与解决方案。"
+tags: [银河麒麟, Kylin, VMware, 虚拟机, OS Agent, Linux, 维护模式, OSTree, SSH]
+category: 赛事学习
+draft: false
+pinned: false
+comment: true
+lang: zh-CN
+---
+
+最近为了在银河麒麟环境中进行 **OS Agent** 相关开发，我在 Windows 主机上安装了 VMware Workstation，并在虚拟机中部署了银河麒麟桌面操作系统 V11。
+
+整个过程中涉及虚拟机方案选择、磁盘空间规划、银河麒麟安装、软件包保护机制、维护模式、共享文件夹、剪贴板与网络配置等问题。本文记录已经实际验证可用的部分，作为后续重装和环境迁移的参考。
+
+---
+
+## 一、为什么选择虚拟机，而不是直接安装双系统
+
+最初考虑过两种方案：
+
+1. 在 Windows 硬盘中划分一块区域安装银河麒麟，组成双系统；
+2. 使用 VMware 创建银河麒麟虚拟机。
+
+双系统确实可以让银河麒麟直接使用真实硬件，性能也更接近物理机，但存在一定风险：
+
+- 分区选择错误可能误删 Windows 数据；
+- 可能影响 Windows 的 EFI 启动分区；
+- 安装后切换系统必须重启电脑；
+- 出现系统问题时不方便快速恢复；
+- 对初次接触银河麒麟的用户来说，操作风险较高。
+
+虚拟机则更加适合前期开发和学习：
+
+- 不需要修改 Windows 真实磁盘分区；
+- 银河麒麟和 Windows 可以同时运行；
+- 系统出现问题时可以直接恢复快照；
+- 可以方便地重新安装；
+- 适合开发、测试、安装依赖和运行 Demo。
+
+因此，最终采用了：
+
+```text
+Windows 宿主机
+    └── VMware Workstation
+            └── 银河麒麟桌面 V11 虚拟机
+```
+
+---
+
+## 二、环境信息
+
+本次使用的环境如下：
+
+| 配置项 | 值 |
+|-------|-----|
+| 宿主机系统 | Windows |
+| 虚拟机软件 | VMware Workstation 17.6.1 |
+| 客户机系统 | 银河麒麟桌面操作系统 V11 2603 |
+| 系统架构 | x86_64 |
+| 网络模式 | NAT |
+| 虚拟硬盘 | 80GB，动态增长 |
+
+银河麒麟安装镜像文件名：
+
+```text
+Kylin-Desktop-V11-2603-Release-20260228-X86_64.iso
+```
+
+---
+
+## 三、磁盘空间规划
+
+Windows D 盘约有 180GB 空闲空间，另有一个 120GB 的普通 USB 3.0 U 盘。
+
+最终采用的目录结构如下：
+
+```text
+D:\
+├── ISO\
+│   └── Kylin-Desktop-V11-2603-Release-20260228-X86_64.iso
+│
+├── VirtualMachines\
+│   └── Kylin-V11\
+│
+└── KylinShare\
+```
+
+### D:\ISO
+
+用于保存银河麒麟安装镜像。
+
+ISO 文件相当于系统安装光盘。银河麒麟安装完成后，日常启动虚拟机不再依赖 ISO，因此后续可以将 ISO 移动到 U 盘保存。
+
+### D:\VirtualMachines
+
+用于保存虚拟机本体，包括：
+
+- `.vmx` 虚拟机配置文件；
+- `.vmdk` 虚拟硬盘文件；
+- VMware 日志；
+- 快照文件；
+- 虚拟机运行状态文件。
+
+这个目录会持续产生随机读写，因此应放在电脑内部硬盘中，不建议放在普通 U 盘里。
+
+### D:\KylinShare
+
+用于 Windows 与银河麒麟之间交换文件（需配合 VMware 共享文件夹功能）。这个目录的内容不受虚拟机快照影响，相当于一个独立于虚拟硬盘的持久化区域。
+
+---
+
+## 四、普通 U 盘应该怎么利用
+
+普通 USB 3.0 U 盘虽然容量足够，但并不适合直接运行虚拟机。
+
+虚拟机运行过程中会进行大量随机读写，普通 U 盘可能出现：
+
+- 系统运行卡顿；
+- 软件安装速度慢；
+- U 盘明显发热；
+- 长时间写入后掉速；
+- 虚拟硬盘损坏；
+- U 盘寿命缩短。
+
+更合理的用途是：
+
+```text
+U盘:\
+├── ISO\
+│   └── 银河麒麟安装镜像
+├── Installers\
+│   └── 常用安装程序
+├── VM-Backup\
+│   └── 虚拟机冷备份
+└── Competition\
+    └── 比赛材料和交付文件
+```
+
+需要注意，备份虚拟机时必须先将虚拟机彻底关机，不能在运行状态下直接复制 `.vmdk` 文件。
+
+---
+
+## 五、安装 VMware Workstation
+
+下载的安装程序为：
+
+```text
+VMware-workstation-17.6.1-24319023.exe
+```
+
+安装过程中可以保持默认路径：
+
+```text
+C:\Program Files (x86)\VMware\VMware Workstation\
+```
+
+VMware 程序本身占用空间不大，真正占空间的是后续创建的虚拟机。
+
+安装完成并确认 VMware 能够正常打开后，这个 `.exe` 安装包可以：
+
+- 删除；
+- 或移动到 U 盘备份。
+
+删除安装包不会影响已经安装好的 VMware。
+
+---
+
+## 六、创建银河麒麟虚拟机
+
+打开 VMware 后，选择"创建新的虚拟机"。
+
+### 1. 选择配置类型
+
+第一次创建可以选择"典型（推荐）"，后续 CPU、内存和虚拟硬盘参数都可以再调整。
+
+### 2. 选择安装方式
+
+建议选择"稍后安装操作系统"，不要在创建向导中直接让 VMware 自动识别 ISO，因为 VMware 可能无法准确识别银河麒麟版本。
+
+### 3. 选择客户机操作系统
+
+选择：
+
+```text
+客户机操作系统：Linux
+版本：其他 Linux 6.x 内核 64 位
+```
+
+如果没有对应选项，也可以选择 `Ubuntu 64 位`。由于镜像名称中包含 `X86_64`，必须创建 64 位虚拟机。
+
+### 4. 设置虚拟机名称和位置
+
+```text
+虚拟机名称：Kylin-V11
+保存位置：D:\VirtualMachines\Kylin-V11
+```
+
+这一步非常重要。如果不修改，VMware 可能默认将虚拟机创建在 `C:\Users\用户名\Documents\Virtual Machines`，占用 C 盘空间。
+
+### 5. 设置虚拟硬盘
+
+推荐配置：
+
+```text
+最大磁盘容量：80GB
+磁盘分配方式：动态增长
+存储方式：将虚拟磁盘存储为单个文件
+```
+
+不要勾选"立即分配所有磁盘空间"。动态增长表示虽然虚拟磁盘上限是 80GB，但创建时不会立即占用完整的 80GB，而是随着银河麒麟内部文件增加逐渐变大。
+
+### 6. 调整硬件配置
+
+创建完成后，进入虚拟机设置，推荐参数如下：
+
+| 配置项 | 推荐值 |
+|-------|------:|
+| CPU | 4 核 |
+| 内存 | 6~8GB |
+| 虚拟硬盘 | 80GB |
+| 网络 | NAT |
+| 固件 | UEFI |
+| USB | USB 3.x |
+| 显示 | 勾选 3D 加速 |
+
+如果宿主机只有 8GB 内存，虚拟机建议只分配 4GB。如果宿主机有 16GB 内存，可以为银河麒麟分配 6~8GB。
+
+### 7. 挂载 ISO
+
+进入 `虚拟机设置 → CD/DVD → 使用 ISO 映像文件`，选择 `D:\ISO\Kylin-Desktop-V11-2603-Release-20260228-X86_64.iso`，并勾选"启动时连接"。
+
+---
+
+## 七、安装银河麒麟桌面系统
+
+启动虚拟机后，进入银河麒麟安装界面。
+
+### 1. 安装途径
+
+选择"从 Live 安装"，不选择 Ghost 安装。Ghost 更适合使用已经制作好的系统镜像进行批量部署或恢复。
+
+### 2. 安装方式
+
+选择"全盘安装"。安装器中显示的磁盘类似 `/dev/sda VMware Virtual Disk`，这是 VMware 创建的虚拟硬盘，不是 Windows 的真实 C 盘或 D 盘。因此，在虚拟机安装器中选择全盘安装，只会格式化虚拟硬盘文件。
+
+### 3. 分区选项
+
+本次采用系统自动分区：
+
+```text
+不启用全盘加密
+不启用 LVM
+使用自动分区
+```
+
+确认页面中会看到类似分区：
+
+```text
+/dev/sda1   boot
+/dev/sda5   /
+/dev/sda6   backup
+/dev/sda7   data
+/dev/sda8   swap
+```
+
+勾选"格式化系统盘和数据盘"，然后继续安装。
+
+### 4. 安装完成后处理 ISO
+
+系统安装完成并重启后，如果虚拟机再次进入安装界面，需要关闭虚拟机并进入 `虚拟机设置 → CD/DVD`，取消"启动时连接"，或者直接将 ISO 从虚拟光驱中弹出。
+
+---
+
+## 八、银河麒麟 V11 的软件包保护机制
+
+银河麒麟 V11 2603 与普通 Ubuntu 有一个明显区别：系统启用了 **OSTree** 相关的软件包保护机制。
+
+在普通模式下直接执行：
+
+```bash
+sudo apt install 软件包名称
+```
+
+可能出现：
+
+```text
+当前模式禁止执行（unpack）操作
+dpkg: 执行钩子 /usr/bin/ostree-pkgs-guard 出错
+E: Sub-process /usr/bin/dpkg returned an error code (2)
+```
+
+这并不代表软件源或网络存在问题，而是当前系统模式不允许修改系统软件包。
+
+需要进入 Maintain Mode，也就是维护模式。
+
+---
+
+## 九、进入维护模式
+
+安装系统级软件之前，建议先在 VMware 中拍摄一个快照：
+
+```text
+虚拟机 → 快照 → 拍摄快照
+```
+
+然后在银河麒麟终端执行：
+
+```bash
+sudo mm-cli -s
+```
+
+用于查看当前系统模式。
+
+申请进入维护模式：
+
+```bash
+sudo mm-cli -o
+```
+
+然后重启：
+
+```bash
+sudo reboot
+```
+
+重启后再次检查：
+
+```bash
+sudo mm-cli -s
+```
+
+确认当前已经进入 Maintain Mode 后，才继续安装软件。
+
+---
+
+## 十、修复被中断的软件包状态
+
+如果之前在普通模式中执行过 `apt install`，软件包可能已经下载，但安装过程被 `ostree-pkgs-guard` 中断。
+
+进入维护模式后，应先修复：
+
+```bash
+sudo dpkg --configure -a
+```
+
+然后执行：
+
+```bash
+sudo apt --fix-broken install -y
+```
+
+再更新软件包索引：
+
+```bash
+sudo apt update
+```
+
+完成这些步骤后，再重新安装需要的软件。
+
+---
+
+## 十一、安装 VMware Tools
+
+为了让虚拟机获得更好的显示、鼠标和虚拟化集成功能，可以安装：
+
+```bash
+sudo apt install -y open-vm-tools open-vm-tools-desktop
+```
+
+安装完成后检查进程：
+
+```bash
+pgrep -a vmtoolsd
+```
+
+也可以检查服务状态：
+
+```bash
+systemctl status open-vm-tools --no-pager
+```
+
+只要能看到 `vmtoolsd` 正常运行，就说明 VMware Tools 已经生效。
+
+---
+
+## 十二、共享剪贴板（Windows ↔ 银河麒麟）
+
+VMware 的拖放和复制粘贴功能依赖 VMware Tools。
+
+### 启用设置
+
+在 VMware 中进入 `虚拟机设置 → 选项 → 客户机隔离`，勾选：
+
+- 启用拖放
+- 启用复制粘贴
+
+### Wayland 限制
+
+银河麒麟 V11 当前默认使用 **Wayland** 显示服务器：
+
+```bash
+echo $XDG_SESSION_TYPE   # 输出 wayland
+```
+
+VMware 官方说明：Linux 客户机的拖放和复制粘贴在 Wayland 下**不能正常工作**，应使用 X11 会话。
+
+### 尝试切换到 X11
+
+正常情况下，可以通过登录管理器切换会话（LightDM 登录界面右下角的桌面环境菜单选择"Kylin (X11)"）。但银河麒麟 V11 2603 中：
+
+```bash
+ls /usr/share/xsessions/   # 可能只包含 kylin-wlcom.desktop，为空
+```
+
+`/usr/share/xsessions/` 为空，只有 Wayland 会话。**不建议强行创建 X11 会话**，可能导致黑屏或登录循环。
+
+### 替代方案：SSH 连接
+
+既然共享剪贴板在 Wayland 下受限，推荐通过 SSH 方式操作：
+
+1. 在银河麒麟中安装 SSH Server（见下一节）；
+2. 在 Windows 上使用 VS Code Remote SSH 连接到银河麒麟；
+3. 代码编辑和命令执行都在 VS Code 中进行，天然支持剪贴板共享。
+
+这种方式绕过了 Wayland 的剪贴板限制，实际开发体验反而更好。
+
+---
+
+## 十三、共享文件夹（HGFS）配置
+
+除了复制粘贴，还可以通过 VMware 的共享文件夹功能在 Windows 和银河麒麟之间交换文件。
+
+### 1. 在 VMware 中配置共享文件夹
+
+进入 `虚拟机设置 → 选项 → 共享文件夹`，选择"总是启用"，添加 Windows 目录：
+
+```text
+D:\KylinShare
+```
+
+### 2. 检查共享文件夹名称
+
+在银河麒麟中执行：
+
+```bash
+vmware-hgfsclient
+```
+
+应输出 `KylinShare`。
+
+### 3. 手动挂载（临时，推荐）
+
+```bash
+sudo mkdir -p /mnt/hgfs
+sudo /usr/bin/vmhgfs-fuse .host:/ /mnt/hgfs -o subtype=vmhgfs-fuse,allow_other
+```
+
+确认挂载成功：
+
+```bash
+ls /mnt/hgfs/
+```
+
+会看到之前在 Windows 侧的 `D:\KylinShare` 中的文件。
+
+### 4. 自动挂载（systemd，可选）
+
+创建 systemd mount 单元：
+
+```bash
+sudo tee /etc/systemd/system/mnt-hgfs.mount > /dev/null << 'EOF'
+[Unit]
+Description=VMware mount for hgfs
+DefaultDependencies=no
+Before=umount.target
+ConditionVirtualization=vmware
+After=sys-fs-fuse-connections.mount
+
+[Mount]
+What=vmhgfs-fuse
+Where=/mnt/hgfs
+Type=fuse
+Options=default_permissions,allow_other
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+加载 fuse 模块并启用：
+
+```bash
+echo fuse | sudo tee /etc/modules-load.d/open-vm-tools.conf
+sudo modprobe -v fuse
+sudo systemctl daemon-reload
+sudo systemctl enable --now mnt-hgfs.mount
+```
+
+> 注意：上述 systemd 配置和模块加载操作需要在维护模式下进行，完成后保存并退出维护模式。
+
+---
+
+## 十四、安装 SSH 服务
+
+为了后续通过 Windows 终端或 VS Code 连接银河麒麟，可以安装 OpenSSH Server。
+
+在维护模式中执行：
+
+```bash
+sudo apt install -y openssh-server
+```
+
+启用并立即启动 SSH：
+
+```bash
+sudo systemctl enable --now ssh
+```
+
+检查状态：
+
+```bash
+systemctl status ssh --no-pager
+```
+
+正常情况下应显示 `active (running)`。
+
+查看虚拟机 IP：
+
+```bash
+hostname -I
+```
+
+可能得到类似 `192.168.153.128`。
+
+随后可以在 Windows PowerShell 中连接：
+
+```powershell
+ssh Csurfing@192.168.153.128
+```
+
+第一次连接时可能提示：
+
+```text
+Are you sure you want to continue connecting?
+```
+
+输入 `yes`，然后输入银河麒麟用户密码。
+
+使用 SSH 的好处是：
+
+- 可以直接在 Windows Terminal 中操作银河麒麟；
+- 方便复制命令；
+- 可以使用 VS Code Remote SSH；
+- 项目文件仍然保存在银河麒麟内部；
+- 更适合后续 Agent 项目开发。
+
+---
+
+## 十五、VPN 与网络配置
+
+当需要在虚拟机中使用 VPN 环境时，需要注意 VMware 的网络模式选择。
+
+### 网络模式选择
+
+VMware 网络必须使用 **NAT** 模式。桥接模式不会跟随 Windows 侧 VPN 的流量。
+
+### VPN 类型处理
+
+| VPN 类型 | 处理方式 |
+|---------|---------|
+| 真实 VPN（WireGuard / OpenVPN） | 通常自动通过 NAT 传递，无需额外配置 |
+| 代理软件（Clash / v2rayN） | 需在代理软件中开启"允许局域网连接"，获取 VMnet8 网关地址，然后在麒麟系统设置中配置代理 |
+
+### 网络测试
+
+在银河麒麟中测试网络连通性：
+
+```bash
+curl -4 --connect-timeout 10 https://checkip.amazonaws.com
+curl -4 --connect-timeout 10 https://ifconfig.me/ip
+```
+
+> 注意：`api.ipify.org` 可能被重置，推荐使用 `checkip.amazonaws.com`。
+
+已验证：银河麒麟 DNS 正常，百度 HTTPS 正常，仅部分境外服务可能被重置。
+
+---
+
+## 十六、中文输入法
+
+银河麒麟桌面 V11 默认可能未安装中文输入法。
+
+### 检查当前输入法状态
+
+```bash
+command -v fcitx5
+dpkg -l | grep -Ei 'fcitx|ibus|pinyin|rime'
+```
+
+### 键位尝试
+
+在桌面环境中尝试：
+
+- `Ctrl + 空格` 切换输入法
+- 点击任务栏右侧的输入法图标
+
+### 安装输入法
+
+如果需要安装，在维护模式中执行：
+
+```bash
+sudo apt update
+sudo apt install -y fcitx5 fcitx5-chinese-addons
+```
+
+安装后重启或注销重新登录，在输入法配置中添加中文拼音输入源。
+
+---
+
+## 十七、保存修改并退出维护模式
+
+完成系统软件安装后，不建议长期停留在维护模式。
+
+应执行：
+
+```bash
+sudo mm-cli -c -a
+```
+
+然后重启：
+
+```bash
+sudo reboot
+```
+
+其中 `-c -a` 表示保存维护模式中的系统修改并退出。如果退出时不保存修改（`-c -n`），刚安装的软件可能无法保留。
+
+> 注意区分：`-c -a` = 保存所有修改并退出；`-c -n` = 丢弃修改并退出。
+
+重启后可以再次查看：
+
+```bash
+sudo mm-cli -s
+```
+
+并检查 SSH 和 VMware Tools 是否仍然正常：
+
+```bash
+systemctl status ssh --no-pager
+pgrep -a vmtoolsd
+```
+
+---
+
+## 十八、几个容易踩坑的地方
+
+### 1. VMware 安装包可以删除
+
+```text
+VMware-workstation-17.6.1-24319023.exe
+```
+
+只是安装程序。VMware 安装完成后可以删除，不影响运行。
+
+### 2. ISO 不等于已经安装好的系统
+
+ISO 只是安装介质。真正的银河麒麟系统存放在 `D:\VirtualMachines\Kylin-V11`，不要误删这个目录。
+
+### 3. 全盘安装不会格式化 Windows
+
+前提是安装器看到的目标磁盘为 `VMware Virtual Disk`，并且创建虚拟机时没有选择"使用物理磁盘"。
+
+### 4. 普通模式无法安装部分软件
+
+出现 `当前模式禁止执行（unpack）操作` 时，不要反复执行 `apt install`，应先进入 Maintain Mode。
+
+### 5. 终端输入密码时没有字符显示
+
+Linux 终端中执行 `sudo` 后输入密码时：
+
+- 不会显示明文；
+- 不会显示星号；
+- 光标可能也没有变化。
+
+直接输入密码并按回车即可。
+
+### 6. 不要随意执行 `apt autoremove`
+
+系统提示某些软件包"现在不需要了"，并不代表必须立即删除。在不确定作用的情况下，不要轻易执行 `sudo apt autoremove`，特别是在银河麒麟这种带系统保护机制的环境中，更应谨慎处理系统组件。
+
+### 7. Wayland 下剪贴板不可用
+
+VMware 官方说明 Linux 客户机的复制粘贴在 Wayland 下不能正常工作。不要花时间尝试修复，直接使用 SSH 作为替代方案。
+
+### 8. 保存维护模式的修改
+
+退出维护模式时，记住：
+
+| 命令 | 效果 |
+|------|------|
+| `sudo mm-cli -c -a` | 保存所有修改并退出 |
+| `sudo mm-cli -c -n` | 丢弃修改并退出 |
+
+不要搞混。
+
+---
+
+## 十九、建议开发路线
+
+综合上述配置过程，对于在银河麒麟上进行 OS Agent 开发的场景，建议按以下路线推进：
+
+1. **当前阶段**：虚拟机开发（VMware + D 盘）
+2. **文件交换**：共享文件夹（手动挂载）+ SSH 传输
+3. **代码开发**：Windows 使用 VS Code Remote SSH 连接到银河麒麟（避免 Wayland 剪贴板限制）
+4. **后续需求**：当比赛项目进入需要真实系统性能、硬件交互或最终演示验证的阶段，再考虑独立 SSD 或双系统（从 D 盘压缩 80-100GB 未分配空间）
+
+---
+
+## 二十、最终效果
+
+完成以上步骤后，当前环境已经具备：
+
+- VMware Workstation 正常运行；
+- 银河麒麟桌面 V11 正常安装；
+- 虚拟机保存在 D 盘；
+- 系统使用 80GB 动态虚拟硬盘；
+- VMware NAT 网络可正常访问基础网络；
+- 已掌握银河麒麟维护模式的进入和退出方法；
+- 可以正常安装系统软件包；
+- VMware Tools 可以运行；
+- 共享文件夹可手动挂载；
+- SSH 服务正常启用；
+- Windows 可通过 SSH 访问银河麒麟；
+- 支持 VS Code Remote SSH 开发；
+- 中文输入法可安装；
+- VPN / 代理网络可配置；
+- U 盘可用于保存 ISO、安装包和冷备份。
+
+---
+
+## 总结
+
+对于想在 Windows 上体验银河麒麟、进行软件开发或开展 OS Agent 项目的人来说，使用 VMware 是一个风险较低、恢复方便的选择。
+
+最关键的几点是：
+
+```text
+虚拟机文件放在电脑内部磁盘
+普通 U 盘只用于备份
+虚拟硬盘使用动态增长
+安装器中确认目标是 VMware Virtual Disk
+安装软件前正确进入 Maintain Mode
+完成修改后保存并退出维护模式
+Wayland 下剪贴板受限，用 SSH 替代
+VPN 用 NAT 模式，代理软件需开局域网
+```
+
+银河麒麟 V11 的系统保护方式与普通 Ubuntu 不完全相同，直接套用常规 Linux 教程可能遇到 `ostree-pkgs-guard` 错误。理解维护模式后，后续安装开发工具和配置环境会顺利很多。
+
+本文整合了部署银河麒麟虚拟机过程中的已验证经验与常见问题处理，后续如果在同一环境中遇到新的配置需求或问题，将持续补充更新。
