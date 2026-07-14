@@ -1,0 +1,330 @@
+---
+title: "TencentDB Agent Memory：分层记忆系统深度解析"
+published: 2026-07-14
+description: "TencentDB Agent Memory 是由腾讯云开源的 Agent 记忆系统，采用分层记忆 + 符号化架构。本文深入解析其核心设计理念：如何通过渐进式披露的短期与长期分层、Mermaid 符号化图谱以及下钻溯源机制，实现 Token 节省最高 61% 的同时达成 100% 可追溯。"
+tags: [TencentDB, Agent, Memory, LLM, 记忆系统, OpenClaw, Hermes, Mermaid]
+category: Agent
+draft: false
+pinned: false
+comment: true
+lang: zh-CN
+---
+
+<div align="center">
+  <img src="/images/tencentdb-memory/logo.png" alt="TencentDB Agent Memory" width="700" />
+</div>
+
+> **让 Agent 沉淀经验，让人专注创造。**  
+> GitHub: [TencentCloud/TencentDB-Agent-Memory](https://github.com/TencentCloud/TencentDB-Agent-Memory)  
+> License: MIT | Node: ≥22.16 | OpenClaw: ≥2026.3.13
+
+---
+
+## ✨ 效果亮点
+
+**TencentDB Agent Memory = 符号化短期记忆 + 分层式长期记忆。**
+
+- **符号化短期记忆**：将厚重的工具日志分层卸载，逐步总结成轻量级 Mermaid 结构符号，大幅降低 Token 消耗的同时提升任务成功率。
+- **分层式长期记忆**：把碎片化对话层层提炼，沉淀出有层次的画像与场景，不再是扁平的向量堆砌。
+
+**作为 OpenClaw 插件接入后**：最高节省 **61.38% Token**，通过率相对提升 **51.52%**；PersonaMem 准确率从 **48%** 提升到 **76%**。
+
+| 记忆能力 | Benchmark | 原生成功率 | 加插件后 | 相对变化 | 原生 Token | 加插件后 | 相对变化 |
+| :------ | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **短期记忆** | WideSearch | 33% | **50%** | **+51.52%** | 221.31M | **85.64M** | **−61.38%** |
+| **短期记忆** | SWE-bench | 58.4% | **64.2%** | **+9.93%** | 3474.1M | **2375.4M** | **−33.09%** |
+| **短期记忆** | AA-LCR | 44.0% | **47.5%** | **+7.95%** | 112.0M | **77.3M** | **−30.98%** |
+| **长期记忆** | PersonaMem | 48% | **76%** | **+59%** | — | — | — |
+
+> 超长 Session 评测不是单题清空上下文，而是把多个任务拼接到同一个 Session 中连续执行。例如 SWE-bench 每个 Session 连续执行 50 个任务，用来模拟真实长程 Agent 的上下文累积压力。
+
+---
+
+## 项目简介
+
+**Memory 不是为了让 AI 存下所有东西，而是为了让人不必重复所有事情。**
+
+在实际使用中，我们往往需要反复告诉 Agent 固定 SOP、项目背景、工具习惯和输出格式。这些信息不应该每次重新解释，但同时也不应该被无脑、扁平地全部塞进上下文。
+
+TencentDB Agent Memory 帮助 Agent 学会你的流程、保留任务上下文、复用历史经验。但它**拒绝暴力的历史堆砌**，也**抛弃不可逆的暴力摘要**。它将记忆设计为一套极具层次感的系统，以**符号化记忆**解决单次长任务的信息过载，以**记忆分层**解决跨会话的经验沉淀。
+
+> **让 Agent 记住该记的，让人把注意力留给判断、创造和真正有价值的工作。**
+
+---
+
+## 核心技术：拒绝平铺，走向分层与符号化
+
+TencentDB Agent Memory 的设计理念围绕两个核心展开：**记忆分层** 与 **符号化记忆**。这不仅让 Agent "记得更多"，更重要的是"想得更清"。
+
+### 1. 记忆分层：渐进式披露与异构存储
+
+传统的记忆系统往往将所有数据切片并平铺为向量，召回时如同在一堆毫无关联的便利贴中寻找线索，缺乏宏观视角的指引。
+
+**不管是长期的知识、短期的任务，还是未来的经验能力，记忆都不应该平铺，生成和召回都必须有层次。** TencentDB Agent Memory 将"分层"作为整个架构的统一设计哲学：
+
+| 层次 | 类型 | 存储形式 | 说明 |
+|------|------|----------|------|
+| **短期分层** | 上下文卸载/任务 | `refs/*.md` → `jsonl` → **Mermaid 画布** | 底层保留工具调用原文，中层步骤摘要，高层轻量 Mermaid 任务地图 |
+| **长期分层** | 用户理解 | **L0 Conversation** → **L1 Atom** → **L2 Scenario** → **L3 Persona** | 语义金字塔，高层把握偏好，底层考证细节 |
+| **技能分层（Roadmap）** | 动作沉淀 | 轨迹 → 解决模式 → Skill/SOP | 记忆包含"会做什么" |
+
+#### 短期记忆的分层
+
+底层保留原始、厚重的工具调用结果（`refs/*.md`），中层抽取步骤摘要（`jsonl`），高层则浓缩为一张极度轻量的 Mermaid 任务画布。Agent 在上下文中仅需关注高层结构，遇错时再沿着 `node_id` 下钻到底层查证。
+
+#### 长期个性化（用户理解）的分层
+
+打破扁平的历史记录，建立 **L0 Conversation → L1 Atom → L2 Scenario → L3 Persona** 的语义金字塔：
+
+- **L0 — Conversation（原始对话）**：保留最原始的对话流水，作为可追溯的证据层
+- **L1 — Atom（结构化事实）**：从对话中提取的结构化事实片段（时间、事件、偏好等），以向量化形式存储
+- **L2 — Scenario（场景块）**：将 L1 Atom 按照场景聚合，形成一块块可读的 Markdown 场景描述
+- **L3 — Persona（用户画像）**：从多个 Scenario 中提炼出的用户宏观画像——表达风格、长期目标、核心偏好
+
+平时靠高层 Persona 把握用户偏好，需要考证细节时再检索底层 Atom。
+
+#### 技能生成（Skill 与动作沉淀，Roadmap）
+
+记忆不应仅限于"知道什么"，还应包括"会做什么"。TencentDB Agent Memory 正在将分层延伸至动作域：从底层的执行轨迹（Traces）与报错日志中，中层归纳出共性的解决模式，高层最终提炼出可直接挂载复用的 Skill 或标准 SOP 代码。
+
+<div align="center">
+  <img src="/images/tencentdb-memory/memory-pyramid.png" alt="TencentDB Agent Memory L0 to L3 semantic pyramid" width="800" />
+</div>
+
+#### 渐进式披露与异构存储
+
+为了支撑这种无处不在的分层，系统设计了**底层数据库与上层文件系统结合的存储方案**：
+
+- **底层**（海量事实、日志、轨迹）存入数据库或归档文件，确保稳定与全量检索
+- **高层**（画像、场景、画布、Skill）存入业务可读的文件系统（Markdown），确保高信息密度、逻辑清晰与白盒可调
+
+**低层保留证据，高层保留结构。**
+
+#### 每一条信息都 100% 可找回、可恢复
+
+压缩或抽象最大的风险是"丢失证据"。得益于严格的索引映射机制，系统内没有任何一段摘要是"不可逆"的黑盒。无论是短期记忆中被卸载的一段报错日志，还是长期记忆里总结出的一条用户偏好，Agent 或开发者都可以沿着 **"高层符号（Persona / 画布） → 中层索引（Scenario / JSONL） → 底层原文（L0 Conversation / refs）"** 的链路进行完美溯源与恢复。
+
+<div align="center">
+  <img src="/images/tencentdb-memory/flowchart1.cn.png" alt="可追溯、可恢复的下钻溯源链路" width="800" />
+</div>
+
+### 2. 符号化记忆：用最少符号表达最多语义（Mermaid 画布）
+
+长程任务中最消耗 Token 的往往是繁杂的过程日志（如搜索结果、代码、报错）。为此，系统结合 **上下文卸载（Context Offloading）** 提出了 **符号化记忆**：
+
+- **Mermaid 符号图谱**：取代冗长的自然语言或扁平的 JSON，使用高密度、强拓扑的 Mermaid 语法来描绘任务状态流转，既能被 LLM 精准理解，也方便人类阅览。
+- **历史折叠与卸载**：完整工具日志被卸载到外部文件系统，上下文仅保留轻量级的 Mermaid 任务地图。
+- **基于 `node_id` 的溯源**：Agent 看着符号图谱推理，如需核对细节，直接 grep 图谱上的 `node_id` 即可瞬间找回完整原文，既大幅降本又保全了 100% 可追溯性。
+
+```mermaid
+graph LR
+    Log["繁杂冗长的过程日志<br/>(几十万 Token)"] -->|"1. 卸载完整原文"| FS[("外部文件系统<br/>(refs/xxx.md)")]
+    Log -->|"2. 提取关系"| MMD["Mermaid 符号图谱<br/>(带 node_id)"]
+    
+    MMD -->|"3. 轻量级注入"| Agent(("Agent 上下文<br/>(几百 Token)"))
+    Agent -. "4. 随时按 node_id 下钻恢复原文" .-> FS
+    
+    style Log fill:#f1f5f9,stroke:#94a3b8,stroke-dasharray: 5 5
+    style FS fill:#f8fafc,stroke:#cbd5e1
+    style MMD fill:#eff6ff,stroke:#3b82f6,stroke-width:2px
+    style Agent fill:#fffbeb,stroke:#f59e0b,stroke-width:2px
+```
+
+---
+
+## 🤔 方案特点
+
+### 1. 宏观画像 + 微观事实：同一套下钻机制降低幻觉
+
+压缩最大的风险是"省了 Token，也丢了证据"。TencentDB Agent Memory 没有把历史压成一段不可恢复的 summary，而是保留了从高层摘要回到底层证据的路径。
+
+| 问题类型 | 优先使用 | 继续下钻 |
+| :--- | :--- | :--- |
+| 日常偏好、表达风格、长期目标 | L3 Persona / L2 Scenario | 需要事实时查 L1 Atom / L0 Conversation |
+| 具体事实、时间、项目细节 | L1 Atom / L0 Conversation | 命中不足时扩大时间范围或语义检索 |
+| 当前长任务继续执行 | Active MMD 任务画布 | 摘要不够时查 JSONL，再读 `refs/*.md` 原文 |
+| 历史任务恢复 | Metadata 任务入口 | 打开 MMD → 找 node_id → 追 result_ref |
+
+上层负责"情商"和方向，下层负责"证据"和精度。短期压缩和长期记忆在这里合成一条闭环：**能折叠，也能展开；能抽象，也能追证。**
+
+### 2. 白盒可调试：记忆不是黑盒向量
+
+很多记忆系统的问题是：召回错了，你只能看到一串向量分数，很难判断到底哪里错。TencentDB Agent Memory 把关键中间产物保存在可读文件里：
+
+- L2 Scenario 块是 Markdown，可以直接打开检查。
+- L3 Persona 存放在 `persona.md`，可以追溯到对应的 Scenario。
+- 短期任务画布是 Mermaid，既能给人看，也能给 Agent 读。
+- 原文、摘要、节点之间有 `result_ref` 和 `node_id` 关联。
+
+这意味着调试不再是翻黑盒数据库，而是沿着 **"Persona → Scenario → Atom → Conversation"** 的链路逐层定位。
+
+**这些分层记忆产物都存放在 `~/.openclaw/memory-tdai/` 下，可以直接打开目录逐层查看。**
+
+### 3. 工程能力完整：不是 Demo，而是可接入的插件
+
+| 能力 | 说明 |
+| :--- | :--- |
+| OpenClaw 插件 | 安装后即可自动捕获、提取、召回记忆 |
+| Hermes Gateway 适配 | `TdaiCore + HostAdapter` 解耦宿主框架 |
+| 本地后端 | `SQLite + sqlite-vec`，开箱即用 |
+| 混合检索 | BM25 + 向量 + RRF，兼顾关键词和语义召回 |
+| Agent 工具 | `tdai_memory_search` / `tdai_conversation_search` |
+
+---
+
+## 🔧 可调参数（三级，零配置可用）
+
+**所有字段均有合理默认值，零配置即可跑。** 如果要调优，可以按使用深度逐层展开。
+
+### Level 1 · 日常调参（覆盖 90% 使用场景）
+
+| 字段 | 默认 | 说明 |
+| :--- | :--- | :--- |
+| `timezone` | `"system"` | 时区 |
+| `storeBackend` | `"sqlite"` | 存储后端 |
+| `recall.strategy` | `"hybrid"` | 召回策略：`keyword` / `embedding` / `hybrid`（RRF 融合，推荐） |
+| `recall.maxResults` | `5` | 每次召回条数 |
+| `pipeline.everyNConversations` | `5` | 每 N 轮对话触发一次 L1 记忆提取 |
+| `persona.triggerEveryN` | `50` | 每 N 条新记忆触发用户画像生成 |
+| `offload.enabled` | `false` | 是否启用短期记忆压缩 |
+
+### Level 2 · 进阶调优（长任务 / 长 Session 场景）
+
+| 字段 | 默认 | 说明 |
+| :--- | :--- | :--- |
+| `pipeline.enableWarmup` | `true` | Warm-up：新 session 从 1 轮起触发，每次翻倍至 N（1→2→4→…） |
+| `pipeline.l1IdleTimeoutSeconds` | `600` | 用户停止对话多久后触发 L1 |
+| `pipeline.l2MinIntervalSeconds` | `900` | 同 session 两次 L2 之间的最小间隔 |
+| `recall.timeoutMs` | `5000` | 召回超时阈值，超时跳过注入不阻塞对话 |
+| `offload.mildOffloadRatio` | `0.5` | 温和压缩触发比例（占 context window） |
+| `offload.aggressiveCompressRatio` | `0.85` | 激进压缩触发比例 |
+| `offload.mmdMaxTokenRatio` | `0.2` | MMD 注入 token 预算比例 |
+| `bm25.language` | `"zh"` | 分词语言：`zh`（jieba）/ `en` |
+
+### Level 3 · 完整参数表（运维 / 自定义模型 / 远程 embedding）
+
+- `embedding.*` — 远程 embedding 服务（OpenAI 兼容 API）
+  - `embedding.sendDimensions`（默认 `true`）：OpenAI `text-embedding-3-*` 系列依赖该字段做 Matryoshka 维度截断；但部分开源模型（如 **BGE-M3**）不支持自定义维度，需设为 `false`
+- `llm.*` — 独立 LLM 模式（绕过宿主框架内置模型）
+- `offload.backendUrl / backendApiKey` — 将 offload 流程卸载到后端服务
+- `report.*` — 指标上报
+
+---
+
+## 🎬 Demos
+
+<table align="center">
+  <tr align="center" valign="middle">
+    <td width="50%" valign="middle">
+      <video src="https://github.com/user-attachments/assets/667231cd-1c77-43e5-a662-6123a0073bc4" controls="controls" muted="muted" style="max-width: 100%;"></video>
+    </td>
+    <td width="50%" valign="middle">
+      <video src="https://github.com/user-attachments/assets/6c6a29a6-c8aa-45b2-8258-bebac8f03396" controls="controls" muted="muted" style="max-width: 100%;"></video>
+    </td>
+  </tr>
+  <tr align="center" valign="top">
+    <td><em>OpenClaw × Agent Memory</em></td>
+    <td><em>Hermes × Agent Memory</em></td>
+  </tr>
+</table>
+
+---
+
+## 🛣️ Roadmap
+
+- [x] 长期个性化记忆（L0 → L3）
+- [x] 短期记忆压缩（Context Offload + Mermaid 画布）
+- [x] 可用本地 SQLite 后端与腾讯云向量数据库 TCVDB 后端
+- [x] OpenClaw 插件与 Hermes Gateway 适配
+- [ ] 记忆可迁移：跨 Agent / 跨框架 / 跨设备的导入导出与热迁移
+- [ ] Skill 自动生成
+- [ ] 可视化调试与记忆观测面板
+
+---
+
+## 📊 项目演示幻灯片
+
+> 以下幻灯片来自 **2026 腾讯犀牛鸟对外开源人才计划** 的 TencentDB Agent Memory 专题分享，系统性地展示了项目的设计思路与能力全景。
+
+### 大模型长程任务的"三重枷锁"
+
+Agent 在处理长程任务时面临三大核心挑战：上下文窗口有限、Token 消耗巨大、跨会话经验无法沉淀。传统方案要么暴力塞入全部历史导致 Token 爆炸，要么使用不可逆的摘要丢失关键证据。
+
+<div align="center">
+  <img src="/images/tencentdb-memory/slides/slide-2.png" alt="大模型长程任务的三重枷锁" width="800" />
+</div>
+
+### 破局之道：独创双引擎记忆架构
+
+TencentDB Agent Memory 提出 **短期记忆引擎 + 长期记忆引擎** 的双引擎架构：
+
+- **短期记忆引擎**：负责当前会话的上下文流式卸载与 Mermaid 符号化压缩，实时降低 Token 消耗
+- **长期记忆引擎**：负责跨会话的经验沉淀，通过 L0→L3 语义金字塔实现从原始对话到用户画像的层层提炼
+
+<div align="center">
+  <img src="/images/tencentdb-memory/slides/slide-3.png" alt="独创双引擎记忆架构" width="800" />
+</div>
+
+### 短期记忆：上下文流式卸载
+
+长程任务中，工具调用的中间结果（搜索、代码、报错）会迅速撑爆上下文窗口。TencentDB Agent Memory 通过流式卸载将完整日志写到外部文件系统，上下文中仅保留轻量级 Mermaid 符号图谱（几百 Token），Agent 按需下钻 `node_id` 查证原文。
+
+<div align="center">
+  <img src="/images/tencentdb-memory/slides/slide-4.png" alt="短期记忆：上下文流式卸载" width="800" />
+</div>
+
+### 长期记忆：L0 – L3 语义金字塔
+
+从原始对话（L0）到用户画像（L3）的渐进式提炼链路：
+
+| 层级 | 内容 | 用途 |
+|:---|:---|:---|
+| **L3 Persona** | 用户画像（表达风格、长期目标、核心偏好） | 日常判断方向，把握宏观 |
+| **L2 Scenario** | 场景块（按主题聚合的 Markdown） | 理解上下文场景 |
+| **L1 Atom** | 结构化事实（向量化存储） | 考证具体细节 |
+| **L0 Conversation** | 原始对话流水 | 终极证据溯源 |
+
+<div align="center">
+  <img src="/images/tencentdb-memory/slides/slide-5.png" alt="长期记忆：L0-L3 语义金字塔" width="800" />
+</div>
+
+### 透明可控：100% 白盒完美溯源
+
+所有分层记忆产物均为可读文件（Markdown / Mermaid），沿着 "Persona → Scenario → Atom → Conversation" 链路可逐层定位至原文。调试不再是翻黑盒数据库，而是直接打开目录查看。
+
+<div align="center">
+  <img src="/images/tencentdb-memory/slides/slide-6.png" alt="透明可控：100% 白盒完美溯源" width="800" />
+</div>
+
+### 实测基准：全面性能评估
+
+| Benchmark | 原生成功率 | 加插件后 | 提升 |
+|:---|:---:|:---:|:---:|
+| WideSearch | 33% | **50%** | **+51.52%** |
+| SWE-bench | 58.4% | **64.2%** | **+9.93%** |
+| AA-LCR | 44.0% | **47.5%** | **+7.95%** |
+| PersonaMem | 48% | **76%** | **+59%** |
+
+Token 节省方面，WideSearch 降低 **61.38%**，SWE-bench 降低 **33.09%**，AA-LCR 降低 **30.98%**。
+
+<div align="center">
+  <img src="/images/tencentdb-memory/slides/slide-7.png" alt="实测基准：全面性能评估" width="800" />
+</div>
+
+### 企业级工程能力：即插即用
+
+- OpenClaw 插件一键安装，自动捕获、提取、召回
+- Hermes Gateway 适配，TdaiCore + HostAdapter 解耦
+- 本地 SQLite + sqlite-vec 开箱即用
+- BM25 + 向量 + RRF 混合检索
+- Agent 工具：`tdai_memory_search` / `tdai_conversation_search`
+
+<div align="center">
+  <img src="/images/tencentdb-memory/slides/slide-8.png" alt="企业级工程能力：即插即用" width="800" />
+</div>
+
+---
+
+> 本文内容基于 [TencentDB-Agent-Memory README_CN.md](https://github.com/TencentCloud/TencentDB-Agent-Memory/blob/main/README_CN.md) 及 2026 腾讯犀牛鸟对外开源人才计划分享幻灯片，聚焦记忆系统的设计理念与架构，未包含安装与部署细节。如需部署，请参考 GitHub 原 README。
+>
+> **MIT License** © TencentDB Agent Memory Team
