@@ -2,7 +2,7 @@
 title: "Windows 上通过 VMware 安装银河麒麟桌面 V11：从镜像下载到开发环境配置"
 published: 2026-07-14
 description: "在 Windows 宿主机上使用 VMware Workstation 部署银河麒麟桌面 V11 虚拟机的完整记录。涵盖虚拟机方案选型、磁盘空间规划、系统安装、OSTree 维护模式、VMware Tools / SSH 配置、共享文件夹挂载、Wayland 剪贴板问题处理以及 VPN 网络配置等实际开发中遇到的难题与解决方案。"
-tags: [银河麒麟, Kylin, VMware, 虚拟机, OS Agent, Linux, 维护模式, OSTree, SSH]
+tags: [银河麒麟, Kylin, VMware, 虚拟机, OS Agent, Linux, 维护模式, OSTree, SSH, Fcitx5, 搜狗输入法, 中文输入法, Clash, 代理, NAT, VMnet8]
 category: 赛事学习
 draft: false
 pinned: false
@@ -571,11 +571,114 @@ VMware 网络必须使用 **NAT** 模式。桥接模式不会跟随 Windows 侧 
 | VPN 类型 | 处理方式 |
 |---------|---------|
 | 真实 VPN（WireGuard / OpenVPN） | 通常自动通过 NAT 传递，无需额外配置 |
-| 代理软件（Clash / v2rayN） | 需在代理软件中开启"允许局域网连接"，获取 VMnet8 网关地址，然后在麒麟系统设置中配置代理 |
+| 代理软件（Clash / v2rayN） | 需手动配置，详情见下方 |
 
-### 网络测试
+### 代理软件配置（以 Clash Verge 为例）
 
-在银河麒麟中测试网络连通性：
+代理软件不是在虚拟机中安装 VPN 客户端，而是让银河麒麟通过 VMware NAT 网络，使用 Windows 宿主机上已经运行的 Clash 服务。
+
+**整体链路：**
+
+```text
+银河麒麟虚拟机
+    ↓  （VMware NAT / VMnet8）
+Windows 宿主机（Clash 代理）
+    ↓
+外部网络
+```
+
+**步骤 1：确认 VMware 网络适配器为 NAT**
+
+虚拟机设置 → 网络适配器 → NAT 模式。
+
+NAT 模式对应 VMware 的 VMnet8 虚拟网卡。VMnet1 通常是仅主机模式，不要弄混。
+
+**步骤 2：获取 Windows 宿主的 VMnet8 地址**
+
+在 Windows 命令提示符中执行：
+
+```powershell
+ipconfig
+```
+
+找到 `VMware Network Adapter VMnet8` 的 IPv4 地址，例如 `192.168.x.1`。下文统一写作 `<宿主机VMnet8地址>`。
+
+**步骤 3：确认 Clash 混合端口**
+
+在 Clash Verge 中进入：
+
+```text
+设置 → 端口设置 → 混合端口
+```
+
+混合端口通常是一个四位数字（例如 `7897` 或 `7890`），以实际显示为准。此处统一写作 `<Clash混合端口>`。
+
+> 不要把"外部控制端口"误认为代理端口。外部控制端口用于 API 管理，混合端口才用于 HTTP/HTTPS/SOCKS 代理连接。
+
+**步骤 4：开启局域网连接**
+
+在 Clash Verge 设置中开启：
+
+```text
+允许局域网连接（Allow LAN）
+```
+
+否则 Clash 只监听 `127.0.0.1`，虚拟机无法连接。
+
+**步骤 5：在银河麒麟系统设置中填写代理**
+
+进入：
+
+```text
+系统设置 → 网络 → 网络代理 → 手动
+```
+
+填写：
+
+| 字段 | 值 |
+|------|-----|
+| HTTP 代理 | `<宿主机VMnet8地址>` |
+| 端口 | `<Clash混合端口>` |
+| HTTPS 代理 | `<宿主机VMnet8地址>` |
+| 端口 | `<Clash混合端口>` |
+
+保存后，浏览器和部分桌面程序即可通过 Clash 访问外部网络。
+
+**步骤 6：终端代理配置（临时）**
+
+部分终端程序不会自动读取系统代理，可临时设置环境变量：
+
+```bash
+export http_proxy="http://<宿主机VMnet8地址>:<Clash混合端口>"
+export https_proxy="$http_proxy"
+export HTTP_PROXY="$http_proxy"
+export HTTPS_PROXY="$http_proxy"
+```
+
+### 代理验证
+
+测试端口连通性：
+
+```bash
+nc -vz <宿主机VMnet8地址> <Clash混合端口>
+```
+
+如果提示 `nc` 未安装：
+
+```bash
+sudo apt install -y netcat-openbsd
+```
+
+测试 HTTP 代理是否正常工作：
+
+```bash
+curl -x http://<宿主机VMnet8地址>:<Clash混合端口> \
+  https://www.google.com/generate_204 -I
+```
+
+若返回 `HTTP/1.1 200` 或 `HTTP/2 204`，说明代理配置成功。
+
+测试公网 IP（确认流量已走代理）：
 
 ```bash
 curl -4 --connect-timeout 10 https://checkip.amazonaws.com
@@ -584,7 +687,19 @@ curl -4 --connect-timeout 10 https://ifconfig.me/ip
 
 > 注意：`api.ipify.org` 可能被重置，推荐使用 `checkip.amazonaws.com`。
 
-已验证：银河麒麟 DNS 正常，百度 HTTPS 正常，仅部分境外服务可能被重置。
+取消终端代理：
+
+```bash
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+```
+
+### 常见网络排查
+
+| 现象 | 排查方向 |
+|------|---------|
+| 虚拟机无法连接 Clash 端口 | VMware 是否为 NAT、地址是否为 VMnet8、Clash 是否开启 Allow LAN、端口是否混合端口、Windows 防火墙是否拦截 |
+| 浏览器能上网但终端不能 | 终端未读取系统代理，为当前会话设置环境变量 |
+| 填写了 127.0.0.1 | 虚拟机中的 127.0.0.1 指向自身，不是 Windows 宿主机，必须使用 VMnet8 地址 |
 
 ---
 
@@ -606,16 +721,99 @@ dpkg -l | grep -Ei 'fcitx|ibus|pinyin|rime'
 - `Ctrl + 空格` 切换输入法
 - 点击任务栏右侧的输入法图标
 
-### 安装输入法
+### 安装 Fcitx5 中文组件
 
-如果需要安装，在维护模式中执行：
+在维护模式中执行完整安装：
 
 ```bash
 sudo apt update
-sudo apt install -y fcitx5 fcitx5-chinese-addons
+sudo apt install -y \
+  fcitx5 \
+  fcitx5-chinese-addons \
+  fcitx5-config-qt \
+  im-config \
+  fcitx5-frontend-gtk2 \
+  fcitx5-frontend-gtk3 \
+  fcitx5-frontend-qt5
 ```
 
-安装后重启或注销重新登录，在输入法配置中添加中文拼音输入源。
+各个包的作用：
+
+| 包名 | 作用 |
+|------|------|
+| `fcitx5` | 输入法框架主程序 |
+| `fcitx5-chinese-addons` | 中文拼音、双拼等输入组件 |
+| `fcitx5-config-qt` | 图形配置工具 |
+| `im-config` | 系统输入法框架选择工具 |
+| `fcitx5-frontend-*` | GTK/Qt 应用输入模块 |
+
+> 注意：Fcitx5 的 Qt5 前端是 `fcitx5-frontend-qt5`，而 `fcitx-frontend-qt5`（少一个 `5`）属于旧版 Fcitx4，安装前请确认包名。
+
+### 设置 Fcitx5 为默认框架
+
+在 UKUI 桌面环境下，`im-config` 的图形界面可能因 Wayland 或 MESA 警告无法正常使用。改用命令行方式指定：
+
+```bash
+im-config -n fcitx5
+```
+
+确认配置已写入：
+
+```bash
+cat ~/.xinputrc
+```
+
+应输出：
+
+```text
+run_im fcitx5
+```
+
+### 启动 Fcitx5 后台进程
+
+安装完成后，Fcitx5 后台进程不一定自动运行。如果 `fcitx5-configtool` 提示"未检测到输入法框架"，先启动进程：
+
+```bash
+fcitx5 -d
+```
+
+确认进程正常运行：
+
+```bash
+pgrep -ax fcitx5
+```
+
+应输出类似：
+
+```text
+12345 fcitx5 -d
+```
+
+此时再打开 `fcitx5-configtool` 即可正常配置输入法。
+
+### 关于搜狗输入法
+
+部分银河麒麟版本预装了麒麟版搜狗输入法。它通常**不是**旧版 Fcitx4 进程，而是作为 Fcitx5 插件运行：
+
+```text
+Loaded addon com.sogou.ime.ng.fcitx5.kylin-addon
+```
+
+所以不需要担心两个框架冲突。可以用以下命令确认当前系统中没有旧版 Fcitx4：
+
+```bash
+pgrep -ax fcitx
+```
+
+如果没有任何输出，说明系统只有 Fcitx5。搜狗输入法、Fcitx5 拼音和英文键盘可以同时运行在 Fcitx5 框架下。
+
+### 切换输入法
+
+安装并启动后，在桌面环境中：
+
+- `Ctrl + 空格` 切换中英文
+- 点击任务栏右侧的输入法图标切换输入源
+- 在 `fcitx5-configtool` 中添加/删除输入法
 
 ---
 
