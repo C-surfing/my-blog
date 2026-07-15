@@ -465,40 +465,59 @@ ls /mnt/hgfs/
 
 会看到之前在 Windows 侧的 `D:\KylinShare` 中的文件。
 
-### 4. 自动挂载（systemd，可选）
+### 4. 开机自动挂载（推荐：/etc/fstab）
 
-创建 systemd mount 单元：
+systemd mount 单元对 vmhgfs-fuse 兼容性不够稳定，更可靠的方式是直接写入 `/etc/fstab`。
+
+先备份原文件：
 
 ```bash
-sudo tee /etc/systemd/system/mnt-hgfs.mount > /dev/null << 'EOF'
-[Unit]
-Description=VMware mount for hgfs
-DefaultDependencies=no
-Before=umount.target
-ConditionVirtualization=vmware
-After=sys-fs-fuse-connections.mount
-
-[Mount]
-What=vmhgfs-fuse
-Where=/mnt/hgfs
-Type=fuse
-Options=default_permissions,allow_other
-
-[Install]
-WantedBy=multi-user.target
-EOF
+sudo cp /etc/fstab /etc/fstab.bak
 ```
 
-加载 fuse 模块并启用：
+然后追加 HGFS 挂载配置：
 
 ```bash
-echo fuse | sudo tee /etc/modules-load.d/open-vm-tools.conf
-sudo modprobe -v fuse
+echo 'vmhgfs-fuse /mnt/hgfs fuse defaults,allow_other,nofail 0 0' \
+| sudo tee -a /etc/fstab
+```
+
+配置字段含义：
+
+| 字段 | 说明 |
+|------|------|
+| `vmhgfs-fuse` | 文件系统类型 |
+| `/mnt/hgfs` | 挂载目标目录 |
+| `fuse` | 使用 FUSE 文件系统 |
+| `defaults,allow_other,nofail` | 默认参数 + 允许其他用户访问 + 挂载失败不阻止系统启动 |
+| `0 0` | 不参与 dump 备份与磁盘检查 |
+
+重新加载并测试：
+
+```bash
 sudo systemctl daemon-reload
-sudo systemctl enable --now mnt-hgfs.mount
+sudo mount -a
 ```
 
-> 注意：上述 systemd 配置和模块加载操作需要在维护模式下进行，完成后保存并退出维护模式。
+验证挂载结果：
+
+```bash
+findmnt -T /mnt/hgfs
+ls /mnt/hgfs/
+```
+
+确认能看到 `KylinShare` 后，重启验证：
+
+```bash
+sudo reboot
+# 重启后执行：
+findmnt -T /mnt/hgfs
+ls /mnt/hgfs/
+```
+
+重启后仍能看到共享目录，说明自动挂载生效。
+
+> 如果 `mount -a` 同时输出了其他挂载点报错（如 `/data`），仔细区分是否与 HGFS 有关。`mount -a` 会尝试 `/etc/fstab` 中所有条目，其他错误不影响 HGFS。
 
 ---
 
