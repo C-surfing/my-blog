@@ -151,6 +151,7 @@ export const navBarConfig: NavBarConfig = {
 					url: "/about/",
 					icon: "material-symbols:person",
 				},
+				LinkPreset.Diary,
 				{
 					name: "Skills",
 					url: "/skills/",
