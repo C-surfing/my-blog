@@ -1,0 +1,513 @@
+---
+title: "Claude Code 记忆（Memory）系统设计：语义分类、召回、写入与维护"
+published: 2026-07-16
+description: "基于五道口纳什『Modern Agent』系列第16期视频内容，结合开源源码深度分析，全面拆解 Claude Code 的四类记忆（user/feedback/project/reference）、MEMORY.md 索引架构、Extract Agent 的写入管线、语义召回机制、Auto Dream 维护策略，以及三路并行记忆产生的互斥设计。"
+tags: [Claude Code, Memory, Agent, 记忆系统, MEMORY.md, 语义检索, Auto Dream, Extract Agent, 源码分析, 五道口纳什]
+category: Agent
+draft: false
+pinned: false
+comment: true
+lang: zh-CN
+---
+
+<div align="center">
+  <img src="/images/claude-code-memory/architecture.png" alt="Agent Memory 系统基础架构" width="800" />
+  <p><em>Agent Memory 系统基础架构图：从对话产生到持久化存储的分层流程</em></p>
+</div>
+
+> 本文基于五道口纳什『Modern Agent』系列第16期《Claude Code 记忆（Memory）系统设计，记忆语义分类，记忆召回，记忆写入、更新与维护》的内容，结合 Claude Code 开源源码（22+ 源文件，~5000 行 TypeScript）进行全面解析。
+
+---
+
+## 一、记忆系统的核心设计理念
+
+Claude Code 的记忆系统定位非常明确——**跨会话学习**，让 Agent 从"无状态工具"进化为"编程伙伴"。其核心哲学只有一句话：
+
+> **只记忆不可从当前项目状态推导的信息。**
+
+这意味着系统有严格的约束来防止记忆与现实漂移：
+
+- **代码模式、架构、文件路径、项目结构**——读当前代码即可获得，不记入记忆
+- **Git 历史、最近的改动**——`git log` / `git blame` 是权威来源，不记
+- **调试方案或修复步骤**——修复在代码里，上下文在 commit 消息中，不记
+- **CLAUDE.md 中已有的内容**——避免重复，不记
+- **临时任务细节**——属于 Task/Plan 而非 Memory，不记
+
+> 即使你明确要求保存这些信息，系统也只会保存"令人意外的或非显而易见的"部分。
+
+### 记忆与 CLAUDE.md 的互补关系
+
+| 维度 | CLAUDE.md | Auto Memory |
+|------|-----------|-------------|
+| **谁写的** | 用户/团队 | Claude Code 自动写入 |
+| **内容** | 规则、指令、项目约定 | 学习到的用户偏好和模式 |
+| **存储位置** | 项目根目录 | `~/.claude/projects/<git_root>/memory/` |
+| **是否提交 Git** | 是（团队共享） | 否（个人本地） |
+| **一句话** | 存"项目是什么" | 存"和这个人协作时要注意什么" |
+
+---
+
+## 二、四种记忆类型：闭合分类法
+
+> **这是一个严格闭合的分类系统——每条记忆必须归入且只能归入这四类之一。**
+
+```typescript
+export const MEMORY_TYPES = [
+  'user',      // 用户角色、目标、偏好
+  'feedback',  // 纠正 + 认可（含 Why 和 How to apply）
+  'project',   // 进展、决策、截止日期（绝对日期）
+  'reference', // 外部系统指针（Linear、Grafana等）
+] as const
+```
+
+### 2.1 user（用户画像型）
+
+**记什么：** 用户的身份、角色、经验水平、偏好、知识背景。
+
+**示例：**
+```markdown
+---
+name: 用户背景
+description: 用户是数据科学家，专注可观测性领域
+type: user
+---
+
+用户是资深数据科学家，对 OpenTelemetry 和 Prometheus 非常熟悉，
+但对前端 React 开发是新手。
+```
+
+**解决的问题：** "你是谁？"——让 Agent 了解对话对象的背景，调整沟通方式和建议深度。
+
+### 2.2 feedback（行为指导型）
+
+这是设计最精妙的一种类型。它不仅记录用户的**纠正**，还记录用户的**肯定**。
+
+> "If you only save corrections, you will drift away from approaches the user has already validated."
+> （如果你只保存纠正，会逐渐偏离用户已经认可的工作方式。）
+
+**结构要求：**
+- **Rule**（规则）：具体的行为要求
+- **Why**（原因）：为什么这条规则存在
+- **How to apply**（应用场景）：什么情况下应该遵循
+
+**示例：**
+```markdown
+---
+name: 简洁回复偏好
+description: 用户不希望在响应末尾看到总结
+type: feedback
+---
+
+不要在每次响应末尾总结已完成的操作。
+**Why:** 用户明确表示可以自己阅读 diff。
+**How to apply:** 所有响应保持简洁，省略尾部总结。
+```
+
+`Why` 字段的存在非常关键——它帮助模型判断边界情况，避免死守规则。当类似但不同的场景出现时，有了 Why 模型才能做出合理判断。
+
+### 2.3 project（项目上下文型）
+
+**记什么：** 项目进展、重要决策、截止日期、发布计划。
+
+**关键要求：** 相对日期必须转换为**绝对日期**。
+
+```
+"周四之后" → "2026-03-05 后"
+"下周发布" → "2026-03-15 发布"
+```
+
+**示例：**
+```markdown
+---
+name: 移动端发布冻结
+description: 2026-03-05 移动端新版本发布冻结
+type: project
+---
+
+移动端 v3.2 发布冻结日期为 2026-03-05。
+**Why:** 避免冻结后仍合并新功能。
+**How to apply:** 03-05 之后只合 P0 级热修复。
+```
+
+### 2.4 reference（外部指针型）
+
+**记什么：** 外部系统中关键信息的位置。
+
+**示例：**
+```markdown
+---
+name: 管道Bug跟踪
+description: 数采管道的Bug在Linear的INGEST项目跟踪
+type: reference
+---
+
+数据处理管道的已知 bug 归入 Linear 项目 "INGEST" 进行跟踪，
+不在本仓库的 GitHub Issues 中维护。
+```
+
+---
+
+## 三、存储架构：Markdown is all you need
+
+> **没有向量数据库，没有 embedding 模型，没有语义检索服务——只有 Markdown 文件和索引文件。**
+> 纯文件系统、多层级、可解释、极易迁移。
+
+### 3.1 目录结构
+
+```
+~/.claude/projects/{project-hash}/memory/
+├── MEMORY.md                          ← 索引文件（自动加载进系统提示词）
+├── user_role.md                       ← 具体记忆文件
+├── feedback_terse.md
+├── project_freeze.md
+└── reference_linear.md
+```
+
+### 3.2 记忆文件格式（YAML Frontmatter）
+
+每条记忆是一个独立的 Markdown 文件，带 YAML 头：
+
+```markdown
+---
+name: 简洁回复偏好
+description: 用户不希望在响应末尾看到总结
+type: feedback
+---
+
+不要在每次响应末尾总结已完成的操作。
+**Why:** 用户明确表示可以自己阅读 diff。
+**How to apply:** 所有响应保持简洁，省略尾部总结。
+```
+
+`description` 字段是召回系统的关键依据——模型会在检索时读取它来判断记忆是否相关。
+
+### 3.3 MEMORY.md：索引而非容器
+
+MEMORY.md 是记忆系统的**入口点**，每次会话自动加载到系统提示词中（与 CLAUDE.md 一起）。
+
+**格式：** 每个条目一行紧凑链接：
+```markdown
+# Auto Memory
+
+- [用户角色](user_role.md) — 数据科学家，专注可观测性
+- [简洁回复](feedback_terse.md) — 不希望在响应末尾总结
+- [合并冻结](project_freeze.md) — 2026-03-05 移动端发布冻结
+- [管道Bug](reference_linear.md) — Linear 项目 INGEST
+```
+
+**双层截断机制：**
+```typescript
+export const MAX_ENTRYPOINT_LINES = 200     // 最大行数
+export const MAX_ENTRYPOINT_BYTES = 25_000  // 最大字节数 (~25KB)
+```
+
+1. **行截断（200行）**：正常情况，确保完整条目
+2. **字节截断（25KB）**：防御极端长行（观察到有 197KB 的单行）
+
+截断时追加警告：`WARNING: MEMORY.md is ... Only part of it was loaded.`
+
+### 3.4 路径解析：三级优先级
+
+```typescript
+1. CLAUDE_CODE_MEMORY_PATH_OVERRIDE 环境变量（全路径覆盖）
+2. autoMemoryDirectory in settings.json（排除 projectSettings 防止恶意劫持）
+3. ~/.claude/projects/<sanitized-git-root>/memory/（默认）
+```
+
+> 特别排除了 projectSettings（`.claude/settings.json`），防止恶意仓库设置 `autoMemoryDirectory: "~/.ssh"` 进行路径劫持。
+
+### 3.5 Git Worktree 共享
+
+`findCanonicalGitRoot()` 确保同一仓库的所有 Git worktree 共享同一记忆目录，防止记忆"孤岛化"——无论你在哪个 worktree 上工作，记忆系统看到的都是同一个项目。
+
+### 3.6 启用优先级链
+
+```
+1. CLAUDE_CODE_DISABLE_AUTO_MEMORY truthy → 禁用
+2. --bare 启动标志                         → 禁用
+3. 远程模式（无持久化存储）                  → 禁用
+4. settings.json 中 autoMemoryEnabled      → 按配置
+5. 以上都不满足                            → 默认启用
+```
+
+---
+
+## 四、记忆写入管线：三路并行
+
+记忆系统有三条独立的写入管线，它们通过互斥机制避免冲突：
+
+| 生产者 | 触发时机 | 写入存储层 |
+|--------|----------|------------|
+| **Extract Memories Agent** | 每轮对话结束（无 tool call 后） | Auto Memory 目录 |
+| **Session Memory Agent** | 每次 model sampling 后 | Session Memory 文件 |
+| **用户显式请求 / 主 Agent** | 用户说"记住这个" | Auto Memory 目录 |
+| **Auto Dream Agent** | 空闲时 | Auto Memory 目录（整理，不产生新记忆） |
+
+### 4.1 Extract Memories Agent（主要写入者）
+
+这是最核心的写入机制，在后台自动运行。
+
+**五层门控条件：**
+1. `agentId` 筛选——只对特定 Agent 生效
+2. `tengu_passport_quail` feature flag 检查
+3. `isAutoMemoryEnabled()` 确认已启用
+4. `getIsRemoteMode()` 远程模式检测
+5. `inProgress` 并发互斥
+
+**核心实现：**
+```typescript
+const result = await runForkedAgent({
+  promptMessages: [createUserMessage({content: userPrompt})],
+  canUseTool: createAutoMemCanUseTool(memoryDir),
+  maxTurns: 5,  // 硬限：防止验证兔子洞
+})
+```
+
+**关键设计决策：**
+
+- **主 Agent 互斥**：`hasMemoryWritesSince()` 扫描对话历史，若主 Agent 已写入记忆，Extract Agent 自动跳过本轮
+- **工具权限沙箱**：
+  - ✅ **允许：** Read、Grep、Glob、只读 Bash（白名单 `ls/find/cat/stat/wc/head/tail`）
+  - ✅ **允许写入：** 仅限 `memoryDir` 内路径（`resolve()` + `startsWith()` 防止路径穿越）
+  - ❌ **拒绝：** `rm`、MCP 工具、Agent 工具
+- **高效两轮策略**：Prompt 指示"Turn 1 并行读取所有可能更新的文件，Turn 2 并行写入"。最大化 prompt cache 复用
+- **只提取不验证**：限定只使用最近 N 条消息的内容，禁止 grep/read code/git commands，防止验证兔子洞
+- **5 轮硬上限**：防止后台 Agent 陷入无限循环
+- **频率节流**：`tengu_bramble_lintel` 控制每 N 轮运行一次（默认 N=1）
+
+### 4.2 Session Memory Agent（会话工作笔记）
+
+每次 sampling 后更新固定结构笔记，生命周期等同单次会话。核心用途是支持 Context Compaction（上下文压缩），替代一次性 LLM 摘要调用。
+
+**触发机制：**
+- 首次触发：10,000 tokens
+- 此后每增长 5,000 tokens + 至少 3 次工具调用
+- **工具权限极度收紧**：仅允许 `FileEditTool` 编辑特定 session memory 文件
+
+### 4.3 两步写入法 vs 一步写入法
+
+**两步法（默认）：**
+1. 写入独立的主题文件（含 YAML frontmatter）
+2. 在 `MEMORY.md` 索引中添加一行指针
+
+**一步法（`tengu_moth_copse` feature gate）：** 跳过索引更新步骤，直接写文件。降低出错概率——模型经常忘记更新索引或写错格式。
+
+---
+
+## 五、记忆召回：语义检索机制
+
+### 5.1 召回流程
+
+```
+1. scanMemoryFiles()
+   → 扫描目录，读取每个 .md 文件前30行 frontmatter
+   → 按 mtime 排序，保留最新200个
+
+2. formatMemoryManifest()
+   → 格式化为：<类型> <文件名> (<时间戳>): <描述>
+
+3. selectRelevantMemories()
+   → sideQuery() + Sonnet 模型评估
+   → 输入：query + manifest + recentTools
+   → 输出：最多5个文件名
+
+4. 过滤 alreadySurfaced + 验证文件存在
+```
+
+### 5.2 scanMemoryFiles() 单次遍历优化
+
+```typescript
+// 传统方案：stat() N次 → read() 200次 = N + 200 syscalls
+// 优化方案：read() 全部文件前30行 → 排序取前200 = N syscalls
+// N ≤ 200 时，syscall 减半
+```
+
+### 5.3 recentTools 参数
+
+- 避免选中当前正在使用的工具的参考文档（对话中已有）
+- 但保留警告和已知问题
+- 示例：`mcp__X__spawn` 工具的警告仍会被选择
+
+### 5.4 alreadySurfaced 预过滤
+
+在调用 Sonnet 前剔除已展示的记忆，免受 5 个召回槽位的浪费。
+
+### 5.5 异步预取
+
+```typescript
+pendingMemoryPrefetch  // 在模型生成响应的同时后台执行 sideQuery()
+```
+
+延迟不叠加到用户感知时间——当模型在"思考"如何响应时，后台已经在准备召回结果了。
+
+### 5.6 新鲜度警告
+
+超过 1 天的记忆注入警告文本：
+
+> Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated.
+
+### 5.7 记忆访问三规则
+
+1. 已知相关时主动查阅
+2. 用户明确要求时**必须**访问
+3. 用户说"忽略记忆"时视为不存在
+
+### 5.8 信任召回：验证而非盲信
+
+> **记忆说 X 存在 ≠ X 现在存在**
+
+系统要求模型在引用记忆时主动验证：
+- 若记忆提到文件路径 → 用 Glob/Read 验证
+- 若提到函数 → 用 Grep 确认
+
+**Eval 结果：** 未加规则前通过率 0/2，加入后 3/3。这就是源码注释中 `H5` eval 标记的由来——提示词措辞从 "Trusting what you recall" 改为 "Before recommending from memory" 后，通过率从 0/3 跳升至 3/3。
+
+---
+
+## 六、记忆维护：Auto Dream
+
+### 6.1 功能定位
+
+Auto Dream 是记忆系统的**维护者**，负责后台定期整理、合并、去重记忆文件。它在特性上与 Extract Agent 互补：
+
+| 维度 | Extract Agent | Auto Dream |
+|------|---------------|------------|
+| **动作** | 产生新记忆 | 整理已有记忆 |
+| **触发** | 每轮对话结束 | 后台定期（约24h + 5 sessions） |
+| **写入** | 新建/追加 | 合并/删除/重建索引 |
+
+### 6.2 核心工作
+
+- 合并主题相关的记忆条目
+- 删除过期或冲突的记忆
+- 重建 MEMORY.md 索引
+- 压缩冗余描述
+
+### 6.3 KAIROS 模式（实验性）
+
+通过 `tengu_kairos` feature gate 开启，采用**追加式日期命名日志**：
+
+```
+logs/2026/04/2026-04-01.md
+logs/2026/04/2026-04-02.md
+```
+
+定期通过 `/dream` 指令蒸馏为结构化记忆。
+
+---
+
+## 七、记忆提示词构建层级
+
+系统构建记忆提示词时采用三层架构：
+
+### 7.1 buildMemoryLines()：行为指令层
+
+包含八个子节：
+1. 持久化介绍——解释记忆系统是什么
+2. 保存/遗忘——什么值得记，什么不该记
+3. 四类型分类——user/feedback/project/reference
+4. 排除列表——WHAT_NOT_TO_SAVE 的完整清单
+5. 保存方式——两步法/一步法
+6. 访问规则——主动查阅、用户要求、忽略记忆
+7. 信任召回——验证而非盲信
+8. 与 Plan/Task 区分——不同工具各司其职
+
+### 7.2 buildMemoryPrompt()：内容层
+
+指令 + MEMORY.md 截断内容的组合。
+
+### 7.3 loadMemoryPrompt()：分发层
+
+按 feature gate 选择模式：
+- **KAIROS**：追加式日期命名日志，定期 `/dream` 蒸馏
+- **TEAMMEM**：私有 + 团队两个目录
+- **普通模式**：单目录
+- **禁用**：返回 null
+
+---
+
+## 八、团队记忆（TEAMMEM）
+
+通过 `tengu_silver_meadow` 和 `tengu_amber_wood` feature gates 启用。
+
+### 8.1 双目录架构
+
+```
+~/.claude/projects/<project>/memory/          ← 个人记忆
+~/.claude/projects/<project>/memory/team/     ← 团队记忆
+```
+
+### 8.2 关键机制
+
+- **路径隔离**：个人 /team 双目录，防止串写
+- **推送/拉取**：`team-sync` 命令与远程仓库同步
+- **冲突解决**：远端最新版本优先
+- **成员管理**：由团队管理员控制
+
+### 8.3 乐观锁同步
+
+```
+1. 本地读取 memory/team/MEMORY.md
+2. 拉取远端最新内容
+3. 本地编辑
+4. 推送前检查远端版本 hash
+5. hash 匹配 → 推送成功
+6. hash 不匹配 → 提示冲突，手动解决
+```
+
+---
+
+## 九、与 Plan/Task 的区分
+
+记忆系统明确与 Plan 和 Task 分离：
+
+| 工具 | 用途 | 生命周期 |
+|------|------|----------|
+| **Plan** | 非平凡实现任务的方案对齐 | 当前对话 |
+| **Task** | 步骤分解和进度追踪 | 当前对话 |
+| **Memory** | 跨会话有价值的信息 | 跨会话持久 |
+
+> 一条有用的启发式判断：如果这个信息在**下一个新会话**中仍然有价值，才应该写入记忆。
+
+---
+
+## 十、总结与启示
+
+### 10.1 设计哲学
+
+Claude Code 的记忆系统给我们最重要的启示是：
+
+1. **Markdown 是足够好的持久化格式**——纯文本、可读、可版本控制、无需基础设施
+2. **在写入阶段做分类，而不是在检索阶段做聚类**——四种类型的设计在写入时就完成了信息的粗过滤
+3. **作用域隔离代替权限控制**——不同记忆天然属于不同的访问边界，不需要额外的 ACL 检查
+4. **两条路径各有用途**：MEMORY.md 走系统提示词（每次会话必加载），召回的记忆走用户消息（按需注入）
+5. **验证永远比盲信重要**——即使是最精确的语义检索，也不能替代对实际代码状态的验证
+
+### 10.2 关键数字
+
+| 指标 | 数值 |
+|------|------|
+| 记忆类型 | 4 种（闭合分类） |
+| MEMORY.md 最大行数 | 200 行 |
+| MEMORY.md 最大字节 | 25 KB |
+| 召回上限 | 5 条/次 |
+| Extract Agent 最大回合 | 5 轮 |
+| Session Memory 触发阈值 | 10K tokens（首次）/ 5K tokens（后续） |
+| 文件扫描优化 | 从 N+200 syscalls 降到 N |
+
+### 10.3 对 Agent 开发者的启示
+
+如果你正在设计自己的 Agent 记忆系统，可以借鉴以下实践：
+
+- **尽量用文件系统而非数据库**：Markdown 的优势在于可读、可审查、可编辑、可备份
+- **闭合分类 + 负面清单**：在写入时做分类和过滤，比在检索时做去重要高效得多
+- **后台 Agent 互斥**：多路写入需要明确的互斥协议
+- **新鲜度标签**：每条记忆都应附带时间信息，过期记忆应有明确的警告
+- **Source of truth 原则**：记忆只是"观点"而非"事实"，引用文件状态时必须验证
+
+### 10.4 延伸阅读
+
+- [Claude Code Memory 策略深度源码分析 - 知乎](https://zhuanlan.zhihu.com/p/2026432792104280269)
+- [how-claude-code-works/docs/08-memory-system.md](https://github.com/Windy3f3f3f3f/how-claude-code-works/blob/main/docs/08-memory-system.md)
+- [【Agent-memory】拆解 Claude Code 的记忆架构 - 知乎](https://zhuanlan.zhihu.com/p/2032173784879330093)
+- [TencentDB Agent Memory：分层记忆系统深度解析](/posts/tencentdb-agent-memory-design)
