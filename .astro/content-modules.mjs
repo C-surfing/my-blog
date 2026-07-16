@@ -2,6 +2,7 @@
 export default new Map([
 ["src/content/posts/advanced-math-final-review.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fadvanced-math-final-review.mdx&astroContentModuleFlag=true")],
 ["src/content/posts/agent-evolution-skill-governance.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fagent-evolution-skill-governance.mdx&astroContentModuleFlag=true")],
+["src/content/posts/claude-code-memory-system-design.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fclaude-code-memory-system-design.mdx&astroContentModuleFlag=true")],
 ["src/content/posts/college-physics-final-review.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fcollege-physics-final-review.mdx&astroContentModuleFlag=true")],
 ["src/content/posts/cpp-final-review.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fcpp-final-review.mdx&astroContentModuleFlag=true")],
 ["src/content/posts/kylin-v11-vmware-setup.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fkylin-v11-vmware-setup.mdx&astroContentModuleFlag=true")],
