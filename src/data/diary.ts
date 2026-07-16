@@ -12,11 +12,6 @@ export interface DiaryItem {
 }
 
 const diaryData: DiaryItem[] = [
-	{
-		id: 1,
-		content: "test",
-		date: "2026-07-16T07:54:20Z",
-	},
 ];
 
 export const getDiaryList = (limit?: number) => {
