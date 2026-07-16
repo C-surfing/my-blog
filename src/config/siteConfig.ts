@@ -19,7 +19,7 @@ export const siteConfig: SiteConfig = {
 	// 特色页面开关配置
 	featurePages: {
 		anime: false, // 关闭番剧
-		diary: false, // 关闭日记
+		diary: true, // 开启日记
 		friends: true, // 友链（用作 Links 页面）
 		projects: true, // 项目展示
 		skills: true, // 技能展示

@@ -1,0 +1,13 @@
+
+export default new Map([
+["src/content/posts/advanced-math-final-review.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fadvanced-math-final-review.mdx&astroContentModuleFlag=true")],
+["src/content/posts/agent-evolution-skill-governance.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fagent-evolution-skill-governance.mdx&astroContentModuleFlag=true")],
+["src/content/posts/college-physics-final-review.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fcollege-physics-final-review.mdx&astroContentModuleFlag=true")],
+["src/content/posts/cpp-final-review.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fcpp-final-review.mdx&astroContentModuleFlag=true")],
+["src/content/posts/kylin-v11-vmware-setup.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fkylin-v11-vmware-setup.mdx&astroContentModuleFlag=true")],
+["src/content/posts/langchain-vs-langgraph-react.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Flangchain-vs-langgraph-react.mdx&astroContentModuleFlag=true")],
+["src/content/posts/modern-agent-01-reasoning-planning.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fmodern-agent-01-reasoning-planning.mdx&astroContentModuleFlag=true")],
+["src/content/posts/pi-agent-skill-registry-deep-dive.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Fpi-agent-skill-registry-deep-dive.mdx&astroContentModuleFlag=true")],
+["src/content/posts/relativity-and-life-philosophy.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Frelativity-and-life-philosophy.mdx&astroContentModuleFlag=true")],
+["src/content/posts/tencentdb-agent-memory-design.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fposts%2Ftencentdb-agent-memory-design.mdx&astroContentModuleFlag=true")]]);
+		

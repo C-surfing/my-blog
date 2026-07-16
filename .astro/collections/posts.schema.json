@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "published": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "draft": {
+      "default": false,
+      "type": "boolean"
+    },
+    "description": {
+      "default": "",
+      "type": "string"
+    },
+    "image": {
+      "default": "",
+      "type": "string"
+    },
+    "tags": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "category": {
+      "default": "",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lang": {
+      "default": "",
+      "type": "string"
+    },
+    "pinned": {
+      "default": false,
+      "type": "boolean"
+    },
+    "comment": {
+      "default": true,
+      "type": "boolean"
+    },
+    "priority": {
+      "type": "number"
+    },
+    "author": {
+      "default": "",
+      "type": "string"
+    },
+    "sourceLink": {
+      "default": "",
+      "type": "string"
+    },
+    "licenseName": {
+      "default": "",
+      "type": "string"
+    },
+    "licenseUrl": {
+      "default": "",
+      "type": "string"
+    },
+    "encrypted": {
+      "default": false,
+      "type": "boolean"
+    },
+    "password": {
+      "default": "",
+      "type": "string"
+    },
+    "passwordHint": {
+      "default": "",
+      "type": "string"
+    },
+    "hideHomeContent": {
+      "type": "boolean"
+    },
+    "alias": {
+      "type": "string"
+    },
+    "permalink": {
+      "type": "string"
+    },
+    "prevTitle": {
+      "default": "",
+      "type": "string"
+    },
+    "prevSlug": {
+      "default": "",
+      "type": "string"
+    },
+    "nextTitle": {
+      "default": "",
+      "type": "string"
+    },
+    "nextSlug": {
+      "default": "",
+      "type": "string"
+    },
+    "$schema": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "published"
+  ]
+}

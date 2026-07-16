@@ -4,23 +4,23 @@ import { SITE_LANG } from "./siteConfig";
 // 评论系统配置
 export const commentConfig: CommentConfig = {
 	enable: true, // 启用评论功能
-	system: "twikoo", // 使用 Twikoo
+	system: "giscus", // 使用 Giscus
 	twikoo: {
 		envId: "", // 部署 Twikoo 后填入 envId（Vercel URL）
 		lang: SITE_LANG,
 	},
 	giscus: {
 		repo: "C-surfing/my-blog",
-		repoId: "",
+		repoId: "R_kgDOTE282A",
 		category: "Announcements",
-		categoryId: "",
+		categoryId: "DIC_kwDOTE282M4DBTiD",
 		mapping: "pathname",
-		strict: "0",
+		strict: "1",
 		reactionsEnabled: "1",
 		emitMetadata: "0",
 		inputPosition: "top",
 		theme: "preferred_color_scheme",
-		lang: SITE_LANG,
+		lang: "zh-CN",
 		loading: "lazy",
 	},
 };
