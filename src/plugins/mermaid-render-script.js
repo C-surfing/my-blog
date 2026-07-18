@@ -26,7 +26,7 @@
 		const style = document.createElement("style");
 		style.id = "mermaid-fullscreen-style";
 		style.textContent = `
-		:where(.mermaid[data-mermaid-code]) { position: relative; }
+		:where(.mermaid) { position: relative; }
 		.mermaid-fullscreen-btn {
 			position: absolute;
 			top: 10px;
@@ -495,7 +495,7 @@
 
 		try {
 			const mermaidElements = Array.from(
-				document.querySelectorAll(".mermaid[data-mermaid-code]"),
+				document.querySelectorAll(".mermaid"),
 			);
 
 			if (mermaidElements.length === 0) {
@@ -553,7 +553,8 @@
 
 						while (attempts < maxAttempts) {
 							try {
-								const code = element.getAttribute("data-mermaid-code");
+							const codeEl = element.querySelector("script[type=\"text/mermaid\"]");
+								const code = codeEl ? codeEl.textContent.trim() : "";
 
 								if (!code) {
 									break;

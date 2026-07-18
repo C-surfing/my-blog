@@ -12,10 +12,17 @@ export function rehypeMermaid() {
 				node.properties.className &&
 				node.properties.className.includes("mermaid-container")
 			) {
-				const mermaidCode = node.properties["data-mermaid-code"] || "";
+				// 在 hast 中，data-* 属性会被转为驼峰格式
+				const mermaidCode = node.properties.dataMermaidCode || "";
+
+				if (!mermaidCode) {
+					console.warn("[rehypeMermaid] No mermaid code found in node");
+					return;
+				}
+
 				const mermaidId = `mermaid-${Math.random().toString(36).slice(-6)}`;
 
-				// 创建 Mermaid 容器
+				// 用 script type="text/mermaid" 存储代码
 				const mermaidContainer = h(
 					"div",
 					{
@@ -23,14 +30,11 @@ export function rehypeMermaid() {
 						id: mermaidId,
 					},
 					[
-						h(
-							"div",
-							{
-								class: "mermaid",
-								"data-mermaid-code": mermaidCode,
-							},
-							mermaidCode,
-						),
+						h("div", { class: "mermaid" }, [
+							h("script", {
+								type: "text/mermaid",
+							}, mermaidCode),
+						]),
 					],
 				);
 
