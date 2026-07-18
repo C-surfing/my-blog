@@ -3,50 +3,57 @@ interface Props {
   src: string;
   title?: string;
   height?: number;
+  editUrl?: string;
 }
 
-// At build time, read the .excalidraw file and embed it as base64
-// so no CORS or external fetch is needed at runtime.
+// ExcalidrawViewer.astro
+// Embeds interactive Excalidraw diagrams in blog posts.
+// Uses excalidraw.com's embed mode — requires internet.
+// .excalidraw files must have CORS headers (added via public/_headers).
+
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const { src, title = "Excalidraw 示意图", height = 480 } = Astro.props;
+const {
+  src,
+  title = "Excalidraw 示意图",
+  height = 480,
+  editUrl,
+} = Astro.props;
 
-let embedUrl = "";
-let errorMsg = "";
+// Build the full public URL for the .excalidraw file
+const siteOrigin = Astro.site
+  ? String(Astro.site).replace(/\/$/, "")
+  : `${Astro.url.protocol}//${Astro.url.host}`;
+const fileUrl = `${siteOrigin}${src}`;
 
+// Validate the file exists at build time
+let fileError = "";
+let fileOk = false;
 try {
   const projectRoot = process.cwd();
-  // Resolve the file path: src is like "/excalidraw/scenes/diagram.excalidraw"
   const cleanSrc = src.replace(/^\//, "");
   const filePath = resolve(projectRoot, "public", cleanSrc);
   const content = readFileSync(filePath, "utf-8");
-
-  // Validate it looks like a valid excalidraw JSON
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content);
-  } catch {
-    throw new Error(`文件不是有效的 JSON: ${src}`);
-  }
-
+  const parsed = JSON.parse(content);
   if (
-    typeof parsed !== "object" ||
-    parsed === null ||
-    !("elements" in (parsed as Record<string, unknown>))
+    typeof parsed === "object" &&
+    parsed !== null &&
+    "elements" in parsed
   ) {
-    throw new Error(`文件缺少 excalidraw 必需的 "elements" 字段: ${src}`);
+    fileOk = true;
+  } else {
+    fileError = "文件格式无效：缺少 elements 字段";
   }
-
-  // Base64 encode and URL-encode for the iframe src
-  // excalidraw.com's #json= parameter accepts base64-encoded scene JSON
-  const base64 = Buffer.from(content, "utf-8").toString("base64");
-  const encoded = encodeURIComponent(base64);
-  embedUrl = `https://excalidraw.com/#json=${encoded}&embed=1`;
 } catch (e) {
-  errorMsg = e instanceof Error ? e.message : String(e);
-  console.error(`[ExcalidrawViewer] ${errorMsg}`);
+  fileError = e instanceof Error ? e.message : String(e);
 }
+
+// excalidraw.com embed URL — passes the file URL, which it fetches via AJAX
+// CORS is handled by public/_headers for /excalidraw/*
+const embedUrl = fileOk
+  ? `https://excalidraw.com/#json=${encodeURIComponent(fileUrl)}&embed=1`
+  : "";
 ---
 
 {
@@ -66,16 +73,27 @@ try {
       >
       </iframe>
       <div
-        class="flex items-center justify-between px-4 py-2 text-xs text-(--text-secondary) border-t border-(--border-color)"
+        class="flex items-center justify-between gap-2 px-4 py-2 text-xs text-(--text-secondary) border-t border-(--border-color)"
       >
         <span class="truncate">{title}</span>
-        <a
-          href={src}
-          target="_blank"
-          class="shrink-0 hover:underline transition-colors"
-        >
-          在 Excalidraw 中编辑 ↗
-        </a>
+        <div class="flex shrink-0 gap-3">
+          {editUrl && (
+            <a
+              href={editUrl}
+              target="_blank"
+              class="hover:underline transition-colors"
+            >
+              在 Excalidraw 中编辑 ↗
+            </a>
+          )}
+          <a
+            href={`https://excalidraw.com/#json=${encodeURIComponent(fileUrl)}`}
+            target="_blank"
+            class="hover:underline transition-colors"
+          >
+            新窗口打开
+          </a>
+        </div>
       </div>
     </div>
   ) : (
@@ -84,8 +102,8 @@ try {
     >
       <div class="mb-2 text-2xl opacity-50">✏️</div>
       <p>Excalidraw 文件加载失败</p>
-      {errorMsg && (
-        <p class="mt-1 text-xs opacity-60 font-mono">{errorMsg}</p>
+      {fileError && (
+        <p class="mt-1 text-xs opacity-60 font-mono">{fileError}</p>
       )}
       <p class="mt-2">
         请确认文件路径正确：
