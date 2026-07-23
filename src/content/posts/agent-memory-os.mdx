@@ -1,0 +1,195 @@
+---
+title: "Agent Memory OS：从核心命题到工程落地的完整图景"
+published: 2026-07-23
+description: "深入梳理 Agent Memory 系统的核心命题（Ledger/Views/Policy）、System 1+2 双系统架构、非参数化记忆的上限分析，以及 PowerMem 等开源实现。附全架构 Excalidraw 交互图。"
+tags: [Agent, Memory, LLM, System2, PowerMem, AgeMem, Agentic Memory, Architecture]
+category: Agent
+draft: false
+pinned: false
+comment: true
+lang: zh-CN
+---
+
+import ExcalidrawViewer from "@/components/ExcalidrawViewer.astro";
+
+> Agent Memory 不是"存储"，而是一个把历史转成可用信息并影响决策的闭环系统。
+
+## 一、Memory 的三个核心命题
+
+Agent 里的 Memory 要回答的问题是：**过去有没有帮它把今天的事做对**。靠一个 Markdown 文件甚至一个数据库都远远不够——Agent 需要一个小的 **Memory OS**。
+
+经过近年来的探索，Agent Memory OS 可以抽象为三个词：**Raw Ledger、Views、Policy**，分别类比操作系统里的原始日志、索引与缓存、调度规则。
+
+### 命题 A：Memory 不是"存储"，而是可被决策利用的外部状态
+
+如果把 Agent 看成一个从输入到输出的函数，仅仅"存了很多历史"并不构成能力。能力来自：在当前状态下，历史能否以某种形式影响决策分布。
+
+Memory 的价值不在于"存了多少历史"，而在于**这条从历史到当前决策的通道是否有效**。它要么进入上下文（证据/摘要/子图），要么直接参与决策（例如对输出分布做调制）。
+
+### 命题 B：Memory 的最小闭包是 Ledger、Views、Policy
+
+| 组件 | 类比 | 职责 |
+|------|------|------|
+| **Raw Ledger** | 账本/黑匣子 | 按发生顺序保留写入、修改、删除和反馈，可审计 |
+| **Derived Views** | 缓存+索引+物化视图 | 从账本加工出的各种"便于查找的版本"：向量索引、全文索引、知识图谱、时间线 |
+| **Policy** | 调度器/控制回路 | 决定何时读、读多少、何时写、如何更新、如何遗忘 |
+
+三者缺一，系统要么不可治理（没有账本），要么不可用（没有索引/抽象），要么不可持续迭代（没有可 A/B 的控制点）。
+
+### 命题 C：Memory 的基本单位是 event 序列
+
+最通用的 ledger 事件应包含：作用域（scope）、时间戳、输入观测、系统动作、记忆变更（ADD/UPDATE/DELETE/NONE）、反馈信号、决策元数据。
+
+Event 序列是"真相来源"，但太底层。真正把历史变成能力的是 **views**（对 event 的重组织/压缩/索引/技能化）和 **policy**（决定触发哪些 view、怎么更新）。
+
+因此，Memory 的本质是一个闭环系统：
+
+---
+
+<ExcalidrawViewer
+  src="/excalidraw/scenes/agent-memory.excalidraw"
+  title="Agent Memory 全架构 Excalidraw 交互图"
+  height={600}
+/>
+
+---
+
+## 二、System 1 + System 2 的双系统设计
+
+### 为什么需要"非空"的 System 2
+
+- **System 1**：快速工作的通用 Agent（大模型+工具），读懂问题、写代码、调用搜索、生成回答
+- **System 2**：较慢的外部记忆回路，负责保存、检索、更新、压缩和遗忘，像操作系统内核与后台服务
+
+如果 System 2 不发挥作用，记忆能力只能通过 RL post-training 固化到 LLM 权重中，很难保证特化后仍保持通用泛化能力。
+
+### "记忆能力"与"Agent 通用能力"为什么是"相对正交"的
+
+**正交的一侧**：同一个 base model 接入不同记忆策略就能显著改变长程表现；而同一套记忆 infra 也往往能服务多种不同的 base model。这种跨模型可复用意味着能力更多绑定在接口与外部状态上。
+
+**非正交的边界**：检索噪声、错检、时序冲突会直接破坏推理（引发幻觉）；同时检索策略依赖 Agent 的自我评估能力。因此更准确的说法是"相对正交 + 存在可控交叉项"，而 System 2 的可观测性、可回放能力正是将交叉项显式化、可诊断。
+
+### 非参数化逼近参数化 Memory
+
+参数化记忆（parametric memory）：经验写进模型权重（训练/微调），推理时不需要额外检索。
+非参数化记忆（non-parametric memory）：经验写在外部状态里（ledger + views + skill pool），通过检索/聚合/注入影响决策。
+
+System 2 的意义就是：**把在线适应的主战场从模型权重挪到外部记忆状态与控制策略上**。
+
+**记忆对决策的调制方式**：新的动作倾向 = 模型原本的判断 + 记忆带来的修正 Δ（Delta）
+
+Δ 是"外置的可控偏置"——不需要改模型权重，但能改变决策分布。
+
+---
+
+## 三、非参数化 Memory 的上限由什么决定
+
+### 1. 接口带宽（注入容量）
+
+无论是 passage、graph、skill，最终都要通过 Context Bridge 让 System 1 用上它。注入通道存在预算约束——外部记忆再大也没用，真正起作用的是每一步你注入多少有效信息。
+
+### 2. 检索与聚合误差
+
+Views 是从 Raw Ledger 派生出的近似结构。近似会带来错检、漏检、时序冲突、语义漂移，直接污染修正项 Δ。因此上限不仅取决于"存了多少"，更取决于误差是否能被治理（可观测、可溯源、可回放）。
+
+### 3. Policy 的学习与控制
+
+存太多污染，存太少学不到；召回太多挤占上下文，召回太少缺证据；错删一条长期偏好，个性化一路歪下去。
+
+非参数化 Memory 的真正瓶颈往往不是存储后端，而是 **policy**。
+
+---
+
+## 四、核心模块设计
+
+### Policy 层：Rubrics 不可持续
+
+打破传统 engineers 的思维禁锢：基于预定义规则（rubrics）的 policy 不可持续，必须用 model 来处理。目前最可行的路径是 **Agentic Memory**——将记忆操作彻底工具化，整合进 Agent 的动作空间，让模型像控制手臂一样控制记忆。
+
+记忆工具分类：
+
+| 记忆层 | 操作 | 功能 | 对应参数化行为 |
+|--------|------|------|---------------|
+| 长期记忆 (LTM) | ADD | 存储新知识 | 梯度更新 |
+| LTM | UPDATE | 修正旧知识 | 权重调整 |
+| LTM | DELETE | 移除过时信息 | 剪枝 |
+| 短期记忆 (STM) | RETRIEVE | 语义搜索并注入 | 激活相关神经元 |
+| STM | SUMMARY | 压缩对话历史 | 抽象表征 |
+| STM | FILTER | 移除无关 Context | 注意力机制 |
+
+### 关键工作：AgeMem 的分阶段 RL 训练
+
+Agent 同时面对长期记忆和眼前上下文时，很难一上来就用好整套记忆工具。AgeMem 采用分阶段训练：
+1. 练长期记忆——判断什么值得新增、什么是修正
+2. 练短期管理——过滤和摘要
+3. 把长期检索与短期整理放进复杂任务
+
+### 记忆单元的结构、时序和压缩
+
+**SimpleMem** 不存储原始文本，而是存储压缩后的"记忆单元"。基于亲和力评分在后台异步执行递归固化，将高亲和力的记忆单元合并为更高层级的抽象表征。据说在长时序多轮对话任务上以约 1/10 的 token 消耗击败了全量上下文。
+
+**时序记忆**："拜登是美国总统"在 2024 年可能没什么问题，2026 年就不对了。Zep 及其引擎 Graphiti 引入了时序知识图谱，对边加入时间标注（Temporal Validity），在检索时结合查询时间语境动态合成"当前时刻"的真值图谱。在其报告的长时序评测上可提升 18.5% 准确率。
+
+**分层记忆（MemWeaver）**：同一段历史需要不同抽象——图记忆（关系）、经验记忆（模式）、片段记忆（原文）。三者都来自同一段历史，却服务于不同问题。
+
+### 程序性记忆：从"知识"到"技能"
+
+事实记忆回答"是什么"，长程任务还需要"怎么做"。**ProcMEM** 用 Skill-MDP 描述技能：触发条件→动作序列→终止条件。用 PPO 风格门控做反事实验证，确保新技能不偏离旧技能太远。
+
+### 记忆整合层
+
+**LycheeMemory**：把外部内容变成潜层 Token，以接近 KV-Cache 的形式注入注意力计算，减少文本编解码开销。
+**MemAdapter**：从图谱中取出相关局部子图，对齐到模型的语义空间，不用微调主模型也能融合异构记忆。
+
+---
+
+## 五、架构五件套
+
+1. **内核（Kernel / Control Plane）**：System 2 的慢回路与调度器，决定何时检索/写入/更新
+2. **文件系统（File System / Storage Plane）**：Raw Ledger + Views，承载时序一致性与语义压缩
+3. **可执行文件（Executable / Skill Plane）**：把经验固化成可复用的程序性单元
+4. **总线接口（Interface / Context Bridge）**：记忆与推理之间的接口层，低开销低失真地注入
+5. **学习引擎（Learning Engine）**：在不更新权重的前提下，把交互反馈转为改进信号
+
+---
+
+## 六、工程落地：PowerMem
+
+PowerMem（[GitHub](https://github.com/oceanbase/powermem)）是这套 Memory OS 的开源工程落点，面向 AI Agent 提供持久化、自演化的记忆能力。
+
+**会话结束，状态还在**：持久化记忆、用户画像和作用域管理，记忆可按用户与 Agent 隔离。
+
+**多模态检索**：向量检索、全文检索、图检索、新近度信号参与混合检索——对应 Views 的设计。
+
+**生命周期管理**：大模型参与记忆抽取、更新、合并，结合艾宾浩斯式时间衰减调整优先级。
+
+**经验→技能蒸馏**：Experience 保存经验，Skill 把反复验证的经验整理成可复用的做法。
+
+**多入口接入**：提供 Python SDK、HTTP 服务、MCP 和 CLI，支持 OceanBase、SQLite、PostgreSQL 等后端。
+
+一个长期运行的 Agent，可以顺着几个问题检查自己的记忆系统：
+- 会话结束后状态还在不在？
+- 历史是否只有向量这一种查法？
+- 旧事实能否更新，低价值内容会退场吗？
+- 成功经验能沉淀成技能吗？
+- 多个应用能共用同一套记忆底座吗？
+
+---
+
+## 参考资料
+
+| # | 论文/项目 | 链接 |
+|---|-----------|------|
+| [1] | AgeMem: Agentic Memory with RL | [arxiv.org/abs/2601.01885](https://arxiv.org/abs/2601.01885) |
+| [2] | JitRL: Just-in-Time Reinforcement Learning | [arxiv.org/abs/2601.18510](https://arxiv.org/abs/2601.18510) |
+| [3] | UMEM: Universal Memory | [arxiv.org/abs/2602.10652](https://arxiv.org/abs/2602.10652) |
+| [4] | InfMem: PreThink-Retrieve-Write Protocol | [arxiv.org/abs/2602.02704](https://arxiv.org/abs/2602.02704) |
+| [5] | SimpleMem: Recursive Consolidation | [arxiv.org/abs/2601.02553](https://arxiv.org/abs/2601.02553) |
+| [6] | Zep: Long-term Memory for AI | [arxiv.org/abs/2501.13956](https://arxiv.org/abs/2501.13956) |
+| [7] | Graphiti: Temporal Knowledge Graph Engine | [github.com/getzep/graphiti](https://github.com/getzep/graphiti) |
+| [8] | MemWeaver: Hierarchical Memory | [arxiv.org/abs/2601.18204](https://arxiv.org/abs/2601.18204) |
+| [9] | ProcMEM: Procedural Memory | [arxiv.org/abs/2602.01869](https://arxiv.org/abs/2602.01869) |
+| [10] | LycheeMemory: Latent Compression | [arxiv.org/abs/2602.08382](https://arxiv.org/abs/2602.08382) |
+| [11] | MemAdapter: Heterogeneous Memory Alignment | [arxiv.org/abs/2602.08369](https://arxiv.org/abs/2602.08369) |
+| [12] | PowerMem: AI Memory OS | [github.com/oceanbase/powermem](https://github.com/oceanbase/powermem) |
+| [13] | PowerMem 架构说明 | [powermem/docs/architecture](https://github.com/oceanbase/powermem/blob/main/docs/architecture/overview.md) |
