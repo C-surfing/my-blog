@@ -77,6 +77,10 @@ System 2 的意义就是：**把在线适应的主战场从模型权重挪到外
 
 Δ 是"外置的可控偏置"——不需要改模型权重，但能改变决策分布。
 
+![System 1 + System 2 Agent 架构图](/images/agent-memory-os/agent.jpg)
+
+*System 1 + System 2 双系统 Agent 架构（[下载 .excalidraw 源文件](/excalidraw/scenes/agent-memory-agent.excalidraw)）*
+
 ---
 
 ## 三、非参数化 Memory 的上限由什么决定
@@ -147,6 +151,10 @@ Agent 同时面对长期记忆和眼前上下文时，很难一上来就用好�
 3. **可执行文件（Executable / Skill Plane）**：把经验固化成可复用的程序性单元
 4. **总线接口（Interface / Context Bridge）**：记忆与推理之间的接口层，低开销低失真地注入
 5. **学习引擎（Learning Engine）**：在不更新权重的前提下，把交互反馈转为改进信号
+
+![Memory OS 设计图](/images/agent-memory-os/design.jpg)
+
+*Memory OS 架构设计（[下载 .excalidraw 源文件](/excalidraw/scenes/agent-memory-design.excalidraw)）*
 
 ---
 
