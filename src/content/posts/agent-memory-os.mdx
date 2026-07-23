@@ -1,5 +1,5 @@
 ---
-title: "Agent Memory OS：从核心命题到工程落地的完整图景"
+title: "Agent Memory OS"
 published: 2026-07-23
 description: "深入梳理 Agent Memory 系统的核心命题（Ledger/Views/Policy）、System 1+2 双系统架构、非参数化记忆的上限分析，以及 PowerMem 等开源实现。附全架构 Excalidraw 交互图。"
 tags: [Agent, Memory, LLM, System2, PowerMem, AgeMem, Agentic Memory, Architecture]
@@ -10,7 +10,6 @@ comment: true
 lang: zh-CN
 ---
 
-import ExcalidrawViewer from "@/components/ExcalidrawViewer.astro";
 
 > Agent Memory 不是"存储"，而是一个把历史转成可用信息并影响决策的闭环系统。
 
@@ -46,13 +45,11 @@ Event 序列是"真相来源"，但太底层。真正把历史变成能力的是
 
 ---
 
-<ExcalidrawViewer
-  src="/excalidraw/scenes/agent-memory.excalidraw"
-  title="Agent Memory 全架构 Excalidraw 交互图"
-  height={600}
-/>
+> **核心闭环**：Raw Ledger（权威）→ Views（可用）→ Policy（控制）→ Commit（回写）→ Provenance（可回放）
 
----
+![Agent Memory OS 全架构图](/images/agent-memory-os/full-diagram.jpg)
+
+*Agent Memory OS 架构总览（[下载 .excalidraw 源文件](/excalidraw/scenes/agent-memory.excalidraw) 在 Excalidraw 中交互查看）*
 
 ## 二、System 1 + System 2 的双系统设计
 
