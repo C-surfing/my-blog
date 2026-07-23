@@ -173,6 +173,79 @@ PowerMem（[GitHub](https://github.com/oceanbase/powermem)）是这套 Memory OS
 
 ---
 
+## 七、2026 全面综述：Memory for Autonomous LLM Agents
+
+arXiv [2603.07670](https://arxiv.org/abs/2603.07670)（[HTML 全文](https://arxiv.org/html/2603.07670)）是一篇 2026 年初发表的全面综述，覆盖了 2022–2026 年 Agent Memory 领域的核心进展。它提供了一个与前三节互补的视角：用 **POMDP** 形式化重新组织了整个领域，并给出了系统化的三维分类学。
+
+### 7.1 形式化：Write-Manage-Read 循环
+
+将 Agent 循环写成：
+
+- $a_t = \pi_\theta(x_t, \mathcal{R}(M_t, x_t), g_t)$
+- $M_{t+1} = \mathcal{U}(M_t, x_t, a_t, o_t, r_t)$
+
+其中 $\pi_\theta$ 是策略（LLM），$\mathcal{R}$ 从记忆读取，$\mathcal{U}$ 写入并管理记忆，$g_t$ 是目标，$o_t$ 是环境反馈，$r_t$ 是奖励信号。
+
+关键洞察：$\mathcal{U}$ 不是简单 append — 它要摘要、去重、打分优先级、消解矛盾、适时删除。且 $\pi_\theta$ 与 $(\mathcal{R}, \mathcal{U})$ 构成因果闭环：决策决定写什么，写什么又塑造未来决策。
+
+### 7.2 三维分类学
+
+**时间范围（Temporal Scope）：**
+- **Working memory**：上下文窗口内的内容，完美召回但容量有限
+- **Episodic memory**：具体的交互记录（工具调用、对话轮次、环境观察），带时间戳和重要性评分
+- **Semantic memory**：去上下文的抽象知识（"用户偏好 DD/MM/YYYY"），需主动固化
+- **Procedural memory**：可复用的技能和可执行计划（Voyager 的技能库）
+
+**表示底层（Representational Substrate）：**
+- **Context-resident text**：摘要、scratchpad，零基础设施但容量受限
+- **Vector-indexed stores**：稠密嵌入 + 近似最近邻搜索，可扩至百万级但丢失结构化关系
+- **Structured stores**：SQL/知识图谱，保关系但需预定义 schema
+- **Executable repositories**：代码库/工具定义，可直接调用
+
+**控制策略（Control Policy）：**
+- **Heuristic control**：硬编码规则（top-k、每 n 轮摘要）
+- **Prompted self-control**：记忆操作作为工具暴露给 LLM，由 LLM 决定何时调用（MemGPT 方式）
+- **Learned control**：记忆操作作为策略动作进行端到端优化（AgeMem 的三阶段 RL）
+
+### 7.3 五大机制家族
+
+| 机制 | 代表工作 | 核心思想 | 风险 |
+|------|---------|---------|------|
+| Context-resident compression | Self-Controlled Memory | 摘要/滑动窗口/层次摘要 | 摘要漂移：低频关键信息逐轮消失 |
+| Retrieval-augmented stores | RAG, RET-LLM | 外部存储 + 检索注入 | 检索质量瓶颈：趋近而非有用 |
+| Reflective self-improvement | Reflexion, ExpeL, Generative Agents | 自然语言事后复盘、聚类反思 | 自强化错误：错误信念固化 |
+| Hierarchical virtual context | MemGPT, JARVIS-1 | OS 虚拟内存式分页管理 | Orchestration 失效：分页错误无声积累 |
+| Policy-learned management | AgeMem (Agentic Memory) | RL 训练记忆操作策略 | 训练成本高、可解释性差 |
+
+### 7.4 评测变迁：从 Recall 到 Agentic Utility
+
+这篇综述追踪了 Memory 评测的演进趋势：
+
+| Benchmark | 年份 | 多会话 | Agentic 任务 | 遗忘测试 | 关键发现 |
+|-----------|------|--------|-------------|---------|---------|
+| LoCoMo | 2024 | ✓ | – | – | RAG 依然远落后人类，尤其时序因果 |
+| MemBench | 2025 | – | – | – | 区分事实记忆 vs 反思记忆 |
+| MemoryAgentBench | 2025 | – | – | ✓ | 无系统同时掌握 4 项认知能力 |
+| MemoryArena | 2026 | ✓ | ✓ | – | LoCoMo 满分模型在此仅 40–60% |
+
+核心结论：**Long context ≠ memory**、**检索质量是瓶颈**、**遗忘评估被严重忽略**、**跨会话一致性仍是开放挑战**。
+
+### 7.5 工程现实与开放挑战
+
+综述花了大量篇幅讨论工程现实——写路径过滤、矛盾处理、延迟预算、隐私治理——以及开放挑战：
+
+- **Continual consolidation**：如何在不灾难遗忘的前提下持续固化
+- **Causally grounded retrieval**：通过因果关系而非语义相似度召回
+- **Trustworthy reflection**：反思时不能固化错误信念
+- **Learned forgetting**：学会安全遗忘过时信息
+- **Standardized evaluation**：社区缺乏 GLUE 式的共享评测体系
+
+最后一句值得全文引用：
+
+> **If there is one takeaway from this survey, it is that memory deserves the same level of engineering investment as the LLM itself.** Model selection gets months of careful benchmarking; memory architecture often gets an afternoon. The evidence reviewed here suggests that flipping this priority—treating memory as a first-class system component worthy of dedicated design, testing, and optimization—may be the single highest-leverage intervention available to agent builders today.
+
+---
+
 ## 参考资料
 
 | # | 论文/项目 | 链接 |
@@ -190,3 +263,4 @@ PowerMem（[GitHub](https://github.com/oceanbase/powermem)）是这套 Memory OS
 | [11] | MemAdapter: Heterogeneous Memory Alignment | [arxiv.org/abs/2602.08369](https://arxiv.org/abs/2602.08369) |
 | [12] | PowerMem: AI Memory OS | [github.com/oceanbase/powermem](https://github.com/oceanbase/powermem) |
 | [13] | PowerMem 架构说明 | [powermem/docs/architecture](https://github.com/oceanbase/powermem/blob/main/docs/architecture/overview.md) |
+| [14] | Memory for Autonomous LLM Agents (Survey) | [arxiv.org/abs/2603.07670](https://arxiv.org/abs/2603.07670) |
