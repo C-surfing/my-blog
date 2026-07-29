@@ -150,6 +150,8 @@ Sigmoid 特别重要，因为它天然是个**闸门**。论文里所有叫"门"
 
 流程：用 Q 去比对所有 K（算相似度打分 → softmax 变权重），然后按权重把所有 V 混合。**不是选一本，而是永远把所有书都读一点，只是权重不同。**
 
+> 🎬 推荐视频讲解：[Attention in transformers, step-by-step — 3Blue1Brown](https://www.youtube.com/watch?v=eMlx5fFNoYc)（直观动画演示 Q、K、V 的工作原理）
+
 ### 6.2 为什么注意力这么重要
 
 在注意力出现之前，RNN 从左到右一个字一个字读，把信息压缩进固定大小的"记忆"——两个致命问题：
