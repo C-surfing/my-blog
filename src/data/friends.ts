@@ -139,5 +139,5 @@ export function getFriendsList(): FriendItem[] {
 }
 
 export function getShuffledFriendsList(): FriendItem[] {
-	return [];
+	return friendsData.sort(() => Math.random() - 0.5);
 }
