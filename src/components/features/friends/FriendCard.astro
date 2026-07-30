@@ -26,14 +26,22 @@ const hostname = new URL(friend.siteurl).hostname;
 		<!-- 头像和标题区 -->
 		<div class="flex items-start gap-4 mb-4">
 			<div
-				class="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-(--btn-regular-bg) ring-2 ring-transparent transition-all duration-300"
+				class="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-(--btn-regular-bg) ring-2 ring-transparent transition-all duration-300 flex items-center justify-center"
 			>
-				<img
-					src={friend.imgurl}
-					alt={friend.title}
-					class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
-					loading="lazy"
-				/>
+				{
+					friend.imgurl ? (
+						<img
+							src={friend.imgurl}
+							alt={friend.title}
+							class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
+							loading="lazy"
+						/>
+					) : (
+						<span class="text-2xl font-bold text-(--primary) select-none">
+							{friend.title.charAt(0).toUpperCase()}
+						</span>
+					)
+				}
 			</div>
 
 			<div class="flex-1 min-w-0">
