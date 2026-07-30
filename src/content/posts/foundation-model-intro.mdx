@@ -10,6 +10,8 @@ comment: true
 lang: zh-CN
 ---
 
+import PdfViewer from "@/components/PdfViewer.astro";
+
 > 本文是我在学习 [Kimi K3 技术报告精读站](https://kimi.papertok.ai/) 第 0 章时整理的笔记与思考。目标读者是**想读懂大模型论文但缺基础的同学**——读完这篇，你就能理解论文里那些"默认你知道"的名词。
 
 ## 0. 为什么写这篇
@@ -151,6 +153,13 @@ Sigmoid 特别重要，因为它天然是个**闸门**。论文里所有叫"门"
 流程：用 Q 去比对所有 K（算相似度打分 → softmax 变权重），然后按权重把所有 V 混合。**不是选一本，而是永远把所有书都读一点，只是权重不同。**
 
 > 🎬 推荐视频讲解：[Attention in transformers, step-by-step — 3Blue1Brown](https://www.youtube.com/watch?v=eMlx5fFNoYc)（直观动画演示 Q、K、V 的工作原理）
+
+我根据 3Blue1Brown 的这个视频整理了详细的图文笔记（PDF，12 页），涵盖嵌入向量、位置编码、QKV 矩阵的数学推导、多头注意力、残差连接与参数规模。如果你觉得上面这段过于抽象，这份 PDF 可以作为你的"第二层"学习材料——一边看视频的动画演示，一边对照 PDF 里的公式和结构讲解。
+
+<PdfViewer
+  src="/pdfs/Attention_in_transformers_notes.pdf"
+  title="Attention in transformers 课程笔记（12页 PDF）"
+/>
 
 ### 6.2 为什么注意力这么重要
 
@@ -414,4 +423,5 @@ SFT 只能教模型**模仿**见过的示范。但"用二十个工具、花三�
 - [Kimi K3 技术报告（PDF）](/papers/kimi-k3-tech-report.pdf) — 月之暗面 2026 年 7 月发布，可新窗口打开或下载
 - [Hugging Face: Kimi K3 模型权重](https://huggingface.co/moonshotai)
 - ChatGPT 讨论记录：[对话 1](https://chatgpt.com/share/6a69b7b9-6a14-83ea-b579-d23930fee7ab) · [对话 2](https://chatgpt.com/share/6a69b7de-2ca4-83ea-983a-24d305262f6e) — 帮助我理清了 KDA 状态矩阵计算、MLA 与 KV 缓存的关系、MoE 专家数变体分析、"评委黑客"三层风险、三条链元问题等关键概念
-- [Attention Is All You Need](https://arxiv.org/abs/1706.03762)（2017）— Transformer 的原论文
+|- [Attention Is All You Need](https://arxiv.org/abs/1706.03762)（2017）— Transformer 的原论文
+|- [Attention in transformers, step-by-step — 3Blue1Brown](https://www.youtube.com/watch?v=eMlx5fFNoYc) — 我据此整理了 12 页图文笔记 PDF，附在 6.1 节供新窗口打开或下载
