@@ -92,6 +92,46 @@ export const friendsData: FriendItem[] = [
 		siteurl: "https://ruc-nlpir.github.io/Arbor/docs/zh/",
 		tags: ["Agent", "Research"],
 	},
+	{
+		id: 10,
+		title: "DeepTutor",
+		imgurl: "",
+		desc: "Agent-native 开源个性化学习伴侣，HKU 出品",
+		siteurl: "https://deeptutor.info/zh-cn/",
+		tags: ["AI", "学习"],
+	},
+	{
+		id: 11,
+		title: "AI 产业链地图",
+		imgurl: "",
+		desc: "AI 产业链投研平台，实时盯一线、深读研报、系统学产业链",
+		siteurl: "https://aichainmap.com/home",
+		tags: ["AI"],
+	},
+	{
+		id: 12,
+		title: "DDIA 中文版",
+		imgurl: "",
+		desc: "《Designing Data-Intensive Applications》第二版中文翻译",
+		siteurl: "https://ddia.vonng.com/",
+		tags: ["系统设计"],
+	},
+	{
+		id: 13,
+		title: "Lil'Log",
+		imgurl: "",
+		desc: "Lilian Weng 的 AI 学习笔记，覆盖 Agent、RL、扩散模型等前沿",
+		siteurl: "https://lilianweng.github.io/",
+		tags: ["AI", "Research"],
+	},
+	{
+		id: 14,
+		title: "Hands-on Modern RL",
+		imgurl: "",
+		desc: "现代强化学习动手教程，从 CartPole 到 RLHF / Agentic RL",
+		siteurl: "https://walkinglabs.github.io/hands-on-modern-rl/preface/intro",
+		tags: ["RL"],
+	},
 ];
 
 export function getFriendsList(): FriendItem[] {
