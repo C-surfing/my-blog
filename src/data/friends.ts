@@ -180,6 +180,14 @@ export const friendsData: FriendItem[] = [
 		siteurl: "https://github.com/alchaincyf/nuwa-skill",
 		tags: ["AI", "Skill"],
 	},
+	{
+		id: 21,
+		title: "Awesome AI Memory",
+		imgurl: "",
+		desc: "AI 记忆知识库：系统整理 LLM Memory 与 Agent Memory 的前沿研究、工程框架、系统设计与评测基准",
+		siteurl: "https://github.com/IAAR-Shanghai/Awesome-AI-Memory",
+		tags: ["AI", "Memory"],
+	},
 ];
 
 export function getFriendsList(): FriendItem[] {
