@@ -196,6 +196,14 @@ export const friendsData: FriendItem[] = [
 		siteurl: "https://aiagentmemory.org/",
 		tags: ["AI", "Memory"],
 	},
+	{
+		id: 23,
+		title: "Easy-Langent",
+		imgurl: "",
+		desc: "Datawhale 出品的 LangChain 与 LangGraph 智能体开发实践教程，从懂概念到会开发，循序渐进",
+		siteurl: "https://easy-langent.datawhale.cc/",
+		tags: ["Agent", "学习"],
+	},
 ];
 
 export function getFriendsList(): FriendItem[] {
