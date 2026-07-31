@@ -188,6 +188,14 @@ export const friendsData: FriendItem[] = [
 		siteurl: "https://github.com/IAAR-Shanghai/Awesome-AI-Memory",
 		tags: ["AI", "Memory"],
 	},
+	{
+		id: 22,
+		title: "AI Agent Memory",
+		imgurl: "",
+		desc: "AI Agent 记忆系统深度技术指南：情景记忆、语义记忆、RAG、嵌入与检索，工程师写给工程师",
+		siteurl: "https://aiagentmemory.org/",
+		tags: ["AI", "Memory"],
+	},
 ];
 
 export function getFriendsList(): FriendItem[] {
