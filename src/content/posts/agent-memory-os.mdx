@@ -1037,59 +1037,92 @@ def rerank(candidates, query):
 
 **实践分层**：先用语义聚类做粗过滤（把 100 条候选压到 5 条），再对簇内/簇间少数冲突用 LLM 精裁。**聚类管量，LLM 管质**。
 
-### 9.12 多条记忆的收敛：语义仲裁与结构重组
+### 9.12 多条记忆的收敛：同一实体的聚合、槽位仲裁与抽象压缩
 
-9.11 解决了"冲突时选哪条"，这一节更进一步：**多条相关记忆如何合并成更高质量的一条**。收敛不是简单拼接，而更接近一次**语义仲裁 + 结构重组**——判断哪些记忆描述同一事实、谁更可信、合并后如何表示、如何重挂关联。三种机制：
+9.11 解决了"冲突时选哪条"，这一节更进一步：**多条相关记忆如何合并成更高质量的一条**。收敛不是简单拼接，而是围绕**实体**展开的三层操作——先把同一实体的零散记忆聚合起来，再对实体属性槽位做仲裁，最后把冗余的具体记忆压缩为抽象表示。三种机制：
 
-#### 机制一：时间仲裁（Temporal Arbitration）
+#### 机制一：同一实体的聚合（Entity Aggregation）
 
-同一事实的新旧版本并存时，以时间为主轴裁决：
-
-```python
-def temporal_arbitrate(group: list[MemoryUnit]) -> MemoryUnit:
-    latest = max(group, key=lambda m: m.created_at)   # 时间最新者胜
-    for old in group:
-        if old is not latest:
-            old.status = "superseded"                  # 旧版本标记为被取代
-            latest.links.append(old.id)                # 保留版本链（可追溯）
-    return latest
-```
-
-要点：**不删除旧版本，只标记 superseded 并保留版本链**——这既是审计需要，也防止"新版本后来被证伪"时无法回退（与 9.1 的 belief revision 呼应）。
-
-#### 机制二：语义仲裁（Semantic Arbitration）
-
-多条记忆表述不同但指向同一事实，或互相矛盾时，交给 LLM 判断语义等价性与可信度：
+多条记忆描述的是同一个实体（用户、项目、概念、文档），第一步是把它们归并到一起。前提是**实体解析**——判断两条记忆是否指向同一实体：
 
 ```python
-def semantic_arbitrate(candidates: list[MemoryUnit]) -> MemoryUnit:
-    prompt = f"""以下记忆可能描述同一事实，请判断并合并：
-    1. 是否指向同一实体/事实？(same / different)
-    2. 若同一事实，内容是否矛盾？(consistent / conflict)
-    3. 合并为一条记忆，保留细节与更高置信度来源
-    {[c.content for c in candidates]}"""
-    merged = llm(prompt)
-    return MemoryUnit(content=merged, confidence=max(c.confidence for c in candidates))
+def resolve_entity(mem: MemoryUnit, entities: dict[str, Entity]) -> Entity | None:
+    # 三种判定信号：精确名称、别名表、语义相似度
+    if mem.entity_name in entities:
+        return entities[mem.entity_name]
+    alias = alias_table.lookup(mem.entity_name)          # 别名/指代消解
+    if alias and alias in entities:
+        return entities[alias]
+    emb = embed(mem.content)
+    best = max(entities.values(), key=lambda e: cos(emb, e.embedding))
+    if cos(emb, best.embedding) > ENTITY_THRESHOLD:
+        return best
+    return None                                           # 无法归并 → 新建实体
 ```
 
-语义仲裁的关键是**置信度与来源的聚合**：多条独立来源的一致信息应提升置信度，冲突信息应保留为"contested"而非强行合并。
-
-#### 机制三：结构重组（Structural Reorganization）
-
-收敛的最后一环是更新记忆库的整体结构——合并后要重挂关联：
-
-- **图谱边重连**：两条记忆合并后，它们原来各自的邻居边要并到合并节点上；
-- **索引更新**：向量索引中删除被合并的旧向量，写入合并向量；
-- **摘要/层级调整**：如果合并后的记忆与某主题摘要重叠，主题摘要可能要重写；
-- **引用迁移**：所有指向旧记忆 id 的 links 改为指向合并后的 id（或用版本链保留映射）。
+解析成功后执行聚合：把多条记忆的属性、证据、关联边并入实体：
 
 ```python
-def reorganize(merged: MemoryUnit, old_ids: list[str], graph):
-    graph.merge_nodes(target=merged.id, sources=old_ids)   # 边重连
-    vector_index.delete(old_ids); vector_index.insert(merged)
+def aggregate(entity: Entity, mems: list[MemoryUnit]):
+    for m in mems:
+        entity.attributes.update(m.attributes)   # 属性合并（并集）
+        entity.evidence.append(m.id)             # 证据链追加
+        entity.links |= m.links                  # 关联边合并
 ```
 
-**为什么收敛是"语义仲裁与结构重组"而非"简单拼接"**：拼接只产生一条更长的文本，仲裁+重组则让记忆库保持**语义一致性与结构正确性**——这是检索质量（9.7/9.8）和长期可扩展性的前提。三个机制常组合使用：时间仲裁定新旧，语义仲裁定内容，结构重组定连接。
+要点：聚合是**并集操作**——同一实体的多条记忆互补信息全部保留，不丢弃任何一条的证据。用户画像、项目状态这类实体级记忆，正是这样从零散对话记录中"长"出来的。
+
+#### 机制二：槽位仲裁（Slot Arbitration）
+
+实体有**槽位**（slot）——预定义的属性位，如 `User.primary_language`、`Project.status`、`Doc.author`。多条记忆竞争同一槽位时，必须裁决谁的值"转正"：
+
+```python
+SLOTS = {"primary_language", "status", "author"}
+
+def arbitrate_slot(entity: Entity, slot: str, candidates: list[MemoryUnit]) -> MemoryUnit:
+    # 仲裁规则：置信度 × 新近度 × 来源可信度的加权评分
+    def score(m: MemoryUnit) -> float:
+        return (m.confidence * 0.5
+                + recency(m.created_at) * 0.3
+                + source_trust(m.source) * 0.2)
+    winner = max(candidates, key=score)
+    for c in candidates:
+        if c is not winner:
+            c.status = "superseded"              # 落选者进版本链
+            winner.links.append(c.id)
+    entity.slots[slot] = winner.value
+    return winner
+```
+
+要点：**落选值不删除**，标记 superseded 并保留版本链——新版本后来被证伪时可以回退（与 9.1 的 belief revision 呼应）。槽位仲裁是收敛中最"像数据库"的一步：它把记忆库变成一张可一致性更新的属性表，冲突不再靠"碰运气"，而是按可解释的评分规则裁决。
+
+#### 机制三：抽象压缩（Abstract Compression）
+
+同一实体的记忆越聚越多，细节不必全部保留。抽象压缩把多条具体记忆**归纳为一条抽象记忆**，丢弃可重建的细节：
+
+$$
+
+|\text{Abstract}| \ll \sum_{i} |m_i|,\quad \text{Abstract} = \text{LLM}\big(\text{归纳}(\{m_1,\dots,m_k\})\big)
+
+$$
+
+```python
+def compress(entity: Entity, mems: list[MemoryUnit]) -> MemoryUnit:
+    abstract = llm(f"""把以下关于 {entity.name} 的 {len(mems)} 条记忆压缩为一条抽象记忆：
+    - 保留：稳定属性、结论性偏好、跨条一致的模式
+    - 丢弃：一次性事件细节、可重建的原始过程
+    {[m.content for m in mems]}""")
+    return MemoryUnit(
+        content=abstract,
+        mem_type="semantic",          # 从 episodic 升格为 semantic
+        links=[m.id for m in mems],   # 指向源记忆（可解压回查）
+        confidence=min(m.confidence for m in mems)  # 取最保守置信度
+    )
+```
+
+数学视角：抽象压缩是一个**有损归纳映射**，压缩率 $r = |\text{Abstract}| / \sum_i |m_i|$。它把 episodic（具体事件）记忆升格为 semantic（抽象知识）记忆——这正是 7.2 分类学里 episodic → semantic 的工程实现。风险是**过度抽象**：被压缩掉的场景细节（"当时在什么条件下用户说喜欢 FPV"）往往正是后续检索需要的上下文，所以抽象记忆必须保留指向源记忆的 links，保证可解压回查。
+
+**三机制的组合**：聚合管"归并"（同一实体的记忆并到一起），仲裁管"定值"（槽位冲突时谁胜出），压缩管"瘦身"（冗余细节归纳为抽象）。三者在记忆的生命周期中循环执行：新记忆写入 → 聚合进实体 → 槽位仲裁 → 定期压缩——记忆库在一次次收敛中保持**规模可控、语义一致、结构正确**，这是检索质量（9.7/9.8）与长期可扩展性的前提。
 
 ### 9.13 多维记忆定位空间
 
