@@ -561,6 +561,494 @@ Memory3 的预训练分两段：
 
 ---
 
+## 九、记忆的工程实现：从漂移到多级缓存管道
+
+前两节分别讨论了"外部状态"（Ledger/Views/Policy）与"参数化知识"，这一节落到工程底层：记忆系统真正跑起来时，要面对信息漂移、存储分层、索引结构、载体选择、冲突消解和缓存调度。这一节的内容大量来自工程实践（数据库、缓存系统、向量检索），是《记忆工程》一书"实现层"的核心。
+
+### 9.1 信息漂移：产生、危害与应对
+
+#### 产生
+
+信息漂移（information drift）指记忆库中的内容与外部真实世界渐行渐远。三个主要来源：
+
+1. **概念漂移（concept drift）**：世界本身在变。"某公司的 CEO 是谁""某 API 的推荐用法"这类答案随时间改变。记忆库若只写不改，存的就是历史快照。
+2. **语义漂移（semantic drift）**：同一段文字在不同语境下的含义漂移。"好"在商品评价里是褒义，在"好一个蠢主意"里是反讽。原始文本不动，检索它的语义空间却变了。
+3. **表示漂移（representation drift）**：embedding 模型升级、分词器更换后，旧记忆向量的语义空间与新查询不兼容——向量索引还在，但"坐标系"换了。
+
+#### 危害
+
+- **错误固化**：过时知识被反复检索、注入上下文，模型据此生成看似自信的错误答案（自信的幻觉最难发现）；
+- **污染派生层**：漂移的原始记忆被摘要、聚合成高层 view 后，错误被"提纯"进更抽象的层，污染面扩大且难以定位；
+- **决策路径漂移**：Agent 的长程任务依赖早期记忆做后续决策，早期的一条漂移记忆可能让整条执行链偏航（错误级联）。
+
+#### 应对
+
+| 手段 | 机制 | 适用 |
+|------|------|------|
+| 时间戳 + 时态标注 | 每条记忆记录 valid_from / valid_to，检索时按查询时间过滤 | 概念漂移 |
+| 新鲜度评分 | 访问越频繁、写入越新的记忆权重越高（类 Ebbinghaus 曲线） | 概念漂移 |
+| 主动重写 | 新信息写入时检测冲突，覆盖旧事实（belief revision） | 概念漂移 |
+| 定期重embed | 用新 embedding 模型重算旧记忆向量，迁移坐标系 | 表示漂移 |
+| 语义版本化 | 同一实体保留多个时态版本，按需选择 | 时序知识图谱（Graphiti 思路） |
+
+**核心原则**：漂移不可消灭，只能被**观测**（时间戳、来源、版本）与**治理**（更新、覆盖、过期）。这正是 Raw Ledger 存在的意义——没有账本，你甚至不知道哪条记忆已经过时。
+
+### 9.2 记忆调度策略：多存储层协同
+
+一个完整的 Memory OS 通常有 4 层存储，对应不同的读写成本与容量（与 8.4 的 Memory3 分层呼应）：
+
+| 层级 | 载体 | 容量 | 延迟 | 写入成本 | 读取成本 |
+|------|------|------|------|---------|---------|
+| 工作记忆（L0） | 上下文窗口 / KV Cache | 小（4K~1M token） | 最低 | 0（随对话写入） | 低（注意力内） |
+| 短期记忆（L1） | 会话缓冲区 | 中（小时级） | 低 | 极低 | 低 |
+| 中期记忆（L2） | 高频索引存储（Redis/内存表） | 大（天级） | 中 | 中 | 中 |
+| 长期记忆（L3） | 向量库 + 关系库 + 图谱 | 极大（月年级） | 高 | 高 | 高 |
+
+**调度策略 = 何时把记忆从低层提升到高层，或从高层降级/淘汰**。典型规则：
+
+1. **提升（promotion）**：会话中反复引用的记忆 → 写入短期；多次跨会话出现 → 升级为长期；
+2. **降级（demotion）**：长期记忆中长期未被访问的 → 降为中期/归档；
+3. **预取（prefetch）**：根据当前任务意图，提前把相关长期记忆拉进短期（类似 CPU 的 cache prefetch）。
+
+调度本质是一个**成本-收益优化**：把高频访问的记忆放在读取便宜、但写入贵的层级。这与 8.4 的总成本公式是同一枚硬币的两面——那里选"格式"，这里选"层级"。
+
+### 9.3 原子记忆单元
+
+记忆不是整段的，而是由**原子记忆单元（atomic memory unit）**组成。原子单元是记忆系统的最小读写粒度，通常是一个结构化的 record：
+
+```python
+@dataclass
+class MemoryUnit:
+    id: str            # 全局唯一
+    content: str       # 记忆内容（原始文本 / 摘要 / 三元组）
+    mem_type: str      # episodic | semantic | procedural | preference
+    created_at: float  # 写入时间戳
+    last_access: float # 最近访问
+    access_count: int  # 访问频率（淘汰算法的输入）
+    ttl: float | None  # 生存时间（None = 永不过期）
+    importance: float  # 重要性评分（0~1）
+    source: str        # 来源（session_id / 文档 / 用户显式声明）
+    links: list[str]   # 关联记忆 id（图谱边的基础）
+```
+
+**为什么要原子化**：
+
+- **可更新**：只替换冲突的那一条，而不是整段历史；
+- **可淘汰**：按单元做 TTL/频率淘汰，粒度精确；
+- **可去重**：同 content 哈希判重，避免重复写入；
+- **可追溯**：每条记忆都能回答"谁在何时写了我，依据是什么"——Provenance 的最小载体。
+
+原子单元对应 8.4 成本公式里的"一条知识 $k$"：整个记忆系统的经济学，是建立在"单元"这个计数单位之上的。
+
+### 9.4 短期记忆：滑动窗口与语义摘要
+
+短期记忆（L1）的容量有限（上下文窗口），两种技术协作管理：
+
+#### 滑动窗口（Sliding Window）
+
+只保留最近 $W$ 个 token（或 $N$ 条消息），更早的直接丢弃：
+
+$$
+
+\text{Window}(t) = \{x_{t-W+1}, \dots, x_t\}, \quad p(x_{t+1} \mid x_{<t}) \approx p(x_{t+1} \mid \text{Window}(t))
+
+$$
+
+程序实现就是双端队列（deque），左边弹出、右边压入：
+
+```python
+from collections import deque
+
+window = deque(maxlen=W)          # maxlen 自动淘汰最旧
+def append(x):
+    window.append(x)              # 超过 W 自动 pop 左侧
+    return sum(len(t) for t in window)  # 当前 token 占用
+```
+
+**优点**：O(1) 复杂度、实现简单、最近信息一定在。
+**缺点**：窗口外的信息**完全丢失**——早期对话里的关键约束（"需求方要求必须兼容 IE11"）会被无声冲走。
+
+#### 语义摘要（Semantic Summarization）
+
+用 LLM 把窗口外的旧内容压缩成语义摘要，替代直接丢弃：
+
+$$
+
+S_j = \text{Summarize}(S_{j-1},\ x_{t_j} \dots x_{t_{j+1}})
+
+$$
+
+程序原理是**滚动摘要**（rolling summary）：维护一个摘要变量 $S$，每当窗口要溢出时，把 $S$ + 即将被挤出的内容一起交给 LLM 生成新摘要：
+
+```python
+summary = ""                       # 全局滚动摘要
+def on_evict(evicted_tokens):
+    global summary
+    summary = llm.summarize(
+        f"旧摘要: {summary}\n新内容: {evicted_tokens}"
+    )                              # 摘要压缩 + 合并
+
+def query_context():
+    return f"[摘要] {summary}\n[最近] {window}"
+```
+
+**数学视角**：摘要是一个有损压缩映射，压缩率 $r = |S| / |X_{\text{evicted}}|$。它的核心风险是**摘要漂移**——低频关键信息在逐轮摘要中指数衰减：
+
+$$
+
+\text{Survival}(k, n) \approx \prod_{j=1}^{n} (1 - p_{\text{drop}}(k, j))
+
+$$
+
+每轮摘要都有一定概率丢细节，多轮后关键信息可能消失（这就是 7.3 综述里"Context-resident compression"家族的风险）。**缓解**：分层摘要树（RAPTOR 式：摘要再摘要，保留多粒度）、重要性加权（先让 LLM 标出关键句再摘要）、关键信息单独提炼成长期记忆再允许摘要丢弃。
+
+**实践组合**：滑动窗口保证"最近不丢"，语义摘要保证"旧的不全丢"，两者叠加后短期记忆的覆盖范围从"窗口长度"扩展为"摘要 + 窗口"。
+
+### 9.5 中期记忆：生存时间策略与访问频率淘汰
+
+中期记忆（L2）容量介于会话与长期之间，需要主动淘汰。两种经典策略：
+
+#### 生存时间（TTL, Time-To-Live）
+
+每条记忆带过期时间，到期即删：
+
+$$
+
+\text{deadline}_i = \text{created\_at}_i + \text{ttl}_i, \quad \text{expire if } t > \text{deadline}_i
+
+$$
+
+TTL 适合**天生有时效**的记忆：临时任务状态、验证码、活动通知、一次性的会议纪要。
+
+程序实现：优先队列（最小堆）按 deadline 排序，惰性删除（查询时发现过期才删）+ 定时清理（堆顶过期则批量弹出）：
+
+```python
+import heapq
+
+heap = []  # (deadline, mem_id) 最小堆
+def set_memory(mem_id, content, ttl_seconds):
+    deadline = time.now() + ttl_seconds
+    heapq.heappush(heap, (deadline, mem_id))
+    store[mem_id] = content
+
+def cleanup():                    # 定时调用
+    now = time.now()
+    while heap and heap[0][0] < now:
+        _, mem_id = heapq.heappop(heap)
+        store.pop(mem_id, None)
+```
+
+复杂度：写入 $O(\log n)$，批量清理 $O(k \log n)$。
+
+#### 访问频率淘汰：LFU / LRU
+
+**LFU（Least Frequently Used）**：淘汰访问次数最少的记忆。计数器 $c_i \leftarrow c_i + 1$ 每次命中递增：
+
+```python
+def access(mem_id):
+    c[mem_id] += 1
+def evict_lfu():
+    victim = min(c, key=c.get)   # 计数最小的
+    del c[victim]
+```
+
+**LRU（Least Recently Used）**：淘汰最久未访问的记忆。哈希表 + 双向链表，访问时把节点移到头部，淘汰尾部：
+
+```python
+class LRU:
+    def __init__(self, cap):
+        self.cap = cap; self.d = {}; self.head = Node(); self.tail = Node()
+        self.head.next = self.tail; self.tail.prev = self.head
+    def get(self, key):
+        if key in self.d:
+            node = self.d[key]
+            self._move_to_head(node)      # 移到头部 = 标记"刚用过"
+            return node.val
+    def put(self, key, val):
+        if key in self.d: self._move_to_head(self.d[key])
+        else:
+            node = Node(key, val); self.d[key] = node; self._add(node)
+            if len(self.d) > self.cap:
+                last = self.tail.prev     # 尾部 = 最久未用
+                self._remove(last); del self.d[last.key]
+```
+
+LRU 复杂度：get/put 均 $O(1)$。这是 Redis `maxmemory-policy=allkeys-lru`、Memcached 默认淘汰的底层结构。
+
+**LFU vs LRU 的选择**：
+
+| 策略 | 淘汰依据 | 适合场景 | 缺陷 |
+|------|---------|---------|------|
+| TTL | 固定生存期 | 时效性强的记忆 | 无法处理"永远有用"的记忆 |
+| LFU | 累计访问次数 | 访问模式稳定的记忆 | 早期冷门后来常用的记忆会被误杀 |
+| LRU | 最近访问时间 | 突发热点访问 | 周期性访问的记忆会被误淘汰 |
+
+**实践**：Memory OS 通常组合使用——TTL 管时效，LFU/LRU 管容量，再叠加重要性评分做加权（如 `score = importance × recency`，Mem0 / PowerMem 的时间衰减即此类）。
+
+### 9.6 长期记忆检索：三类基础索引
+
+长期记忆（L3）容量大，必须靠索引支撑检索。三类经典索引各有适用：
+
+#### B-Tree
+
+有序平衡多叉树，节点含多个键值，所有叶子在同一深度。适合**范围查询与有序扫描**：
+
+$$
+
+\text{Search: } O(\log_B N), \quad \text{存储: } O(N)
+
+$$
+
+- 磁盘友好：节点大小对齐页（4KB/16KB），一次 I/O 读一个节点；
+- 用于 SQL 主键/普通索引、LevelDB 之前的传统关系库；
+- 局限：只支持精确匹配与范围，不支持语义相似度。
+
+#### LSM-Tree（Log-Structured Merge Tree）
+
+**写优化**的结构：写入先进内存的 MemTable（跳表/红黑树），满了刷成不可变的 SSTable 落盘，后台按层级合并（compaction）：
+
+$$
+
+\text{Write: } O(1)~\text{内存} + O(1)~\text{顺序落盘}, \quad \text{Read: } O(\log N)~\text{~}~O(\#\text{levels})
+
+$$
+
+- 顺序写（而非 B-Tree 的随机写）让写放大远小于读放大，吞吐极高；
+- 用于 LevelDB、RocksDB、Cassandra、HBase 以及大多数向量库的元数据存储；
+- 代价：读路径要查多层 SSTable（可用布隆过滤器跳过不存在的层）；
+- 对记忆系统：**写入频繁、读少写多的会话日志场景非常合适**。
+
+#### 哈希索引
+
+键 → 值的直接映射：
+
+$$
+
+\text{Get: } O(1)
+
+$$
+
+- 完美支持"按记忆 id 精确取回"；
+- 无顺序、无范围查询，容量受内存限制（或用可扩展哈希落盘）；
+- 用于 Redis、Memcached、以及所有 KV 场景。
+
+**三类索引在记忆系统中的分工**：
+
+| 索引 | 查询类型 | 记忆场景 |
+|------|---------|---------|
+| B-Tree | 有序/范围 | "2026 年 3 月到 5 月的所有会话记录" |
+| LSM-Tree | 高频写入 + 点查 | 会话日志、原始 ledger 的 append-only 流 |
+| Hash | O(1) 点查 | 按 memory id / 用户 id 取回 |
+
+### 9.7 复杂索引：HNSW 向量索引与知识图谱关联结构
+
+语义检索（"和这条记忆相关的记忆有哪些"）需要**近似最近邻（ANN）**索引。最主流的是 HNSW。
+
+#### HNSW（Hierarchical Navigable Small World）
+
+把"小世界网络"（六度分割式的高连通图）与"跳表"的分层思想结合：
+
+- **多层图**：第 0 层包含全部节点；越往上层节点越少、边越长——上层是"地图"，下层是"街道"；
+- **构建**：每个节点按几何分布随机分配层数（层越高节点越少），逐层贪心插入，每层用候选队列（$ef\_construction$）选邻居，用 $M$（max_degree）限制连接数；
+- **检索**：从最高层入口开始，每层贪心走向离查询最近的节点，然后下探一层，重复直到第 0 层做精细搜索（$ef\_search$ 控制候选队列长度）。
+
+复杂度：查询约 $O(\log N)$ 次距离计算（对比暴力 $O(N)$），精度通常可达 95%+（牺牲 5% 换取几个数量级的加速）。
+
+```python
+def search_hnsw(query_vec, ef_search=64):
+    cur = entry_point                    # 最高层入口
+    for layer in range(top_layer, 0, -1):
+        cur = greedy_search(query_vec, cur, layer)   # 本层贪心
+    candidates = greedy_search(query_vec, cur, 0, ef_search)  # 底层扩展
+    return top_k(candidates)
+```
+
+工程注意：HNSW 是**内存型**索引（图结构在内存），海量记忆需分片；插入时不可并发构建（vearch 等做了实时化改造）；删除是"软删除"（标记 + 后台清理）。
+
+#### 基于知识图谱的关联结构
+
+向量索引回答"语义上像不像"，知识图谱回答"**结构上连不连**"。记忆图谱以实体为节点、关系为边（三元组 $(\text{subject}, \text{predicate}, \text{object})$），支持多跳推理：
+
+$$
+
+\text{User} \xrightarrow{\text{likes}} \text{FPV} \xrightarrow{\text{related\_to}} \text{Gyroflow} \Rightarrow \text{User 可能关心 Gyroflow}
+
+$$
+
+与向量索引的对比：
+
+| 维度 | 向量索引（HNSW） | 知识图谱 |
+|------|----------------|---------|
+| 查询方式 | 语义相似度 top-k | 结构遍历/图查询（Cypher） |
+| 擅长 | "找内容相似的记忆" | "找有关联的记忆、多跳推理" |
+| 时效 | 需要重embed | 边带时间戳（Graphiti 时态图） |
+| 短板 | 不表达关系语义 | 构建成本高、稀疏数据效果差 |
+
+**实践**：混合双通道——HNSW 做粗召回（语义候选），图谱做精过滤/扩展（关系过滤 + 一跳邻居补充），两者在重排序阶段融合。这是 Mem0、Graphiti、PowerMem 混合检索的共同形态。
+
+### 9.8 记忆的载体形式：激活态与外部显式载体
+
+记忆可以按"存在哪里、如何被使用"分为两类载体：
+
+#### 激活态载体（Active / In-context Carrier）
+
+**存在形式**：上下文窗口内、KV Cache 里、注意力计算路径上的信息。包括当前对话、检索注入的 RAG 段落、System Prompt 中的指令与画像。
+
+**特性**：
+
+- 读取成本最低——就在注意力里，随模型前向自动参与计算；
+- 容量受窗口限制，且随对话推进被挤出（8.1 的"知识穿越"在这反而是零成本）；
+- **易失**：会话结束即消失（除非显式导出）；
+- 更新极快：改写提示词 = 立即生效。
+
+#### 外部显式载体（External Explicit Carrier）
+
+**存在形式**：持久化的存储——数据库、向量库、文件、知识图谱。
+
+**特性**：
+
+- 持久、可审计、可跨会话共享；
+- 读取需要先检索再注入（多一跳）；
+- 容量近乎无限，可承载完整历史；
+- 更新需要写操作（写入成本，见 8.4 的成本公式）。
+
+**两者的关系**：激活态是"被想起的记忆"，外部显式是"可被想起的记忆"。Memory OS 的调度（9.2）本质上就是在这两种载体之间搬运——**检索 = 外部 → 激活**，**写入 = 激活 → 外部**。8.5 的 Memory3 显式记忆是两者的桥梁：它把外部载体做成 KV 形态，让"外部"以接近激活态的成本参与注意力。
+
+### 9.9 结构化记忆的具体载体形式
+
+结构化记忆指有固定 schema 的记忆，具体载体有三类主流：
+
+| 载体 | 结构 | 优势 | 典型场景 |
+|------|------|------|---------|
+| 关系表（SQL） | 行 × 列 | 强约束、事务、复杂查询（JOIN） | 用户画像、偏好、KV 元数据 |
+| 键值/文档（Redis / MongoDB / JSON） | 键→文档 | 灵活 schema、低延迟 | 会话状态、配置、记忆单元本身 |
+| 知识图谱（Neo4j / RDF） | 节点-边-属性 | 关系表达、多跳推理 | 实体关联、时序事实 |
+
+选型原则：**schema 稳定且查询复杂 → 关系表；schema 多变且读多写多 → 文档；关系是核心价值 → 图谱**。工程上常用"组合拳"：SQLite/Postgres 存元数据与记忆单元，Redis 做热点缓存（L2），向量库 + 图谱并行服务语义与关系检索（L3）。
+
+### 9.10 非结构化记忆冲突的解决
+
+非结构化记忆（自然语言片段、摘要、对话记录）之间常互相矛盾："用户喜欢 Python" vs "用户改用 Rust 了"。冲突不解决，检索到的就是自相矛盾的上下文。两种主流解法：
+
+#### 语义聚类（Semantic Clustering）
+
+把语义相近的记忆聚成一簇，簇内冲突通过"多数投票 / 时间加权"裁决：
+
+$$
+
+\text{sim}(m_i, m_j) = \cos(\text{emb}(m_i), \text{emb}(m_j)) \ge \tau \Rightarrow \text{同簇}
+
+$$
+
+```python
+clusters = []  # 增量聚类
+def upsert(memory):
+    emb = embed(memory.content)
+    for c in clusters:
+        if cos(emb, c.center) >= THRESHOLD:
+            c.members.append(memory)
+            c.center = mean_emb(c.members)   # 簇心随成员更新
+            resolve_conflicts(c)             # 时间新者胜 / 投票
+            return
+    clusters.append(Cluster(center=emb, members=[memory]))
+```
+
+优势：无额外 LLM 调用、可解释（簇=主题）；劣势：阈值难定、跨簇冲突管不到。
+
+#### 大模型重排序 / 裁决（LLM Re-ranking）
+
+把候选记忆连同上下文交给 LLM 裁决，让模型选出最相关、最一致的一条：
+
+```python
+def rerank(candidates, query):
+    prompt = f"""以下记忆与当前问题相关，请按相关性与一致性排序，
+    排除与最新事实冲突的过时记忆:
+    问题: {query}
+    记忆: {[m.content for m in candidates]}
+    返回排序后的记忆 id 列表。"""
+    ordered = llm(prompt)
+    return [candidates[i] for i in ordered]
+```
+
+优势：语义理解强，能处理"表面相似实则矛盾"的复杂情况；劣势：每次裁决一次 LLM 调用（延迟 + 成本），且模型自身可能误判。
+
+**实践分层**：先用语义聚类做粗过滤（把 100 条候选压到 5 条），再对簇内/簇间少数冲突用 LLM 精裁。**聚类管量，LLM 管质**。
+
+### 9.11 多维记忆定位空间
+
+单一索引只能回答一种"找记忆"的方式。多维记忆定位空间用多个正交维度给每条记忆建立坐标，检索时可按任意维度组合定位：
+
+| 维度 | 取值示例 | 检索方式 |
+|------|---------|---------|
+| 时间 | 2026-03-15 14:02 | B-Tree 范围查询 |
+| 主题/语义 | "FPV 调参" | HNSW 向量检索 |
+| 实体 | User, Gyroflow, Betaflight | 图谱节点查询 |
+| 类型 | episodic / semantic / procedural | 过滤条件 |
+| 来源 | session-42 / 文档X / 用户声明 | 过滤条件 |
+| 重要性 | 0.8 | 排序加权 |
+
+每条记忆 = 高维空间中的一个点：$(\text{time}, \text{emb}, \text{entities}, \text{type}, \text{source}, \text{importance})$。
+
+检索时按查询意图组合维度：回忆"上周讨论过的 FPV 调参" = 时间范围（B-Tree）+ 语义向量（HNSW）+ 实体过滤（图谱），三路结果做融合重排。**多维空间的价值在于把 9.2 的调度、9.6/9.7 的索引、9.10 的冲突解决统一到同一个"按坐标取记忆"的框架里**。
+
+### 9.12 解耦结构：长历史的持续吸收与调用
+
+"长历史存入记忆库，以解耦结构支持持续吸收与调用"——这里的**解耦结构（decoupled structure）**指把记忆的"原始真相"与"使用视图"分离成互相独立的层，各自按自己的节奏演化：
+
+1. **存储与使用解耦**：写入路径（append-only 的 Raw Ledger）与读取路径（Views）物理/逻辑分离。历史永远可追加，视图随时可重建；
+2. **内容与索引解耦**：原始文本存在对象存储/文档库，索引（向量、图谱、倒排）单独维护。embedding 模型升级时只重算索引，不动原文；
+3. **历史与工作集解耦**：完整历史在 L3，当前任务只加载"工作集"（摘要 + 相关切片）到 L1/L2——模型永远只面对小上下文，却能通过检索触及全部历史。
+
+**为什么必须解耦**：如果"存储"和"使用"耦合（比如把整个历史直接塞进上下文），长历史会撑爆窗口（上下文爆炸）、拖慢推理（注意力 O(n²)）、污染注意力（9.1 的 lost in the middle）。解耦后：
+
+$$
+
+\text{调用}(t) = \text{Retrieve}(\text{Index}( \text{History}_{<t} ),\ \text{Query}_t) \rightarrow \text{Working Set}_t
+
+$$
+
+持续吸收变成**增量写入 + 异步固化**：新事件 append 进 ledger → 后台抽取实体/生成摘要 → 增量更新索引。全程无全量重扫，历史再长也只是"多了一页账"，而不是"多了一倍上下文"。
+
+### 9.13 多级缓存管道
+
+记忆系统的读取路径是一根管道，每级缓存拦截一部分请求，命中即返回、未命中才下探：
+
+```
+
+    查询
+     │
+     ▼
+┌─────────────┐  命中? ──► 返回
+│ L0 上下文/KV │
+└─────────────┘
+     │ miss
+     ▼
+┌─────────────┐  命中? ──► 返回
+│ L1 内存缓存  │  (最近检索的记忆, LRU)
+└─────────────┘
+     │ miss
+     ▼
+┌─────────────┐  命中? ──► 返回
+│ L2 磁盘索引  │  (B-Tree / HNSW 索引读)
+└─────────────┘
+     │ miss
+     ▼
+┌─────────────┐
+│ L3 冷存储    │   (对象存储 / 归档, 最慢)
+└─────────────┘
+```
+
+设计要点：
+
+1. **多级命中率**：总平均延迟 = $\sum_i p_i \cdot \text{latency}_i$（$p_i$ 为第 $i$ 级命中概率）。目标是用少量高速缓存覆盖大部分查询（二八法则：20% 的热记忆承担 80% 的检索）；
+2. **写回（write-back）vs 写穿（write-through）**：会话中的记忆先写 L1（写回，低延迟），后台异步刷到 L3；需要强一致时写穿（每次写直达持久层）；
+3. **预取**：检索到一条记忆时，把它的邻居（图谱一跳 / 向量 top-5）一并拉进 L1（空间局部性，类似 CPU cache line）；
+4. **失效传播**：L3 中记忆被更新/删除时，要同步清理各级缓存副本（9.1 漂移治理的缓存侧实现）。
+
+**小结**：从 9.1 的漂移治理到 9.13 的缓存管道，记忆系统的工程实现可以概括为一句话——**用分层吸收不确定性，用索引对抗规模，用解耦隔离变化**。漂移靠时间戳观测，规模靠索引支撑，变化靠解耦消化，性能靠缓存管道兜底。这正是 Agent Memory OS 区别于"一个数据库"的全部工程细节。
+
+---
+
 ## 参考资料
 
 | # | 论文/项目 | 链接 |
