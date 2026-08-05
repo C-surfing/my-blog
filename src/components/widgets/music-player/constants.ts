@@ -53,6 +53,14 @@ export const LOCAL_PLAYLIST: Song[] = [
 		url: "/assets/music/url/sweetshirt-take-me.mp3",
 		duration: 0,
 	},
+	{
+		id: 7,
+		title: "WannaCry",
+		artist: "Ninajirachi / Porter Robinson",
+		cover: "/favicon/favicon.ico",
+		url: "/assets/music/url/porter-robinson-wannacry.mp3",
+		duration: 0,
+	},
 ];
 
 export const DEFAULT_SONG: Song = {
