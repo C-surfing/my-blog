@@ -58,7 +58,7 @@ export const LOCAL_PLAYLIST: Song[] = [
 		title: "WannaCry",
 		artist: "Ninajirachi / Porter Robinson",
 		cover: "/favicon/favicon.ico",
-		url: "/assets/music/url/wannacry-v2.mp3",
+		url: "/assets/music/url/wannacry-v2.mp3?v=2",
 		duration: 0,
 	},
 ];
