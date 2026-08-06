@@ -204,6 +204,14 @@ export const friendsData: FriendItem[] = [
 		siteurl: "https://easy-langent.datawhale.cc/",
 		tags: ["Agent", "学习"],
 	},
+	{
+		id: 24,
+		title: "Simon Willison",
+		imgurl: "",
+		desc: "Simon Willison 的个人博客：AI 工具实测、提示词工程与开源实践，Datasette 作者",
+		siteurl: "https://simonwillison.net/",
+		tags: ["AI"],
+	},
 ];
 
 export function getFriendsList(): FriendItem[] {
