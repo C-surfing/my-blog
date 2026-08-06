@@ -34,6 +34,9 @@ const postsCollection = defineCollection({
 		/* Custom permalink - 自定义固定链接，优先级高于 alias */
 		permalink: z.string().optional(),
 
+		/* Series - 系列文章 */
+		series: z.string().optional().default(""),
+
 		/* For internal use */
 		prevTitle: z.string().default(""),
 		prevSlug: z.string().default(""),
@@ -45,7 +48,18 @@ const specCollection = defineCollection({
 	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/spec" }),
 	schema: z.object({}),
 });
+const wikiCollection = defineCollection({
+	loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/wiki" }),
+	schema: z.object({
+		title: z.string(),
+		updated: z.date(),
+		description: z.string().optional().default(""),
+		tags: z.array(z.string()).optional().default([]),
+		category: z.string().optional().default(""),
+	}),
+});
 export const collections = {
 	posts: postsCollection,
 	spec: specCollection,
+	wiki: wikiCollection,
 };

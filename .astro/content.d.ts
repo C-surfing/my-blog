@@ -147,6 +147,14 @@ declare module 'astro:content' {
   rendered?: RenderedContent;
   filePath?: string;
 }>;
+"wiki": Record<string, {
+  id: string;
+  body?: string;
+  collection: "wiki";
+  data: InferEntrySchema<"wiki">;
+  rendered?: RenderedContent;
+  filePath?: string;
+}>;
 
 	};
 

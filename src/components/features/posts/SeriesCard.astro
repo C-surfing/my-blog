@@ -1,0 +1,61 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	series: string;
+	currentId: string;
+	entries: CollectionEntry<"posts">[];
+}
+
+const { series, currentId, entries } = Astro.props as Props;
+---
+
+<div class="card-base p-6 mb-4 rounded-xl border border-black/10 dark:border-white/10">
+	<div class="flex items-center gap-2 mb-4">
+		<svg
+			class="w-5 h-5 text-(--primary)"
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+		>
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M4 5a2 2 0 012-2h4.586a1 1 0 01.707.293l1.414 1.414a1 1 0 00.707.293H18a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"
+			/>
+		</svg>
+		<span class="font-bold text-black/90 dark:text-white/90">系列 · {series}</span>
+	</div>
+	<ol class="space-y-1">
+		{
+			entries.map((entry, index) => {
+				const slug = entry.id.replace(/\.(md|mdx)$/, "");
+				const isCurrent = entry.id === currentId;
+				return (
+					<li key={entry.id}>
+						<a
+							href={`/posts/${slug}/`}
+							class:list={[
+								"flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm",
+								isCurrent
+									? "bg-(--primary)/10 text-(--primary) font-medium"
+									: "text-black/60 dark:text-white/60 hover:bg-(--btn-regular-bg) hover:text-(--primary)",
+							]}
+						>
+							<span class="w-6 shrink-0 text-xs text-black/35 dark:text-white/35">
+								{String(index + 1).padStart(2, "0")}
+							</span>
+							<span class="truncate">{entry.data.title}</span>
+							{isCurrent && (
+								<span class="ml-auto shrink-0 px-1.5 py-0.5 text-[10px] rounded bg-(--primary)/15 text-(--primary)">
+									本篇
+								</span>
+							)}
+						</a>
+					</li>
+				);
+			})
+		}
+	</ol>
+</div>

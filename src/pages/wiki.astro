@@ -1,0 +1,93 @@
+---
+import { getCollection } from "astro:content";
+import { PageHeader } from "@components/features/page-header";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+
+import { formatDateToYYYYMMDD } from "../utils/date-utils";
+
+export const prerender = true;
+
+const wikiEntries = (await getCollection("wiki")).sort(
+	(a, b) => b.data.updated.getTime() - a.data.updated.getTime(),
+);
+
+const categories = Array.from(
+	new Set(wikiEntries.map((entry) => entry.data.category || "其他")),
+).sort();
+---
+
+<MainGridLayout title="知识库 Wiki" description="常青笔记与知识沉淀，按主题组织，持续更新">
+	<script>
+		import("../scripts/right-sidebar-layout.js");
+	</script>
+
+	<div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
+		<div class="card-base z-10 px-9 py-6 relative w-full">
+			<PageHeader
+				title="知识库 Wiki"
+				subtitle="常青笔记：与博客文章不同，这里按主题组织、持续更新，是长期积累的知识资产"
+			/>
+
+			{
+				categories.map((category) => {
+					const entries = wikiEntries.filter(
+						(entry) => (entry.data.category || "其他") === category,
+					);
+					return (
+						<div class="mb-8">
+							<div class="flex items-center gap-3 mb-4">
+								<h2 class="text-xl font-bold text-black/90 dark:text-white/90">
+									{category}
+								</h2>
+								<span class="px-2 py-0.5 text-xs rounded-md bg-(--primary)/10 text-(--primary) font-medium">
+									{entries.length}
+								</span>
+								<div class="flex-1 border-(--line-divider) border-dashed border-b" />
+							</div>
+
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+								{
+									entries.map((entry) => (
+										<a
+											href={`/wiki/${entry.id.replace(/\.(md|mdx)$/, "")}/`}
+											class="group block rounded-xl border border-black/10 dark:border-white/10 p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+										>
+											<div class="flex items-start justify-between gap-3 mb-2">
+												<h3 class="text-lg font-bold text-black/90 dark:text-white/90 group-hover:text-(--primary) transition-colors">
+													{entry.data.title}
+												</h3>
+												<span class="shrink-0 text-xs text-black/40 dark:text-white/40">
+													{formatDateToYYYYMMDD(entry.data.updated)}
+												</span>
+											</div>
+											<p class="text-sm text-black/60 dark:text-white/60 line-clamp-2 mb-3">
+												{entry.data.description}
+											</p>
+											<div class="flex flex-wrap gap-2">
+												{
+													(entry.data.tags || []).map((tag) => (
+														<span class="px-2 py-0.5 text-xs rounded-md bg-(--primary)/10 text-(--primary) font-medium">
+															{tag}
+														</span>
+													))
+												}
+											</div>
+										</a>
+									))
+								}
+							</div>
+						</div>
+					);
+				})
+			}
+
+			{
+				wikiEntries.length === 0 && (
+					<p class="text-center text-black/50 dark:text-white/50 py-12">
+						知识库建设中，敬请期待。
+					</p>
+				)
+			}
+		</div>
+	</div>
+</MainGridLayout>

@@ -1,0 +1,34 @@
+---
+import Comment from "@components/comment/index.astro";
+import { PageHeader } from "@components/features/page-header";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+
+export const prerender = true;
+---
+
+<MainGridLayout title="留言板" description="欢迎在留言板留下你的足迹">
+	<script>
+		import("../scripts/right-sidebar-layout.js");
+	</script>
+
+	<div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
+		<div class="card-base z-10 px-9 py-6 relative w-full">
+			<PageHeader title="留言板" subtitle="欢迎留言，聊聊 Agent、RL、学习或任何话题" />
+
+			<div class="mb-4 space-y-4">
+				<p class="text-black/60 dark:text-white/60 leading-relaxed">
+					这里是我的留言板，任何想法都可以写在下面：
+				</p>
+				<ul class="list-disc pl-6 space-y-1.5 text-black/60 dark:text-white/60 text-sm">
+					<li>💡 对某篇文章的疑问或补充</li>
+					<li>🔗 友链 / 收藏交换申请</li>
+					<li>🤝 项目合作与技术交流</li>
+					<li>☕ 单纯打个招呼也可以</li>
+				</ul>
+			</div>
+
+			<!-- 评论区（复用 Giscus） -->
+			<Comment path="/guestbook/" />
+		</div>
+	</div>
+</MainGridLayout>

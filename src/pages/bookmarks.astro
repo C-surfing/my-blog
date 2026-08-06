@@ -1,0 +1,67 @@
+---
+import Comment from "@components/comment/index.astro";
+import FriendCard from "@components/features/friends/FriendCard.astro";
+import { PageHeader } from "@components/features/page-header";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+
+import { getBookmarksByCategory } from "../data/bookmarks";
+
+export const prerender = true;
+
+// 分类显示顺序
+const categoryOrder = ["Agent", "学习", "Research", "资源榜单", "工具", "创业", "其他"];
+const groups = getBookmarksByCategory();
+const orderedCategories = categoryOrder.filter((cat) => groups[cat]);
+const totalCount = Object.values(groups).reduce((sum, list) => sum + list.length, 0);
+---
+
+<MainGridLayout title="收藏夹" description="精选的 AI / Agent / 学习资源收藏">
+	<script>
+		import("../scripts/right-sidebar-layout.js");
+	</script>
+
+	<div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
+		<div class="card-base z-10 px-9 py-6 relative w-full">
+			<PageHeader
+				title="收藏夹"
+				subtitle={`精选资源，共 ${totalCount} 个收藏（原友链已全部迁移至此）`}
+			/>
+
+			{
+				orderedCategories.map((category) => (
+					<div class="mb-8">
+						<div class="flex items-center gap-3 mb-4">
+							<h2 class="text-xl font-bold text-black/90 dark:text-white/90">
+								{category}
+							</h2>
+							<span class="px-2 py-0.5 text-xs rounded-md bg-(--primary)/10 text-(--primary) font-medium">
+								{groups[category].length}
+							</span>
+							<div class="flex-1 border-(--line-divider) border-dashed border-b" />
+						</div>
+
+						<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+							{
+								groups[category].map((item) => (
+									<FriendCard
+										friend={{
+											title: item.title,
+											siteurl: item.siteurl,
+											imgurl: item.imgurl,
+											desc: item.desc,
+											tags: item.tags,
+										}}
+									/>
+								))
+							}
+						</div>
+					</div>
+				))
+			}
+		</div>
+	</div>
+
+	<div class="mt-4">
+		<Comment path="/bookmarks/" />
+	</div>
+</MainGridLayout>

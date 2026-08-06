@@ -140,6 +140,20 @@ export const navBarConfig: NavBarConfig = {
 			icon: "material-symbols:work",
 		},
 
+		// 知识库 Wiki
+		{
+			name: "Wiki",
+			url: "/wiki/",
+			icon: "material-symbols:menu-book",
+		},
+
+		// 收藏夹（原友链已迁移至此）
+		{
+			name: "收藏",
+			url: "/bookmarks/",
+			icon: "material-symbols:bookmarks",
+		},
+
 		// 个人页面下拉
 		{
 			name: "About",
@@ -162,10 +176,15 @@ export const navBarConfig: NavBarConfig = {
 					url: "/timeline/",
 					icon: "material-symbols:timeline",
 				},
+				{
+					name: "留言板",
+					url: "/guestbook/",
+					icon: "material-symbols:chat",
+				},
+				LinkPreset.Albums,
+				LinkPreset.Anime,
+				LinkPreset.Devices,
 			],
 		},
-
-		// 友链（作为 Links 页面）
-		LinkPreset.Friends,
 	],
 };

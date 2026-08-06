@@ -10,6 +10,7 @@ import {
 	PostNavigation,
 	RandomPosts,
 	RelatedPosts,
+	SeriesCard,
 	ShareCard,
 } from "@components/features/posts";
 import { ReadingTime, WordCount } from "@components/features/posts/atoms";
@@ -101,6 +102,16 @@ const { remarkPluginFrontmatter } = await render(entry);
 // 获取相关文章
 const relatedPosts = relatedPostsConfig.enable
 	? await getRelatedPosts(entry, relatedPostsConfig.maxCount)
+	: [];
+
+// 获取同系列文章
+const seriesPosts = entry.data.series
+	? (await getSortedPosts())
+			.filter((p) => p.data.series === entry.data.series)
+			.sort(
+				(a, b) =>
+					a.data.published.getTime() - b.data.published.getTime(),
+			)
 	: [];
 
 // Process cover image, for both OG and SharePoster
@@ -387,6 +398,17 @@ const jsonLd = {
 		nextSlug={entry.data.prevSlug}
 		nextTitle={entry.data.prevTitle}
 	/>
+
+	<!-- 系列文章 -->
+	{
+		seriesPosts.length > 1 && (
+			<SeriesCard
+				series={entry.data.series}
+				currentId={entry.id}
+				entries={seriesPosts}
+			/>
+		)
+	}
 
 	<!-- 相关文章与随机文章 -->
 	{

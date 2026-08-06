@@ -18,14 +18,14 @@ export const siteConfig: SiteConfig = {
 
 	// 特色页面开关配置
 	featurePages: {
-		anime: false, // 关闭番剧
+		anime: true, // 开启番剧
 		diary: true, // 开启日记
-		friends: true, // 友链（用作 Links 页面）
+		friends: false, // 友链已迁移至收藏夹页 (/bookmarks/)
 		projects: true, // 项目展示
 		skills: true, // 技能展示
 		timeline: true, // 时间线
-		albums: false, // 关闭相册
-		devices: false, // 关闭设备
+		albums: true, // 开启相册
+		devices: true, // 开启设备
 	},
 
 	// 顶栏标题配置
@@ -235,7 +235,7 @@ export const siteConfig: SiteConfig = {
 	},
 	// 图片优化配置
 	imageOptimization: {
-		formats: "webp", // 图片输出格式："avif"、"webp" 或 "both"（avif+webp，最优质量但构建更慢）
+		formats: "avif", // 图片输出格式："avif"、"webp" 或 "both"（avif+webp，最优质量但构建更慢）
 		quality: 85, // 图片质量，推荐 70-85
 		noReferrerDomains: [
 			// 需要添加 referrerpolicy="no-referrer" 的域名（支持通配符）

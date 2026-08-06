@@ -95,6 +95,10 @@
     "permalink": {
       "type": "string"
     },
+    "series": {
+      "default": "",
+      "type": "string"
+    },
     "prevTitle": {
       "default": "",
       "type": "string"
