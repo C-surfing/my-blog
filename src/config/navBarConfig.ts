@@ -182,8 +182,6 @@ export const navBarConfig: NavBarConfig = {
 					icon: "material-symbols:chat",
 				},
 				LinkPreset.Albums,
-				LinkPreset.Anime,
-				LinkPreset.Devices,
 			],
 		},
 	],

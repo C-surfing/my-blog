@@ -18,14 +18,14 @@ export const siteConfig: SiteConfig = {
 
 	// 特色页面开关配置
 	featurePages: {
-		anime: true, // 开启番剧
+		anime: false, // 关闭番剧
 		diary: true, // 开启日记
 		friends: false, // 友链已迁移至收藏夹页 (/bookmarks/)
 		projects: true, // 项目展示
 		skills: true, // 技能展示
 		timeline: true, // 时间线
 		albums: true, // 开启相册
-		devices: true, // 开启设备
+		devices: false, // 关闭设备
 	},
 
 	// 顶栏标题配置

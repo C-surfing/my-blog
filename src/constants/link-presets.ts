@@ -54,9 +54,4 @@ export const LinkPresets: Record<LinkPreset, NavBarLink> = {
 		url: "/timeline/",
 		icon: "material-symbols:timeline",
 	},
-	[LinkPreset.Devices]: {
-		name: i18n(I18nKey.devices),
-		url: "/devices/",
-		icon: "material-symbols:devices",
-	},
 };
