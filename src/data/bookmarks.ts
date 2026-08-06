@@ -237,6 +237,15 @@ export const bookmarksData: BookmarkItem[] = [
 		tags: ["AI", "Skill"],
 		category: "工具",
 	},
+	{
+		id: 25,
+		title: "科学空间 | Scientific Spaces",
+		imgurl: "",
+		desc: "苏剑林的数学与机器学习硬核推导博客，RoFormer 作者，覆盖大模型、注意力机制、优化等深度内容",
+		siteurl: "https://kexue.fm/",
+		tags: ["AI", "Research"],
+		category: "Research",
+	},
 ];
 
 export function getBookmarksList(): BookmarkItem[] {
