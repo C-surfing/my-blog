@@ -147,12 +147,15 @@ export const navBarConfig: NavBarConfig = {
 			icon: "material-symbols:menu-book",
 		},
 
-		// 收藏夹（原友链已迁移至此）
+		// 收藏夹（想记住的网站）
 		{
 			name: "收藏",
 			url: "/bookmarks/",
 			icon: "material-symbols:bookmarks",
 		},
+
+		// 友链（认识的人的网站）
+		LinkPreset.Friends,
 
 		// 个人页面下拉
 		{

@@ -20,7 +20,7 @@ export const siteConfig: SiteConfig = {
 	featurePages: {
 		anime: false, // 关闭番剧
 		diary: true, // 开启日记
-		friends: false, // 友链已迁移至收藏夹页 (/bookmarks/)
+		friends: true, // 友链（认识的人的网站）
 		projects: true, // 项目展示
 		skills: true, // 技能展示
 		timeline: true, // 时间线
