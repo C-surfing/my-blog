@@ -56,6 +56,13 @@ const wikiCollection = defineCollection({
 		description: z.string().optional().default(""),
 		tags: z.array(z.string()).optional().default([]),
 		category: z.string().optional().default(""),
+		/* 内容类型（仿 Simon Willison 博客结构）：
+		   entries=完整长文章 / links=摘录+评论 / quotes=观点收集 /
+		   notes=短想法与结论 / guides=结构化教程 / tils=今日所学 / tools=小工具 */
+		type: z
+			.enum(["entries", "links", "quotes", "notes", "guides", "tils", "tools"])
+			.optional()
+			.default("notes"),
 	}),
 });
 export const collections = {

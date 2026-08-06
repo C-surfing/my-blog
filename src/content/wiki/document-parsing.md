@@ -4,6 +4,7 @@ updated: 2026-08-06
 description: "PDF/扫描件/Office/网页 → Markdown/JSON 的文档解析方案：MinerU 双引擎、flash-extract 与 precision extract 模式、API 接入。"
 tags: [MinerU, 文档解析, RAG, OCR]
 category: Tools
+type: tools
 ---
 
 # 文档解析：MinerU 生态

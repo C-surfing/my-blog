@@ -4,6 +4,7 @@ updated: 2026-08-06
 description: "Agent 记忆系统的分层架构：情景/语义/程序性记忆、写入-管理-读取管道、检索与评测。"
 tags: [Agent, Memory, RAG]
 category: Agent
+type: entries
 ---
 
 # Agent 记忆系统

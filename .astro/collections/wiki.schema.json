@@ -24,6 +24,19 @@
       "default": "",
       "type": "string"
     },
+    "type": {
+      "default": "notes",
+      "type": "string",
+      "enum": [
+        "entries",
+        "links",
+        "quotes",
+        "notes",
+        "guides",
+        "tils",
+        "tools"
+      ]
+    },
     "$schema": {
       "type": "string"
     }

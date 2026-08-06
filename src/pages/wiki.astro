@@ -7,16 +7,58 @@ import { formatDateToYYYYMMDD } from "../utils/date-utils";
 
 export const prerender = true;
 
+type WikiType = "entries" | "links" | "quotes" | "notes" | "guides" | "tils" | "tools";
+
+// 类型定义（仿 Simon Willison 博客的内容分类）
+const typeMeta: { key: WikiType; name: string; desc: string }[] = [
+	{
+		key: "entries",
+		name: "Entries",
+		desc: "相对完整的长文章，通常是自己的技术分析、实验总结或项目复盘。这是最应该看的栏目。",
+	},
+	{
+		key: "links",
+		name: "Links",
+		desc: "看到某篇论文、项目、新闻或博客后，摘录其中一段，再补充自己的评论。它不是普通收藏夹，而是经过筛选的技术信息流。",
+	},
+	{
+		key: "quotes",
+		name: "Quotes",
+		desc: "收集其他人的有价值观点，通常只有一小段。",
+	},
+	{
+		key: "notes",
+		name: "Notes",
+		desc: "比正式文章短，但主要是自己的想法、实验结果或临时结论。",
+	},
+	{
+		key: "guides",
+		name: "Guides",
+		desc: "真正结构化的教程，适合系统学习。",
+	},
+	{
+		key: "tils",
+		name: "TILs",
+		desc: "Today I Learned——今天解决了一个具体问题，把步骤记录下来。特别适合遇到工程问题时搜索，而不适合从头刷。",
+	},
+	{
+		key: "tools",
+		name: "Tools",
+		desc: "用 LLM 辅助制作的小工具集合。真正的价值不是工具本身，而是观察一个想法如何通过 Prompt、代码生成、测试和修改，变成可运行的软件。",
+	},
+];
+
 const wikiEntries = (await getCollection("wiki")).sort(
 	(a, b) => b.data.updated.getTime() - a.data.updated.getTime(),
 );
 
-const categories = Array.from(
-	new Set(wikiEntries.map((entry) => entry.data.category || "其他")),
-).sort();
+const entriesByType = (type: WikiType) =>
+	wikiEntries.filter((e) => (e.data.type || "notes") === type);
+
+const totalCount = wikiEntries.length;
 ---
 
-<MainGridLayout title="知识库 Wiki" description="常青笔记与知识沉淀，按主题组织，持续更新">
+<MainGridLayout title="知识库 Wiki" description="Entries / Links / Quotes / Notes / Guides / TILs / Tools">
 	<script>
 		import("../scripts/right-sidebar-layout.js");
 	</script>
@@ -25,68 +67,80 @@ const categories = Array.from(
 		<div class="card-base z-10 px-9 py-6 relative w-full">
 			<PageHeader
 				title="知识库 Wiki"
-				subtitle="常青笔记：与博客文章不同，这里按主题组织、持续更新，是长期积累的知识资产"
+				subtitle={`常青笔记 · 共 ${totalCount} 篇，按内容类型组织，持续更新`}
 			/>
 
+			<!-- 类型导航锚点 -->
+			<div class="flex flex-wrap gap-2 mb-8">
+				{
+					typeMeta.map((meta) => {
+						const count = entriesByType(meta.key).length;
+						return (
+							<a
+								href={`#${meta.key}`}
+								class="px-4 py-2 rounded-lg border border-black/10 dark:border-white/10 hover:border-(--primary) hover:text-(--primary) transition-all text-sm font-medium text-black/70 dark:text-white/70"
+							>
+								{meta.name}
+								<span class="ml-1 text-xs text-black/40 dark:text-white/40">
+									({count})
+								</span>
+							</a>
+						);
+					})
+				}
+			</div>
+
+			<!-- 各类型分区 -->
 			{
-				categories.map((category) => {
-					const entries = wikiEntries.filter(
-						(entry) => (entry.data.category || "其他") === category,
-					);
+				typeMeta.map((meta) => {
+					const entries = entriesByType(meta.key);
 					return (
-						<div class="mb-8">
-							<div class="flex items-center gap-3 mb-4">
-								<h2 class="text-xl font-bold text-black/90 dark:text-white/90">
-									{category}
+						<section id={meta.key} class="mb-10 scroll-mt-24">
+							<div class="flex items-center gap-3 mb-1">
+								<h2 class="text-2xl font-bold text-black/90 dark:text-white/90">
+									{meta.name}
 								</h2>
 								<span class="px-2 py-0.5 text-xs rounded-md bg-(--primary)/10 text-(--primary) font-medium">
 									{entries.length}
 								</span>
-								<div class="flex-1 border-(--line-divider) border-dashed border-b" />
 							</div>
+							<p class="text-sm text-black/50 dark:text-white/50 mb-4 leading-relaxed">
+								{meta.desc}
+							</p>
 
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-								{
-									entries.map((entry) => (
-										<a
-											href={`/wiki/${entry.id.replace(/\.(md|mdx)$/, "")}/`}
-											class="group block rounded-xl border border-black/10 dark:border-white/10 p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
-										>
-											<div class="flex items-start justify-between gap-3 mb-2">
-												<h3 class="text-lg font-bold text-black/90 dark:text-white/90 group-hover:text-(--primary) transition-colors">
-													{entry.data.title}
-												</h3>
-												<span class="shrink-0 text-xs text-black/40 dark:text-white/40">
-													{formatDateToYYYYMMDD(entry.data.updated)}
-												</span>
-											</div>
-											<p class="text-sm text-black/60 dark:text-white/60 line-clamp-2 mb-3">
-												{entry.data.description}
-											</p>
-											<div class="flex flex-wrap gap-2">
-												{
-													(entry.data.tags || []).map((tag) => (
-														<span class="px-2 py-0.5 text-xs rounded-md bg-(--primary)/10 text-(--primary) font-medium">
-															{tag}
+							{
+								entries.length > 0 ? (
+									<div class="space-y-2">
+										{
+											entries.map((entry) => (
+												<a
+													href={`/wiki/${entry.id.replace(/\.(md|mdx)$/, "")}/`}
+													class="group flex items-baseline justify-between gap-4 px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 hover:border-(--primary) transition-all duration-200"
+												>
+													<div class="min-w-0">
+														<span class="font-medium text-black/80 dark:text-white/80 group-hover:text-(--primary) transition-colors">
+															{entry.data.title}
 														</span>
-													))
-												}
-											</div>
-										</a>
-									))
-								}
-							</div>
-						</div>
+														<span class="block text-xs text-black/40 dark:text-white/40 truncate mt-0.5">
+															{entry.data.description}
+														</span>
+													</div>
+													<span class="shrink-0 text-xs text-black/35 dark:text-white/35">
+														{formatDateToYYYYMMDD(entry.data.updated)}
+													</span>
+												</a>
+											))
+										}
+									</div>
+								) : (
+									<p class="text-sm text-black/30 dark:text-white/30 pl-1">
+										暂无内容，建设中。
+									</p>
+								)
+							}
+						</section>
 					);
 				})
-			}
-
-			{
-				wikiEntries.length === 0 && (
-					<p class="text-center text-black/50 dark:text-white/50 py-12">
-						知识库建设中，敬请期待。
-					</p>
-				)
 			}
 		</div>
 	</div>

@@ -4,6 +4,7 @@ updated: 2026-08-06
 description: "LLM 后训练中的策略优化算法族：从 PPO 到 GRPO、DAPO，去掉 Critic 的群体相对优势估计。"
 tags: [RL, GRPO, DAPO, LLM]
 category: RL
+type: guides
 ---
 
 # RL 策略优化：GRPO / DAPO

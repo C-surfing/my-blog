@@ -4,6 +4,7 @@ updated: 2026-08-06
 description: "国产操作系统（麒麟 V11）上的 Agent 记忆系统竞赛项目：四层记忆架构、Embedding/向量引擎 SDK 适配、评测框架。"
 tags: [Kylin, Agent, Memory, 赛事]
 category: Projects
+type: notes
 ---
 
 # 麒麟OS Agent 记忆项目

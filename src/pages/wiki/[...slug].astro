@@ -16,9 +16,20 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 
+const typeNameMap: Record<string, string> = {
+	entries: "Entries",
+	links: "Links",
+	quotes: "Quotes",
+	notes: "Notes",
+	guides: "Guides",
+	tils: "TILs",
+	tools: "Tools",
+};
+const entryType = entry.data.type || "notes";
+
 const allEntries = await getCollection("wiki");
 const siblings = allEntries
-	.filter((e) => (e.data.category || "其他") === (entry.data.category || "其他"))
+	.filter((e) => (e.data.type || "notes") === entryType)
 	.sort((a, b) => a.data.title.localeCompare(b.data.title, "zh"));
 const currentIndex = siblings.findIndex((e) => e.id === entry.id);
 const prevEntry = currentIndex > 0 ? siblings[currentIndex - 1] : null;
@@ -54,6 +65,9 @@ const nextEntry =
 			<!-- 元信息 -->
 			<div class="flex flex-wrap items-center gap-3 mb-6 pb-4 border-(--line-divider) border-dashed border-b">
 				<span class="px-2 py-1 text-xs rounded-md bg-(--primary)/10 text-(--primary) font-medium">
+					{typeNameMap[entryType] || entryType}
+				</span>
+				<span class="px-2 py-1 text-xs rounded-md bg-(--btn-regular-bg) text-black/60 dark:text-white/60 font-medium">
 					{entry.data.category || "其他"}
 				</span>
 				{
@@ -73,12 +87,12 @@ const nextEntry =
 				<Content />
 			</Markdown>
 
-			<!-- 同分类条目导航 -->
+			<!-- 同类型条目导航 -->
 			{
 				siblings.length > 1 && (
 					<div class="mt-8 pt-4 border-(--line-divider) border-t">
 						<p class="text-sm text-black/40 dark:text-white/40 mb-3">
-							同分类 · {entry.data.category || "其他"}
+							同类型 · {typeNameMap[entryType] || entryType}
 						</p>
 						<div class="flex flex-col gap-2">
 							{

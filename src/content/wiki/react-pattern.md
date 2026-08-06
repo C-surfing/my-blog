@@ -4,6 +4,7 @@ updated: 2026-08-06
 description: "ReAct（Reasoning + Acting）是 Agent 最基础的推理-行动循环范式，几乎所有现代 Agent 框架都在此基础上构建。"
 tags: [Agent, ReAct, LangGraph]
 category: Agent
+type: notes
 ---
 
 # ReAct 模式

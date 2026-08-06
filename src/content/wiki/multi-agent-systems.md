@@ -4,6 +4,7 @@ updated: 2026-08-06
 description: "多 Agent 协作的模式：编排者-工作者、辩论/评审、流水线；从单 Agent 到能力系统协作的演进路径。"
 tags: [Agent, Multi-Agent]
 category: Agent
+type: notes
 ---
 
 # 多智能体系统
