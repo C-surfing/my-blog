@@ -246,6 +246,15 @@ export const bookmarksData: BookmarkItem[] = [
 		tags: ["AI", "Research"],
 		category: "Research",
 	},
+	{
+		id: 26,
+		title: "AI Hero",
+		imgurl: "",
+		desc: "Matt Pocock（Total TypeScript 作者）的 AI 工程化平台：25+ 免费可安装技能，把编码 agent 的工程流程变成可安装技能",
+		siteurl: "https://www.aihero.dev/",
+		tags: ["AI", "Agent"],
+		category: "工具",
+	},
 ];
 
 export function getBookmarksList(): BookmarkItem[] {
