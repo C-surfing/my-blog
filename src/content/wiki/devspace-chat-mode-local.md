@@ -1,7 +1,7 @@
 ---
 title: "DevSpace：把 ChatGPT 的 Chat 模式搬到本地"
 updated: 2026-08-07
-description: "用普通 ChatGPT Chat 对话 + DevSpace MCP 插件直接读写本地文件、跑 shell，不消耗 Codex/agentic 额度。含从安装、Cloudflare Tunnel 到首次任务的完整配置。"
+description: "用普通 ChatGPT Chat 对话 + DevSpace MCP 插件直接读写本地文件、跑 shell，不消耗 Codex/agentic 额度。含从安装、Cloudflare Tunnel、OAuth 到聊天内激活的完整配置与排障。"
 tags: [DevSpace, ChatGPT, MCP, Codex, Agent]
 category: Agent
 type: tools
@@ -85,6 +85,8 @@ cloudflared tunnel --url http://127.0.0.1:7676
 
 记录输出的 HTTPS origin，例如 `https://random-name.trycloudflare.com`（临时域名会变，长期使用请配置稳定域名）。
 
+**配好之后不要重启 cloudflared**：Quick Tunnel 一重启就会换一个随机域名，ChatGPT 里的 MCP connection 立即失效，需要重新配置并授权。域名必须与 DevSpace 配置里的 `publicBaseUrl` 一致（日志中的 Host 也是它）。
+
 ### 3. 初始化并启动
 
 ```bash
@@ -109,6 +111,14 @@ DEVSPACE_OAUTH_SCOPES=project:read,project:write,process:execute node dist/cli.j
 
 只查看项目可用 `DEVSPACE_OAUTH_SCOPES=project:read`。修改 scopes 后必须重启服务、在 ChatGPT 里 Refresh 连接并重新授权。
 
+**走 Cloudflare Tunnel 必须加 `DEVSPACE_TRUST_PROXY=1`**：Tunnel 会带 `X-Forwarded-For` 头，而 DevSpace 默认 `DEVSPACE_TRUST_PROXY=0`，express-rate-limit 会报 `ERR_ERL_UNEXPECTED_X_FORWARDED_FOR` 警告。由于 DevSpace 只监听 `127.0.0.1:7676`、Tunnel 是本机反代进来，这样配置是安全的：
+
+```bash
+DEVSPACE_TRUST_PROXY=1 DEVSPACE_OAUTH_SCOPES=project:read,project:write,process:execute node dist/cli.js serve
+```
+
+工具调用日志默认开启（`DEVSPACE_LOG_TOOL_CALLS=1`），ChatGPT 每次调用 `open_workspace` / `bash` 等工具都会打印到 serve 终端——这是判断链路是否真正跑通的关键信号。
+
 ### 4. 验证本地与公网服务
 
 ```bash
@@ -126,15 +136,36 @@ node dist/cli.js doctor
 2. 打开 [ChatGPT Plugins](https://chatgpt.com/plugins)，新增一个 MCP connection
 3. MCP URL 填公网 origin 加 `/mcp`：`https://random-name.trycloudflare.com/mcp`
 4. 使用 OAuth 连接，在 DevSpace 批准页输入 Owner 密码，并选择该 grant 可访问的 Project roots
-5. 完成授权，确认 ChatGPT 发现的工具，然后**新建一个对话**，从工具菜单添加该连接
+5. 完成授权，确认 ChatGPT 发现的工具
 
-### 6. 完成第一次任务
+MCP 握手成功的日志长这样：`mcp_session_created`、`POST /mcp status=200/202`、`userAgent="openai-mcp/1.0.0"`；输入密码后出现 `POST / status=302` 说明 OAuth 授权页正常完成。
 
-先做一次只读验证（此时确保对话模式是 **Chat**，不是 Work/Codex）：
+### 6. 在聊天中激活 DevSpace（最容易漏的一步）
 
-> 使用 DevSpace 查看已授权的 Project。打开我指定的项目，只读取 README.md 和 package.json，用三点说明它的用途和主要脚本；不要修改文件，也不要执行命令。
+**连接成功 ≠ 当前聊天自动加载工具。** OpenAI 官方要求：连接 Plugin/App 后，还需要在聊天里主动调用它。步骤：
 
-确认只读流程正确后，再试一个小修改："修改前先读取目标文件；只做我指定的改动，完成后展示变更，不要提交 Git"。
+1. **新建一个聊天**（不要在旧聊天里继续测试）
+2. 点输入框左侧的 **+** → **More / 更多** → 选择 **DevSpace**（或你自定义 App 的名字）
+3. 成功后输入框附近会出现 DevSpace 的 App/Plugin 标识
+
+另一个方式是 **@ mention**：输入 `@` 后从 UI 自动补全列表里点选 DevSpace，让它变成真正的 mention/chip。**手打纯文本 `@devspace` 没有任何作用。**
+
+### 7. 完成第一次任务
+
+发送这个最可靠的测试（确保对话模式是 **Chat**，不是 Work/Codex）：
+
+> 使用 DevSpace 的 open_workspace 打开：
+>
+> /home/Csurfing/kylin-memory/project
+>
+> 使用 checkout 模式，不创建 worktree。打开后执行 pwd 和 ls -la。必须调用 DevSpace 的 open_workspace 和 bash 工具，不要根据聊天上下文推测。
+
+**判断是否真的调用了工具**：不要只看 ChatGPT 怎么说，盯着 `devspace serve` 的终端。出现 `open_workspace` 相关的 tool-call 日志，然后 `workspaceId → bash → pwd / ls -la`，才算真正跑通：
+
+- **没有 `open_workspace` 日志** → ChatGPT UI 没有把 DevSpace App 注入当前聊天，回去检查第 6 步的激活
+- **出现 `open_workspace` 但报错** → DevSpace workspace 层的问题，按具体错误排查
+
+第一次 `open_workspace` 之后，后续所有文件 / shell / edit 操作都复用返回的 `workspaceId`——这是官方工作流。
 
 ## 任务分级工作流
 
@@ -162,6 +193,10 @@ DevSpace 内置支持 `codex`、`claude`、`opencode`、`pi`、`cursor`、`copil
 - **ChatGPT Pro 模型/模式的工具路由问题**（issue #14）：Pro 模式会错误尝试 `multi_tool_use.parallel` 而不是 `open_workspace` / `read` / `bash` / `edit`，导致"没有 DevSpace 工具"。其他 ChatGPT 模型用同一个 DevSpace connector 正常。注意区分"ChatGPT Pro 套餐"和"模型选择器里的 Pro 模型/模式"。
 - **Work ≠ 省额度**：Work 和 Codex 共用 agentic usage 池。
 - **用了插件 ≠ 进入 Codex**：插件同时可用于 ChatGPT 和 Codex，关键在于对话模式选择。
+- **`ERR_ERL_UNEXPECTED_X_FORWARDED_FOR` 警告**：走 Cloudflare Tunnel 时 Cloudflare 会带 `X-Forwarded-For`，DevSpace 默认 `DEVSPACE_TRUST_PROXY=0` 导致 express-rate-limit 告警。用 `DEVSPACE_TRUST_PROXY=1 devspace serve` 启动即可消除（DevSpace 只监听 127.0.0.1，Tunnel 是本机反代，安全）。
+- **MCP 握手成功但聊天里没有工具**：日志出现 `mcp_session_created`、`POST /mcp 200/202` 只代表 ChatGPT 连上了 MCP，不代表当前聊天加载了工具。必须新建聊天 → `+` → More → 选择 DevSpace（或 @ 自动补全点选，手打 `@devspace` 无效）。输入框附近出现 App 标识才算注入成功。
+- **`stream ... canceled by remote with error code 0`**：客户端结束 HTTP stream 时 Cloudflare 的普通记录，只要 MCP session 已建立就不影响连接，不是核心问题。
+- **不要重启 Quick Tunnel**：随机域名一变，ChatGPT 里的 connection 失效。长期使用请配置稳定域名（Named Tunnel）。
 - **临时隧道域名变化**：用 `DEVSPACE_PUBLIC_BASE_URL="https://new-tunnel.example.com" node dist/cli.js serve` 重启，并更新 ChatGPT 里的 MCP URL 后重新授权——只重启隧道不够，OAuth issuer 和 redirect URL 也依赖公网 origin。
 - **ChatGPT 连接后没有新工具**：在 ChatGPT Plugins 打开该连接选 **Refresh**，确认工具元数据更新后再新建对话复测。
 - **`doctor` 通过但连不上**：按顺序检查 服务终端输出 → 本地 `/readyz` → 公网 `/readyz` → OAuth 批准 → ChatGPT 连接元数据。
