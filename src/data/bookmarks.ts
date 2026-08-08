@@ -255,6 +255,15 @@ export const bookmarksData: BookmarkItem[] = [
 		tags: ["AI", "Agent"],
 		category: "工具",
 	},
+	{
+		id: 27,
+		title: "Agentic Design Patterns（谷歌新书中文版）",
+		imgurl: "",
+		desc: "《Agentic Design Patterns》最佳中文翻译：21 个核心模式（提示链/路由/并行化/反思/工具使用/规划/多智能体/记忆管理/RAG/安全/评估等）+ 7 个附录，在线可读",
+		siteurl: "https://github.com/xindoo/agentic-design-patterns",
+		tags: ["Agent", "设计模式", "翻译"],
+		category: "Agent",
+	},
 ];
 
 export function getBookmarksList(): BookmarkItem[] {
