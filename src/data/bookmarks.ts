@@ -264,6 +264,15 @@ export const bookmarksData: BookmarkItem[] = [
 		tags: ["Agent", "设计模式", "翻译"],
 		category: "Agent",
 	},
+	{
+		id: 28,
+		title: "操作系统导论（中文版）",
+		imgurl: "",
+		desc: "OSTEP《Operating Systems: Three Easy Pieces》中文翻译版，虚拟化/并发/持久化三大主题，附全书目录与各章节 PDF",
+		siteurl: "https://itanken.github.io/ostep-chinese/",
+		tags: ["操作系统", "系统"],
+		category: "学习",
+	},
 ];
 
 export function getBookmarksList(): BookmarkItem[] {
