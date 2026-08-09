@@ -271,7 +271,7 @@ export const bookmarksData: BookmarkItem[] = [
 		desc: "OSTEP《Operating Systems: Three Easy Pieces》中文翻译版，虚拟化/并发/持久化三大主题，附全书目录与各章节 PDF",
 		siteurl: "https://itanken.github.io/ostep-chinese/",
 		tags: ["操作系统", "系统"],
-		category: "学习",
+		category: "408",
 	},
 	{
 		id: 29,
