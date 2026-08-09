@@ -9,7 +9,7 @@ import { getBookmarksByCategory } from "../data/bookmarks";
 export const prerender = true;
 
 // 分类显示顺序
-const categoryOrder = ["Agent", "学习", "Research", "资源榜单", "工具", "创业", "其他"];
+const categoryOrder = ["Agent", "学习", "408", "Research", "资源榜单", "工具", "创业", "其他"];
 const groups = getBookmarksByCategory();
 const orderedCategories = categoryOrder.filter((cat) => groups[cat]);
 const totalCount = Object.values(groups).reduce((sum, list) => sum + list.length, 0);
