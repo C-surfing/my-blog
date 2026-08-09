@@ -33,7 +33,7 @@ const { series, currentId, entries } = Astro.props as Props;
 				const slug = entry.id.replace(/\.(md|mdx)$/, "");
 				const isCurrent = entry.id === currentId;
 				return (
-					<li key={entry.id}>
+					<li>
 						<a
 							href={`/posts/${slug}/`}
 							class:list={[
