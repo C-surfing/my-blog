@@ -273,6 +273,15 @@ export const bookmarksData: BookmarkItem[] = [
 		tags: ["操作系统", "系统"],
 		category: "学习",
 	},
+	{
+		id: 29,
+		title: "EndlessCheng（灵茶山艾府）",
+		imgurl: "",
+		desc: "算法竞赛选手（力扣全球前列）的 GitHub：codeforces-go 算法竞赛模板库、题解与刷题教程，B站同步讲解",
+		siteurl: "https://github.com/EndlessCheng",
+		tags: ["算法", "刷题"],
+		category: "学习",
+	},
 ];
 
 export function getBookmarksList(): BookmarkItem[] {
