@@ -336,7 +336,16 @@ export const bookmarksData: BookmarkItem[] = [
 		tags: ["工具", "课程"],
 		category: "408",
 	},
-];
+	{
+		id: 36,
+		title: "Happy-LLM",
+		imgurl: "",
+		desc: "Datawhale 出品的系统性 LLM 学习教程：从 NLP 基础、Transformer 架构到 LLM 原理，动手实现 LLaMA2 并跑通从预训练到微调的全流程",
+		siteurl: "https://datawhalechina.github.io/happy-llm/#/",
+		tags: ["LLM", "学习"],
+		category: "学习",
+	},
+	];
 
 export function getBookmarksList(): BookmarkItem[] {
 	return bookmarksData;
