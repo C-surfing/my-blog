@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="900" height="400" font-family="Arial, sans-serif">
+  <rect width="900" height="400" fill="#FFFFFF"/>
+  <defs>
+    <marker id="arrow-default" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#555555"/>
+    </marker>
+    <marker id="arrow-c0" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#94A3B8"/>
+    </marker>
+    <marker id="arrow-c1" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#60A5FA"/>
+    </marker>
+    <marker id="arrow-c2" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#F59E0B"/>
+    </marker>
+    <marker id="arrow-c3" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#10B981"/>
+    </marker>
+    <marker id="arrow-c4" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#7C3AED"/>
+    </marker>
+  </defs>
+  <path d="M 195.0,120.0 L 225.0,120.0" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrow-c0)"/>
+  <rect x="186.0" y="102.0" width="48.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="210.0" y="114.0" font-size="10" fill="#777777" text-anchor="middle">横向分工</text>
+  <path d="M 375.0,120.0 L 405.0,120.0" stroke="#60A5FA" stroke-width="2" fill="none" marker-end="url(#arrow-c1)"/>
+  <rect x="366.0" y="102.0" width="48.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="390.0" y="114.0" font-size="10" fill="#777777" text-anchor="middle">纵向约束</text>
+  <path d="M 555.0,120.0 L 585.0,120.0" stroke="#F59E0B" stroke-width="2" fill="none" marker-end="url(#arrow-c2)"/>
+  <rect x="546.0" y="102.0" width="48.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="570.0" y="114.0" font-size="10" fill="#777777" text-anchor="middle">能力抽象</text>
+  <path d="M 735.0,120.0 L 755.0,120.0" stroke="#10B981" stroke-width="2" fill="none" marker-end="url(#arrow-c3)" stroke-dasharray="8,4"/>
+  <rect x="721.0" y="102.0" width="48.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="745.0" y="114.0" font-size="10" fill="#777777" text-anchor="middle">能力治理</text>
+  <path d="M 120.0,147.0 L 120.0,212.0" stroke="#FCA5A5" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <path d="M 300.0,147.0 L 300.0,212.0" stroke="#FCA5A5" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <path d="M 480.0,147.0 L 480.0,212.0" stroke="#FCA5A5" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <path d="M 660.0,147.0 L 660.0,212.0" stroke="#FCA5A5" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <rect x="45.0" y="93.0" width="150.0" height="54.0" fill="#F1F5F9" stroke="#94A3B8" stroke-width="2" rx="8"/>
+  <text x="120.0" y="117.0" font-size="13" fill="#475569" text-anchor="middle" font-weight="bold">Single Agent</text>
+  <text x="120.0" y="132.1" font-size="13" fill="#475569" text-anchor="middle" font-weight="bold">一个人自由探索</text>
+  <rect x="225.0" y="93.0" width="150.0" height="54.0" fill="#EFF6FF" stroke="#60A5FA" stroke-width="2" rx="8"/>
+  <text x="300.0" y="117.0" font-size="13" fill="#333333" text-anchor="middle" font-weight="bold">Multi-Agent</text>
+  <text x="300.0" y="132.1" font-size="13" fill="#333333" text-anchor="middle" font-weight="bold">团队分工协作</text>
+  <rect x="405.0" y="93.0" width="150.0" height="54.0" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2" rx="8"/>
+  <text x="480.0" y="117.0" font-size="13" fill="#333333" text-anchor="middle" font-weight="bold">Workflow</text>
+  <text x="480.0" y="132.1" font-size="13" fill="#333333" text-anchor="middle" font-weight="bold">按流程稳定执行</text>
+  <rect x="585.0" y="93.0" width="150.0" height="54.0" fill="#F0FDF4" stroke="#10B981" stroke-width="2" rx="8"/>
+  <text x="660.0" y="117.0" font-size="13" fill="#333333" text-anchor="middle" font-weight="bold">Skill</text>
+  <text x="660.0" y="132.1" font-size="13" fill="#333333" text-anchor="middle" font-weight="bold">专家能力模块化</text>
+  <rect x="755.0" y="93.0" width="150.0" height="54.0" fill="#F3E8FF" stroke="#7C3AED" stroke-width="2" rx="8"/>
+  <text x="830.0" y="117.0" font-size="13" fill="#333333" text-anchor="middle" font-weight="bold">Skill 治理</text>
+  <text x="830.0" y="132.1" font-size="13" fill="#333333" text-anchor="middle" font-weight="bold">能力可控可组合</text>
+  <rect x="45.0" y="212.0" width="150.0" height="36.0" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="2" rx="8"/>
+  <text x="120.0" y="227.2" font-size="12" fill="#991B1B" text-anchor="middle" font-weight="bold">上下文污染</text>
+  <text x="120.0" y="241.2" font-size="12" fill="#991B1B" text-anchor="middle" font-weight="bold">单点失败</text>
+  <rect x="225.0" y="212.0" width="150.0" height="36.0" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="2" rx="8"/>
+  <text x="300.0" y="227.2" font-size="12" fill="#991B1B" text-anchor="middle" font-weight="bold">协调成本</text>
+  <text x="300.0" y="241.2" font-size="12" fill="#991B1B" text-anchor="middle" font-weight="bold">信息不一致</text>
+  <rect x="405.0" y="212.0" width="150.0" height="36.0" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="2" rx="8"/>
+  <text x="480.0" y="227.2" font-size="12" fill="#991B1B" text-anchor="middle" font-weight="bold">流程僵化</text>
+  <text x="480.0" y="241.2" font-size="12" fill="#991B1B" text-anchor="middle" font-weight="bold">能力难复用</text>
+  <rect x="585.0" y="212.0" width="150.0" height="36.0" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="2" rx="8"/>
+  <text x="660.0" y="227.2" font-size="12" fill="#991B1B" text-anchor="middle" font-weight="bold">Skill 过载</text>
+  <text x="660.0" y="241.2" font-size="12" fill="#991B1B" text-anchor="middle" font-weight="bold">路由困难</text>
+  <text x="450.0" y="25.0" font-size="20" fill="#1E293B" text-anchor="middle">Agent 工程化演变主线</text>
+  <text x="450.0" y="55.0" font-size="13" fill="#64748B" text-anchor="middle">每一代架构都在解决上一代暴露的矛盾，不是相互替代</text>
+  <text x="450.0" y="310.0" font-size="14" fill="#64748B" text-anchor="middle">每代架构的核心问题</text>
+  <text x="450.0" y="370.0" font-size="15" fill="#2563EB" text-anchor="middle">Single Agent → Multi-Agent → Workflow → Skill → Skill 治理</text>
+</svg>

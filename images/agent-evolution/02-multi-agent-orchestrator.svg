@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" font-family="Arial, sans-serif">
+  <rect width="800" height="480" fill="#FFFFFF"/>
+  <defs>
+    <marker id="arrow-default" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#555555"/>
+    </marker>
+    <marker id="arrow-c0" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#2563EB"/>
+    </marker>
+    <marker id="arrow-c1" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#10B981"/>
+    </marker>
+    <marker id="arrow-c2" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#7C3AED"/>
+    </marker>
+    <marker id="arrow-c3" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#EA580C"/>
+    </marker>
+    <marker id="arrow-c4" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 4, 0 8" fill="#F59E0B"/>
+    </marker>
+  </defs>
+  <rect x="35.0" y="213.0" width="580.0" height="94.0" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" rx="8"/>
+  <text x="43.0" y="229.0" font-size="12" fill="#999999" font-weight="bold">子 Agent 层</text>
+  <path d="M 400.0,70.0 L 400.0,115.0" stroke="#6366F1" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <path d="M 341.7,165.0 L 183.0,233.0" stroke="#10B981" stroke-width="2" fill="none" marker-end="url(#arrow-c1)"/>
+  <rect x="247.3" y="181.0" width="30.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="262.3" y="193.0" font-size="11" fill="#777777" text-anchor="middle">分配</text>
+  <path d="M 372.9,165.0 L 299.2,233.0" stroke="#F59E0B" stroke-width="2" fill="none" marker-end="url(#arrow-c4)"/>
+  <rect x="321.1" y="181.0" width="30.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="336.1" y="193.0" font-size="11" fill="#777777" text-anchor="middle">分配</text>
+  <path d="M 400.0,165.0 L 400.0,233.0" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrow-c2)"/>
+  <rect x="385.0" y="181.0" width="30.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="400.0" y="193.0" font-size="11" fill="#777777" text-anchor="middle">分配</text>
+  <path d="M 427.1,165.0 L 500.8,233.0" stroke="#EC4899" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <rect x="448.9" y="181.0" width="30.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="463.9" y="193.0" font-size="11" fill="#777777" text-anchor="middle">分配</text>
+  <path d="M 185.0,285.5 Q 249.7,343.2 336.4,345.0" stroke="#10B981" stroke-width="2" fill="none" marker-end="url(#arrow-c1)"/>
+  <rect x="240.2" y="311.2" width="30.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="255.2" y="323.2" font-size="11" fill="#777777" text-anchor="middle">结果</text>
+  <path d="M 301.9,287.0 Q 316.8,338.9 370.5,345.0" stroke="#F59E0B" stroke-width="2" fill="none" marker-end="url(#arrow-c4)"/>
+  <rect x="311.5" y="309.5" width="30.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="326.5" y="321.5" font-size="11" fill="#777777" text-anchor="middle">结果</text>
+  <path d="M 400.0,287.0 Q 370.0,316.0 400.0,345.0" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrow-c2)"/>
+  <rect x="370.0" y="298.0" width="30.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="385.0" y="310.0" font-size="11" fill="#777777" text-anchor="middle">结果</text>
+  <path d="M 498.1,287.0 Q 444.4,293.1 429.5,345.0" stroke="#EC4899" stroke-width="2" fill="none" marker-end="url(#arrow-default)"/>
+  <rect x="439.1" y="286.5" width="30.0" height="16" fill="#FFFFFF" rx="3" opacity="0.85"/>
+  <text x="454.1" y="298.5" font-size="11" fill="#777777" text-anchor="middle">结果</text>
+  <rect x="335.0" y="30.0" width="130.0" height="40.0" fill="#E0E7FF" stroke="#6366F1" stroke-width="2" rx="8"/>
+  <text x="400.0" y="54.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">用户任务</text>
+  <rect x="310.0" y="115.0" width="180.0" height="50.0" fill="#DBEAFE" stroke="#2563EB" stroke-width="2" rx="8"/>
+  <text x="400.0" y="136.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Orchestrator</text>
+  <text x="400.0" y="152.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">任务分解与调度</text>
+  <rect x="55.0" y="233.0" width="130.0" height="54.0" fill="#D1FAE5" stroke="#10B981" stroke-width="2" rx="8"/>
+  <text x="120.0" y="256.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Research</text>
+  <text x="120.0" y="272.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Agent</text>
+  <rect x="205.0" y="233.0" width="130.0" height="54.0" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" rx="8"/>
+  <text x="270.0" y="256.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Code</text>
+  <text x="270.0" y="272.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Agent</text>
+  <rect x="335.0" y="233.0" width="130.0" height="54.0" fill="#F3E8FF" stroke="#7C3AED" stroke-width="2" rx="8"/>
+  <text x="400.0" y="256.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Test</text>
+  <text x="400.0" y="272.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Agent</text>
+  <rect x="465.0" y="233.0" width="130.0" height="54.0" fill="#FCE7F3" stroke="#EC4899" stroke-width="2" rx="8"/>
+  <text x="530.0" y="256.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Review</text>
+  <text x="530.0" y="272.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">Agent</text>
+  <rect x="320.0" y="345.0" width="160.0" height="50.0" fill="#E0E7FF" stroke="#6366F1" stroke-width="2" rx="8"/>
+  <text x="400.0" y="366.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">汇总结果</text>
+  <text x="400.0" y="382.9" font-size="14" fill="#333333" text-anchor="middle" font-weight="bold">最终输出</text>
+  <text x="400.0" y="25.0" font-size="18" fill="#1E293B" text-anchor="middle">Multi-Agent Orchestrator 模式</text>
+</svg>

@@ -1,0 +1,8 @@
+# Excalidraw scenes — CORS for excalidraw.com embed
+/excalidraw/*
+  Access-Control-Allow-Origin: *
+  Content-Type: application/json
+
+# Block HTML sniffing on raw excalidraw files (already json)
+/excalidraw/scenes/*
+  X-Content-Type-Options: nosniff
