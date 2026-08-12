@@ -5,7 +5,7 @@
   <link href="https://csurfing.xyz/" rel="alternate" type="text/html"/>
   <link href="https://csurfing.xyz/atom.xml" rel="self" type="application/atom+xml"/>
   <id>https://csurfing.xyz/</id>
-  <updated>2026-08-12T05:04:30.979Z</updated>
+  <updated>2026-08-12T07:08:37.008Z</updated>
   <language>zh_CN</language>
   <entry>
     <title>个人 Workflow 优化：从终端配置到 Agentic 工程工作流</title>
@@ -16,18 +16,17 @@
     <summary>结合五道口纳什 L8《首席工程师的 Agentic Engineering 工作流》的方法论，记录个人终端工作流的最终架构：WezTerm 管环境、tmux 管项目、z/zi/y 管去哪、fd/rg 管找什么，以及上下文分层、验证习惯与长任务边界的落地实践。</summary>
     <content type="html"><![CDATA[<p>import PdfViewer from "@/components/PdfViewer.astro";</p>
 <blockquote>
-<p>本文把两件事合在一起讲：一份是五道口纳什 L8《首席工程师的 Agentic Engineering 工作流》课程笔记（Kun Chen 主讲），另一份是我自己经过多轮迭代后定型的终端工作流。课程提供方法论骨架，我的配置是它的一个具体实例——从"造船"到"掌舵"的完整落地记录。</p>
+<p>本文把两件事合在一起讲：一份是 L8《首席工程师的 Agentic Engineering 工作流》视频笔记（Kun Chen 主讲），另一份是我自己经过多轮迭代后定型的终端工作流。视频提供方法论骨架，我的配置是它的一个具体实例——从"造船"到"掌舵"的完整落地记录。</p>
 </blockquote>
 <hr />
 <h2>一、为什么值得专门优化一遍 Workflow</h2>
-<p>L8 课程开篇把人比作<strong>船长</strong>，把 coding agents 比作<strong>船员</strong>，把终端、会话管理、记忆、Skills、验证流水线与并行调度组合成一艘船。评价标准随之从"模型能不能写出代码"，提高为四个问题：</p>
+<p>L8 课程开篇把人比作<strong>船长</strong>，把 coding agents 比作<strong>船员</strong>，把终端、会话管理、记忆、Skills、验证流水线与并行调度组合成一艘船。评价标准随之从"模型能不能写出代码"，提高为三个问题：</p>
 <ul>
 <li>任务能否被正确理解？</li>
 <li>过程能否隔离？</li>
 <li>结果能否验证？</li>
-<li>风险能否升级？</li>
 </ul>
-<p>这四问构成了我优化工作流的出发点。课程给出了一条<strong>五步认知地图</strong>：</p>
+<p>这三问构成了我优化工作流的出发点。课程给出了一条<strong>五步认知地图</strong>：</p>
 <ol>
 <li><strong>先造船</strong> —— 低摩擦、可恢复的终端工作环境</li>
 <li><strong>Onboarding</strong> —— 上下文分层（全局记忆 → 项目记忆 → Skills）</li>
@@ -35,10 +34,10 @@
 <li><strong>多代理并行</strong> —— worktree 隔离、资源池</li>
 <li><strong>First Mate</strong> —— 统一调度与控制平面</li>
 </ol>
-<p>顺序很重要：没有可靠的工作环境和上下文分层，直接增加代理数量只会把局部问题放大成并行混乱。所以我的优化从"造船"开始，也就是下面这套已经定型的终端架构。</p>
+<p>顺序很重要：没有可靠的工作环境和上下文分层，直接增加代理数量只会把局部问题放大成并行混乱。所以我的优化从"造船"开始，也就是下面这套终端架构。</p>
 <hr />
 <h2>二、先造船：终端最终架构</h2>
-<p>课程里 WezTerm 负责可编程、跨平台的终端外壳，tmux 负责工作分区与持久会话。落到我的机器上，完整架构是这样的：</p>
+<p>视频里 WezTerm 负责可编程、跨平台的终端外壳，tmux 负责工作分区与持久会话。落到我的机器上，完整架构是这样的：</p>
 <pre><code>Windows
 │
 └── WezTerm                     ← 最外层工作台
@@ -71,7 +70,7 @@
 <strong>z/zi/y 管去哪，fd/rg 管找什么。</strong></p>
 </blockquote>
 <h3>2.1 WezTerm：最外层控制器</h3>
-<p>WezTerm 的配置本身就是代码（Lua），支持平台条件、窗口参数、回调与快捷键写在同一份文件里，还能热重载——这正是课程强调的反馈回路：<strong>把环境定制变成可快速试验的工程过程</strong>。</p>
+<p>WezTerm 的配置本身就是代码（Lua），支持平台条件、窗口参数、回调与快捷键写在同一份文件里，还能热重载——<strong>把环境定制变成可快速试验的工程过程</strong>。</p>
 <p>我的 Leader 键是 <code>Alt + W</code>，注意是两段式按键：</p>
 <pre><code>Alt+W  →  松开  →  再按第二个键
 </code></pre>
@@ -122,7 +121,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>Alt+W → p</code> 值得单独说：它相当于 WezTerm 版的 Ctrl+Shift+P。<strong>忘记某个功能时直接搜</strong>：split、pane、tab、zoom、launcher、workspace、copy、font。可以理解为——"我忘了怎么操作 WezTerm，让 WezTerm 自己告诉我"。</p>
+<p><code>Alt+W → p</code> 值得单独说：它相当于 WezTerm 版的 Ctrl+Shift+P。<strong>忘记某个功能时直接搜</strong>：split、pane、tab、zoom、launcher、workspace、copy、font。</p>
 <h3>2.2 每天打开终端，先判断做什么</h3>
 <p>刻意不形成"打开终端 = 一定先进 tmux"的肌肉记忆。tmux 是给<strong>长期项目会话</strong>用的，临时任务不该为它付出上下文切换成本：</p>
 <table>
@@ -165,7 +164,7 @@
 </table>
 <hr />
 <h2>三、跨平台工具层：一套命令，两个系统</h2>
-<p>这是当前配置最舒服的地方：PowerShell 和 Bash 里保持同一套高频命令，只学一次。</p>
+<p>这是当前配置最舒服的地方：PowerShell 和 Bash 里保持同一套高频命令，不必切换。</p>
 <table>
 <thead>
 <tr>
@@ -208,18 +207,18 @@
 </tbody>
 </table>
 <h3>3.1 z / zi：替代大量手敲 cd</h3>
-<p>zoxide 会学习访问历史，所以刚开始 <code>z xxx</code> 可能不够聪明，<strong>用几天后会越来越准</strong>。以前写 <code>cd D:\Work\Projects\Agent-Memory\project</code>，现在一个 <code>z memory</code> 就够了。记不清具体路径时用 <code>zi</code>，输入 <code>kyl</code> 直接模糊选择。</p>
+<p>zoxide 会学习访问历史，所以刚开始 <code>z xxx</code> 可能不够聪明，<strong>用几天后会越来越准</strong>。以前写 <code>cd D:\Work\Projects\Agent-Memory\project</code>，现在一个 <code>z memory</code> 就够了。记不清具体路径时用 <code>zi</code>，输入 <code>kyl</code> 即可过滤出 kylin 相关目录再选择。</p>
 <h3>3.2 y：可视化的 cd</h3>
 <p>Yazi 最值得用的模式是浏览 → 退出跟过去：</p>
 <pre><code>y  →  进入 ~/work/kylin-memory/project  →  q
 </code></pre>
 <p><code>q</code> 退出时 shell 自动 cd 到 Yazi 最后停留的目录，<code>Q</code> 退出但不改变目录。所以 Yazi 本质上是<strong>可视化 cd</strong>。</p>
-<h3>3.3 fd / rg：必须形成条件反射</h3>
+<h3>3.3 fd / rg：寻找</h3>
 <ul>
 <li>"competition-v2 那个目录在哪？" → <code>fd competition-v2</code></li>
 <li>"哪些地方引用了 competition-v2？" → <code>rg "competition-v2"</code></li>
 </ul>
-<p>永远记：<strong>fd = Find file，rg = Ripgrep content</strong>。</p>
+<p>所以是：<strong>fd = Find file，rg = Ripgrep content</strong>。</p>
 <hr />
 <h2>四、tmux：项目工作区</h2>
 <p>课程讲 tmux 的三层结构：session 包含多个 windows，window 可切分成多个 panes。映射到我的使用习惯：</p>
@@ -280,7 +279,7 @@
 </tbody>
 </table>
 <h3>4.2 一个项目的默认布局</h3>
-<p>固定成三块：左 = 长期 Agent，右 = 文件浏览，下 = git / test / build。</p>
+<p>可以固定成三块：左 = 长期 Agent，右 = 文件浏览，下 = git / test / build。</p>
 <pre><code>Window 1: DEV
 ┌────────────────────────────┬───────────────────┐
 │ Agent (Codex / Hermes)     │ Yazi              │
@@ -288,7 +287,6 @@
 │ Shell / Git / Test                             │
 └────────────────────────────────────────────────┘
 </code></pre>
-<p>一个关键纪律：<strong>不要在 Agent Pane 里为了跑 <code>git status</code> 就把 Agent Ctrl+C 杀掉</strong>，直接切到 shell Pane。需要长期独立运行的东西就开新 Window（server、日志），比把一个屏幕切成 8 个 Pane 清楚得多。</p>
 <h3>4.3 "退出"一定要区分</h3>
 <table>
 <thead>
@@ -331,10 +329,10 @@
 <pre><code>ssh user@server
 tmux new -A -s project
 </code></pre>
-<p>即使 SSH 断线，tmux 任务继续；重新连上后 <code>tmux attach -t project</code> 恢复。对经常做 Linux/VM 项目开发的工作方式，这个能力非常重要。</p>
+<p>即使 SSH 断线，tmux 任务继续；重新连上后 <code>tmux attach -t project</code> 恢复。对经常做 Linux/VM/ssh项目开发的工作方式，这个方法很好。</p>
 <hr />
 <h2>五、上下文治理：把知识放到正确的加载层级</h2>
-<p>课程的核心观点：<strong>全局记忆是每次请求都要缴纳的成本</strong>。全局文件应该极短（讲者的 AGENTS.md 只有 27 行），只放稳定偏好与反复出现的模型偏差；项目背景、一次性约束和大段操作说明不应常驻。</p>
+<p>视频的核心观点：<strong>全局记忆是每次请求都要缴纳的成本</strong>。全局文件应该极短（讲者的 AGENTS.md 只有 27 行），只放稳定偏好与反复出现的模型偏差；项目背景、一次性约束和大段操作说明不应常驻。</p>
 <p>对应到我的 Agent 工作流（Hermes / Codex），分层口径是这样的：</p>
 <table>
 <thead>
@@ -366,7 +364,7 @@ tmux new -A -s project
 <p>另一个实践：项目记忆的正确增长方式不是一次写满，而是——<strong>代理犯错 → 人类给出具体纠正 → 把可复用教训写回项目记忆</strong>，让后续会话直接继承。一次纠错变成集体经验，这是项目记忆区别于静态 README 的地方。</p>
 <hr />
 <h2>六、从"代码完成"到"变更可信"</h2>
-<p>Agent 产码速度远快于人的逐行审查速度。如果所有变更都要求同等深度的 diff review，<strong>人的时间就是硬上限</strong>。课程的建议是把审查预算投向更高信号的位置：意图、证据、风险。</p>
+<p>Agent 产码速度远快于人的逐行审查速度。如果所有变更都要求同等深度的 diff review，<strong>人的时间就是硬上限</strong>。视频的建议是把审查预算投向更高信号的位置：意图、证据、风险。</p>
 <p>落到日常，我的最小验证习惯：</p>
 <pre><code>git status        # 我改了什么
 git diff --stat   # 改动规模多大
@@ -374,14 +372,14 @@ git diff          # 具体改了什么
 git branch --show-current   # 当前分支
 git log --oneline --decorate -10   # 最近提交
 </code></pre>
-<p>Agent 修改完代码后，至少跑一遍这三条再决定是否接受。进阶版是课程里 No Mistakes 流水线的骨架：隔离 worktree → fresh context 做对抗性审查 → 自动修复明确问题、产品歧义升级给人 → E2E 记录证据 → PR。</p>
+<p>Agent 修改完代码后，至少跑一遍这三条再决定是否接受。进阶版是课程里 <strong>No Mistakes 流水线的骨架：隔离 worktree → fresh context 做对抗性审查 → 自动修复明确问题、产品歧义升级给人 → E2E 记录证据 → PR。</strong></p>
 <blockquote>
 <p>PR 不只交付代码，还应交付决策材料：Intent、What Changed、Testing、evidence、risk assessment。人先看"是否满足原始意图的直接证据"，再审计自动修复是否越界，最后按风险等级决定 diff 审查深度。</p>
 </blockquote>
 <hr />
 <h2>七、长任务与并行：自治必须有边界</h2>
 <h3>7.1 长任务的三重边界</h3>
-<p>"人守两端，AI 承担中间"——人的集中投入在任务开头（意图）和结尾（验收），中间连续执行交给代理。但长运行不等于无限运行，安全的长任务必须同时有：</p>
+<p>"人守两端，AI 承担中间"——人的集中投入在任务开头（意图）和结尾（验收），中间连续执行交给代理。但长运行不等于无限运行，安全的长任务（loop）必须同时有：</p>
 <ol>
 <li><strong>语义停止条件</strong>（semantic stop）—— 明确"做完"长什么样</li>
 <li><strong>迭代上限</strong>（iteration cap）—— 最多循环多少轮</li>
@@ -416,7 +414,7 @@ git log --oneline --decorate -10   # 最近提交
 </tr>
 </tbody>
 </table>
-<p>课程里 First Mate 的定位值得记住：它不是"第四个写代码的代理"，而是一个<strong>调度入口</strong>——理解跨项目目标、拆成独立任务、建会话、分 worktree、启动执行代理、调验证、整理 PR，交给人最终判断。编排必须包含失败检测与恢复：首次 dispatch 失败时，调度器要能看到"没有任务真正启动"并显式重试。</p>
+<p>视频里 First Mate 的定位值得记住：它不是"第四个写代码的代理"，而是一个<strong>调度入口</strong>——理解跨项目目标、拆成独立任务、建会话、分 worktree、启动执行代理、调验证、整理 PR，交给人最终判断。编排必须包含失败检测与恢复：首次 dispatch 失败时，调度器要能看到"没有任务真正启动"并显式重试。</p>
 <p>对当前阶段的我来说，单代理 + 长任务边界已经够用；并行是下一步的方向，先理解原理，需要时再引入。</p>
 <hr />
 <h2>八、总结：高频命令卡与快捷键卡</h2>
@@ -489,7 +487,7 @@ Yazi         h j k l 导航 / Enter 打开 / Space 选择 / a 新建
 </table>
 <hr />
 <h2>九、结语：瓶颈上移，从水手到船长</h2>
-<p>课程结尾有一句话很值得反复读：</p>
+<p>视频结尾有一句话很值得反复读：</p>
 <blockquote>
 <p>瓶颈正在转移。作为船长，你必须跟上——把更多精力放在理解什么重要、与用户交谈、理解竞争格局，并绘制一张把船带向正确方向的藏宝图上。这样，你就从一名水手变成真正的船长。</p>
 </blockquote>
