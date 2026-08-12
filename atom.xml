@@ -5,7 +5,7 @@
   <link href="https://csurfing.xyz/" rel="alternate" type="text/html"/>
   <link href="https://csurfing.xyz/atom.xml" rel="self" type="application/atom+xml"/>
   <id>https://csurfing.xyz/</id>
-  <updated>2026-08-12T07:18:45.219Z</updated>
+  <updated>2026-08-12T07:35:26.500Z</updated>
   <language>zh_CN</language>
   <entry>
     <title>个人 Workflow 优化：从终端配置到 Agentic 工程工作流</title>
@@ -417,7 +417,7 @@ git log --oneline --decorate -10   # 最近提交
 </tr>
 </tbody>
 </table>
-<p>表格里出现了几个课程里的名词，先拆开解释：</p>
+<p>表格里出现了几个视频里的名词，先拆开解释：</p>
 <ul>
 <li><strong>git worktree</strong>：同一个 git 仓库可以拉出多个互不干扰的工作目录——每个 worktree 有自己独立的文件和分支，共享同一份对象库。多个代理在同一目录改文件会互相踩踏，各占一个 worktree 就互不影响了。它比完整 clone 更轻，但仍提供文件系统级隔离。</li>
 <li><strong>资源池（resource pool）</strong>：worktree 如果用完即弃，创建、标记、回收全是手工活，很快变成管理债。资源池的思路是把 worktree 变成可申请、占用、释放、复用的"执行槽"——Treehouse 就是干这个的：自动申请新鲜 worktree、标记占用状态、识别空闲并优先复用。关闭 tab 后自动释放是 Treehouse 的行为，不是 git 原生能力。</li>
@@ -537,7 +537,7 @@ title="L8 首席工程师的 Agentic Engineering 工作流 课程笔记（27页 
 </blockquote>
 <p>高推理 不制造网络故障，它只是让连接活得更久，更容易撞上<strong>本来就存在</strong>的网络故障。</p>
 <pre><code>flowchart TD
-    A["推理强度 xhigh"] --&gt; B["服务端推理/工具调用时间变长"]
+    A["推理强度 高"] --&gt; B["服务端推理/工具调用时间变长"]
     B --&gt; C["WebSocket/TCP 连接寿命变长&lt;br/&gt;几秒 → 几分钟"]
     C --&gt; D["经过代理节点/防火墙/NAT/跨境链路的时间变长"]
     D --&gt; E["撞上既有故障的概率上升"]
