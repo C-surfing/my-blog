@@ -25,3 +25,6 @@ npm-debug.log*
 # Temp
 tmp/
 temp/
+
+# Astro build cache
+.astro/
