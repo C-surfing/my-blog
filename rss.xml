@@ -1,4 +1,493 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Csurfing&apos;s Agent Lab</title><description>Agent, RL, LLM Engineering, and Systems Notes</description><link>https://csurfing.xyz/</link><language>zh_CN</language><item><title>由 Codex 断联引发的计网 think</title><link>https://csurfing.xyz/posts/codex-disconnect-network-think/</link><guid isPermaLink="true">https://csurfing.xyz/posts/codex-disconnect-network-think/</guid><description>从 Codex 高推理强度频繁断连（5/5 重新连接失败）与打比赛时 docker/modelscope 拉取缓慢两个真实场景出发，梳理 WebSocket / TLS / TCP / 代理 / Clash TUN 的完整排查链路。17 张 Mermaid 图讲清长连接为什么容易断、close_notify 到底意味着什么、如何分层定位网络故障。</description><pubDate>Mon, 10 Aug 2026 00:00:00 GMT</pubDate><content:encoded>&lt;blockquote&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Csurfing&apos;s Agent Lab</title><description>Agent, RL, LLM Engineering, and Systems Notes</description><link>https://csurfing.xyz/</link><language>zh_CN</language><item><title>个人 Workflow 优化：从终端配置到 Agentic 工程工作流</title><link>https://csurfing.xyz/posts/personal-workflow-optimization/</link><guid isPermaLink="true">https://csurfing.xyz/posts/personal-workflow-optimization/</guid><description>结合五道口纳什 L8《首席工程师的 Agentic Engineering 工作流》的方法论，记录个人终端工作流的最终架构：WezTerm 管环境、tmux 管项目、z/zi/y 管去哪、fd/rg 管找什么，以及上下文分层、验证习惯与长任务边界的落地实践。</description><pubDate>Wed, 12 Aug 2026 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;import PdfViewer from &quot;@/components/PdfViewer.astro&quot;;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;本文把两件事合在一起讲：一份是五道口纳什 L8《首席工程师的 Agentic Engineering 工作流》课程笔记（Kun Chen 主讲），另一份是我自己经过多轮迭代后定型的终端工作流。课程提供方法论骨架，我的配置是它的一个具体实例——从&quot;造船&quot;到&quot;掌舵&quot;的完整落地记录。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr /&gt;
+&lt;h2&gt;一、为什么值得专门优化一遍 Workflow&lt;/h2&gt;
+&lt;p&gt;L8 课程开篇把人比作&lt;strong&gt;船长&lt;/strong&gt;，把 coding agents 比作&lt;strong&gt;船员&lt;/strong&gt;，把终端、会话管理、记忆、Skills、验证流水线与并行调度组合成一艘船。评价标准随之从&quot;模型能不能写出代码&quot;，提高为四个问题：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;任务能否被正确理解？&lt;/li&gt;
+&lt;li&gt;过程能否隔离？&lt;/li&gt;
+&lt;li&gt;结果能否验证？&lt;/li&gt;
+&lt;li&gt;风险能否升级？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这四问构成了我优化工作流的出发点。课程给出了一条&lt;strong&gt;五步认知地图&lt;/strong&gt;：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;先造船&lt;/strong&gt; —— 低摩擦、可恢复的终端工作环境&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Onboarding&lt;/strong&gt; —— 上下文分层（全局记忆 → 项目记忆 → Skills）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;单代理协作&lt;/strong&gt; —— 工具接口、验证流水线&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;多代理并行&lt;/strong&gt; —— worktree 隔离、资源池&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;First Mate&lt;/strong&gt; —— 统一调度与控制平面&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;顺序很重要：没有可靠的工作环境和上下文分层，直接增加代理数量只会把局部问题放大成并行混乱。所以我的优化从&quot;造船&quot;开始，也就是下面这套已经定型的终端架构。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h2&gt;二、先造船：终端最终架构&lt;/h2&gt;
+&lt;p&gt;课程里 WezTerm 负责可编程、跨平台的终端外壳，tmux 负责工作分区与持久会话。落到我的机器上，完整架构是这样的：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Windows
+│
+└── WezTerm                     ← 最外层工作台
+    │  Leader = Alt + W
+    │
+    ├── PowerShell 7            ← Windows 工作
+    │   ├── Oh My Posh
+    │   ├── PSReadLine
+    │   ├── z / zi
+    │   ├── y
+    │   ├── fd / rg / fzf
+    │
+    └── WSL Ubuntu              ← Linux 开发
+        │
+        ├── Bash
+        ├── z / zi / y
+        ├── fd / rg / fzf
+        │
+        └── tmux                ← 项目工作区
+             Leader = Ctrl + A
+             ├── Agent
+             ├── Yazi
+             ├── Test
+             ├── Server
+             └── Logs
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;整个配置可以压缩成两句话：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;WezTerm 管环境，tmux 管项目。&lt;/strong&gt;
+&lt;strong&gt;z/zi/y 管去哪，fd/rg 管找什么。&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;2.1 WezTerm：最外层控制器&lt;/h3&gt;
+&lt;p&gt;WezTerm 的配置本身就是代码（Lua），支持平台条件、窗口参数、回调与快捷键写在同一份文件里，还能热重载——这正是课程强调的反馈回路：&lt;strong&gt;把环境定制变成可快速试验的工程过程&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;我的 Leader 键是 &lt;code&gt;Alt + W&lt;/code&gt;，注意是两段式按键：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Alt+W  →  松开  →  再按第二个键
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;核心快捷键：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;操作&lt;/th&gt;
+&lt;th&gt;快捷键&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Launcher&lt;/td&gt;
+&lt;td&gt;Alt+W → Space&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Command Palette&lt;/td&gt;
+&lt;td&gt;Alt+W → p&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;新 Tab&lt;/td&gt;
+&lt;td&gt;Alt+W → c&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;左右分 Pane&lt;/td&gt;
+&lt;td&gt;Alt+W → \&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;上下分 Pane&lt;/td&gt;
+&lt;td&gt;Alt+W → -&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;移动 Pane&lt;/td&gt;
+&lt;td&gt;Alt+W → h/j/k/l&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Pane 最大化/恢复&lt;/td&gt;
+&lt;td&gt;Alt+W → z&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;关闭 Pane&lt;/td&gt;
+&lt;td&gt;Alt+W → x&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;全屏&lt;/td&gt;
+&lt;td&gt;Alt+Enter&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;Alt+W → p&lt;/code&gt; 值得单独说：它相当于 WezTerm 版的 Ctrl+Shift+P。&lt;strong&gt;忘记某个功能时直接搜&lt;/strong&gt;：split、pane、tab、zoom、launcher、workspace、copy、font。可以理解为——&quot;我忘了怎么操作 WezTerm，让 WezTerm 自己告诉我&quot;。&lt;/p&gt;
+&lt;h3&gt;2.2 每天打开终端，先判断做什么&lt;/h3&gt;
+&lt;p&gt;刻意不形成&quot;打开终端 = 一定先进 tmux&quot;的肌肉记忆。tmux 是给&lt;strong&gt;长期项目会话&lt;/strong&gt;用的，临时任务不该为它付出上下文切换成本：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;我要做的事情&lt;/th&gt;
+&lt;th&gt;推荐入口&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Windows 上临时执行命令&lt;/td&gt;
+&lt;td&gt;直接 PowerShell&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Git、小脚本、小型 Codex 任务&lt;/td&gt;
+&lt;td&gt;PowerShell&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;看 Windows 文件&lt;/td&gt;
+&lt;td&gt;PowerShell → y&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;正式 Linux 开发&lt;/td&gt;
+&lt;td&gt;Alt+W → Space → tmux · Ubuntu&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;临时用一下 Ubuntu&lt;/td&gt;
+&lt;td&gt;Alt+W → Space → WSL · Ubuntu&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;长时间 Agent / Server / Test&lt;/td&gt;
+&lt;td&gt;Ubuntu + tmux&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SSH 到服务器 / VM&lt;/td&gt;
+&lt;td&gt;WezTerm → SSH → 远端 tmux&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr /&gt;
+&lt;h2&gt;三、跨平台工具层：一套命令，两个系统&lt;/h2&gt;
+&lt;p&gt;这是当前配置最舒服的地方：PowerShell 和 Bash 里保持同一套高频命令，只学一次。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;命令&lt;/th&gt;
+&lt;th&gt;含义&lt;/th&gt;
+&lt;th&gt;心智模型&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;z xxx&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;智能跳到常用目录&lt;/td&gt;
+&lt;td&gt;我知道去哪&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;zi&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;模糊选择目录&lt;/td&gt;
+&lt;td&gt;我大概知道去哪&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;y&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Yazi 文件浏览器&lt;/td&gt;
+&lt;td&gt;我想看看有哪些文件&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fd xxx&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;按文件名查找&lt;/td&gt;
+&lt;td&gt;文件叫什么？&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;rg xxx&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;按文件内容搜索&lt;/td&gt;
+&lt;td&gt;文件里面写了什么？&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fzf&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;通用模糊选择器&lt;/td&gt;
+&lt;td&gt;给我一个选择界面&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;3.1 z / zi：替代大量手敲 cd&lt;/h3&gt;
+&lt;p&gt;zoxide 会学习访问历史，所以刚开始 &lt;code&gt;z xxx&lt;/code&gt; 可能不够聪明，&lt;strong&gt;用几天后会越来越准&lt;/strong&gt;。以前写 &lt;code&gt;cd D:\Work\Projects\Agent-Memory\project&lt;/code&gt;，现在一个 &lt;code&gt;z memory&lt;/code&gt; 就够了。记不清具体路径时用 &lt;code&gt;zi&lt;/code&gt;，输入 &lt;code&gt;kyl&lt;/code&gt; 直接模糊选择。&lt;/p&gt;
+&lt;h3&gt;3.2 y：可视化的 cd&lt;/h3&gt;
+&lt;p&gt;Yazi 最值得用的模式是浏览 → 退出跟过去：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;y  →  进入 ~/work/kylin-memory/project  →  q
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;q&lt;/code&gt; 退出时 shell 自动 cd 到 Yazi 最后停留的目录，&lt;code&gt;Q&lt;/code&gt; 退出但不改变目录。所以 Yazi 本质上是&lt;strong&gt;可视化 cd&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3&gt;3.3 fd / rg：必须形成条件反射&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&quot;competition-v2 那个目录在哪？&quot; → &lt;code&gt;fd competition-v2&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&quot;哪些地方引用了 competition-v2？&quot; → &lt;code&gt;rg &quot;competition-v2&quot;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;永远记：&lt;strong&gt;fd = Find file，rg = Ripgrep content&lt;/strong&gt;。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h2&gt;四、tmux：项目工作区&lt;/h2&gt;
+&lt;p&gt;课程讲 tmux 的三层结构：session 包含多个 windows，window 可切分成多个 panes。映射到我的使用习惯：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Session = 项目工作区&lt;/strong&gt;（如 &lt;code&gt;kylin-memory&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Window = 一类任务&lt;/strong&gt;（dev / test / logs）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Pane = 同一任务页的分屏&lt;/strong&gt;（Agent / Yazi / shell）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;4.1 快捷键（Leader = Ctrl + A）&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;操作&lt;/th&gt;
+&lt;th&gt;快捷键&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;新 Window&lt;/td&gt;
+&lt;td&gt;Ctrl+A → c&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;左右分 Pane&lt;/td&gt;
+&lt;td&gt;Ctrl+A → |&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;上下分 Pane&lt;/td&gt;
+&lt;td&gt;Ctrl+A → -&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;移动 Pane&lt;/td&gt;
+&lt;td&gt;Ctrl+A → h/j/k/l&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Pane 最大化&lt;/td&gt;
+&lt;td&gt;Ctrl+A → z&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Detach&lt;/td&gt;
+&lt;td&gt;Ctrl+A → d&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Reload config&lt;/td&gt;
+&lt;td&gt;Ctrl+A → r&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;关闭当前 Pane&lt;/td&gt;
+&lt;td&gt;Ctrl+A → x&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;关闭 Window&lt;/td&gt;
+&lt;td&gt;Ctrl+A → &amp;amp;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Copy mode&lt;/td&gt;
+&lt;td&gt;Ctrl+A → [&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;4.2 一个项目的默认布局&lt;/h3&gt;
+&lt;p&gt;固定成三块：左 = 长期 Agent，右 = 文件浏览，下 = git / test / build。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Window 1: DEV
+┌────────────────────────────┬───────────────────┐
+│ Agent (Codex / Hermes)     │ Yazi              │
+├────────────────────────────┴───────────────────┤
+│ Shell / Git / Test                             │
+└────────────────────────────────────────────────┘
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;一个关键纪律：&lt;strong&gt;不要在 Agent Pane 里为了跑 &lt;code&gt;git status&lt;/code&gt; 就把 Agent Ctrl+C 杀掉&lt;/strong&gt;，直接切到 shell Pane。需要长期独立运行的东西就开新 Window（server、日志），比把一个屏幕切成 8 个 Pane 清楚得多。&lt;/p&gt;
+&lt;h3&gt;4.3 &quot;退出&quot;一定要区分&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;意图&lt;/th&gt;
+&lt;th&gt;操作&lt;/th&gt;
+&lt;th&gt;结果&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;暂时离开，后台继续&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Ctrl+A → d&lt;/code&gt;（detach）&lt;/td&gt;
+&lt;td&gt;项目仍然存在&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;回来&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;tmux attach -t main&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;恢复现场&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;当前 pane 真正退出&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;exit&lt;/code&gt; 或 &lt;code&gt;Ctrl+A → x&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;只结束当前 pane&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;杀整个 session&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;tmux kill-session -t main&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;该 session 全部结束&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;杀所有 tmux&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;tmux kill-server&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;所有 session/window/pane 全部结束（谨慎）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;关 WezTerm 时发生了什么&lt;/strong&gt;：普通前台 shell 会跟着结束；但程序在 tmux 里时，关掉 WezTerm 只是断开 client，tmux server 和里面的 Agent/Server &lt;strong&gt;继续运行&lt;/strong&gt;。所以想保留现场就 detach 再关窗口；不想后台运行就先结束任务再 kill session。&lt;/p&gt;
+&lt;h3&gt;4.4 SSH / VM 场景&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;ssh user@server
+tmux new -A -s project
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;即使 SSH 断线，tmux 任务继续；重新连上后 &lt;code&gt;tmux attach -t project&lt;/code&gt; 恢复。对经常做 Linux/VM 项目开发的工作方式，这个能力非常重要。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h2&gt;五、上下文治理：把知识放到正确的加载层级&lt;/h2&gt;
+&lt;p&gt;课程的核心观点：&lt;strong&gt;全局记忆是每次请求都要缴纳的成本&lt;/strong&gt;。全局文件应该极短（讲者的 AGENTS.md 只有 27 行），只放稳定偏好与反复出现的模型偏差；项目背景、一次性约束和大段操作说明不应常驻。&lt;/p&gt;
+&lt;p&gt;对应到我的 Agent 工作流（Hermes / Codex），分层口径是这样的：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;层级&lt;/th&gt;
+&lt;th&gt;存什么&lt;/th&gt;
+&lt;th&gt;触发方式&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;全局记忆&lt;/td&gt;
+&lt;td&gt;稳定偏好、反复出现的纠错&lt;/td&gt;
+&lt;td&gt;每次会话常驻（保持极短）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;项目记忆&lt;/td&gt;
+&lt;td&gt;项目定义、技术栈、术语、约定&lt;/td&gt;
+&lt;td&gt;进入项目时加载&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Skills&lt;/td&gt;
+&lt;td&gt;条件化流程、操作知识&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;渐进式披露&lt;/strong&gt;：只暴露短 description，任务匹配后才读正文&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;渐进式披露（progressive disclosure）是其中最关键的一环：E2E 指令只在改代码与验证行为时有用，普通问答每次加载整段说明只会浪费 token 并干扰注意力。分层既是省 token，也是&lt;strong&gt;减少无关指令竞争模型注意力&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;另一个实践：项目记忆的正确增长方式不是一次写满，而是——&lt;strong&gt;代理犯错 → 人类给出具体纠正 → 把可复用教训写回项目记忆&lt;/strong&gt;，让后续会话直接继承。一次纠错变成集体经验，这是项目记忆区别于静态 README 的地方。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h2&gt;六、从&quot;代码完成&quot;到&quot;变更可信&quot;&lt;/h2&gt;
+&lt;p&gt;Agent 产码速度远快于人的逐行审查速度。如果所有变更都要求同等深度的 diff review，&lt;strong&gt;人的时间就是硬上限&lt;/strong&gt;。课程的建议是把审查预算投向更高信号的位置：意图、证据、风险。&lt;/p&gt;
+&lt;p&gt;落到日常，我的最小验证习惯：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;git status        # 我改了什么
+git diff --stat   # 改动规模多大
+git diff          # 具体改了什么
+git branch --show-current   # 当前分支
+git log --oneline --decorate -10   # 最近提交
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Agent 修改完代码后，至少跑一遍这三条再决定是否接受。进阶版是课程里 No Mistakes 流水线的骨架：隔离 worktree → fresh context 做对抗性审查 → 自动修复明确问题、产品歧义升级给人 → E2E 记录证据 → PR。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;PR 不只交付代码，还应交付决策材料：Intent、What Changed、Testing、evidence、risk assessment。人先看&quot;是否满足原始意图的直接证据&quot;，再审计自动修复是否越界，最后按风险等级决定 diff 审查深度。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr /&gt;
+&lt;h2&gt;七、长任务与并行：自治必须有边界&lt;/h2&gt;
+&lt;h3&gt;7.1 长任务的三重边界&lt;/h3&gt;
+&lt;p&gt;&quot;人守两端，AI 承担中间&quot;——人的集中投入在任务开头（意图）和结尾（验收），中间连续执行交给代理。但长运行不等于无限运行，安全的长任务必须同时有：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;语义停止条件&lt;/strong&gt;（semantic stop）—— 明确&quot;做完&quot;长什么样&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;迭代上限&lt;/strong&gt;（iteration cap）—— 最多循环多少轮&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Token 上限&lt;/strong&gt;（token cap）—— 资源护栏&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;还要保留分支/worktree 和人工检查点。适合长循环的任务通常有外部可观察指标、单轮成败可判定、每轮结果可独立提交、错误可回滚——页面性能、E2E 覆盖率、指标驱动假设实验都是典型例子。&lt;/p&gt;
+&lt;h3&gt;7.2 并行：隔离、资源池、控制平面&lt;/h3&gt;
+&lt;p&gt;多代理并行有三个前提，缺一个都会把执行等待换成人的上下文切换：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;条件&lt;/th&gt;
+&lt;th&gt;解决的问题&lt;/th&gt;
+&lt;th&gt;工具&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;资源隔离&lt;/td&gt;
+&lt;td&gt;多个代理共享工作树互相干扰&lt;/td&gt;
+&lt;td&gt;git worktree / Treehouse&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;状态可见&lt;/td&gt;
+&lt;td&gt;人必须知道每个任务的目标与状态&lt;/td&gt;
+&lt;td&gt;有语义标题的 tmux tab&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;统一调度&lt;/td&gt;
+&lt;td&gt;拆任务、监控、恢复、汇总 PR&lt;/td&gt;
+&lt;td&gt;First Mate&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;课程里 First Mate 的定位值得记住：它不是&quot;第四个写代码的代理&quot;，而是一个&lt;strong&gt;调度入口&lt;/strong&gt;——理解跨项目目标、拆成独立任务、建会话、分 worktree、启动执行代理、调验证、整理 PR，交给人最终判断。编排必须包含失败检测与恢复：首次 dispatch 失败时，调度器要能看到&quot;没有任务真正启动&quot;并显式重试。&lt;/p&gt;
+&lt;p&gt;对当前阶段的我来说，单代理 + 长任务边界已经够用；并行是下一步的方向，先理解原理，需要时再引入。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h2&gt;八、总结：高频命令卡与快捷键卡&lt;/h2&gt;
+&lt;h3&gt;8.1 高频命令卡&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;导航         z xxx / zi / y
+搜索         fd xxx / rg &quot;xxx&quot; / fzf
+Git          git status / git diff / git diff --stat
+             git branch --show-current / git log --oneline -10
+tmux         tmux ls / attach -t NAME / new -s NAME
+             kill-session -t NAME / kill-server
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;8.2 高频快捷键卡&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;WezTerm      Alt+W → Space(Launcher) / p(Palette) / c(新Tab)
+             \ 左右分 / - 上下分 / h j k l 移动 / z Zoom / x 关闭
+tmux         Ctrl+A → c(新Window) / | 左右 / - 上下 / h j k l 移动
+             z Zoom / d Detach / r Reload
+Yazi         h j k l 导航 / Enter 打开 / Space 选择 / a 新建
+             r 重命名 / y 复制 / x 剪切 / p 粘贴 / d 删除 / q 退出并 cd
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;8.3 不知道该用哪个工具时&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;问题&lt;/th&gt;
+&lt;th&gt;答案&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;我要换 Windows/Ubuntu 环境&lt;/td&gt;
+&lt;td&gt;WezTerm&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;我要管理项目现场&lt;/td&gt;
+&lt;td&gt;tmux&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;我要去某个熟悉目录&lt;/td&gt;
+&lt;td&gt;z&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;我记不清具体目录&lt;/td&gt;
+&lt;td&gt;zi&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;我要看看文件结构&lt;/td&gt;
+&lt;td&gt;y&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;那个文件在哪&lt;/td&gt;
+&lt;td&gt;fd&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;哪个文件包含这段代码&lt;/td&gt;
+&lt;td&gt;rg&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;我忘了 WezTerm 功能&lt;/td&gt;
+&lt;td&gt;Alt+W → p&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;我暂时离开 Linux 项目&lt;/td&gt;
+&lt;td&gt;Ctrl+A → d&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;我要真正杀掉 tmux 项目&lt;/td&gt;
+&lt;td&gt;tmux kill-session -t NAME&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr /&gt;
+&lt;h2&gt;九、结语：瓶颈上移，从水手到船长&lt;/h2&gt;
+&lt;p&gt;课程结尾有一句话很值得反复读：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;瓶颈正在转移。作为船长，你必须跟上——把更多精力放在理解什么重要、与用户交谈、理解竞争格局，并绘制一张把船带向正确方向的藏宝图上。这样，你就从一名水手变成真正的船长。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;工具搭船，上下文招募船员，验证与隔离扩大执行力；而&lt;strong&gt;用户洞察、方向判断和最终责任&lt;/strong&gt;才让这艘船驶向值得去的地方。成熟的人机协作不是人退出，而是人的工作上移——从逐个 babysit 代理，转向维护目标、优先级和最终判断。&lt;/p&gt;
+&lt;p&gt;对现阶段的自己：终端工具链已经冻结，不再继续收集工具；接下来的日常是&lt;strong&gt;练熟这套 workflow&lt;/strong&gt;——打开终端选环境，z/zi/y 进目录，tmux 组织项目，fd/rg 搜索，Agent/Test/Server 各占一个 Pane 长期运行。船已经造好，剩下的交给航程。&lt;/p&gt;
+&lt;hr /&gt;
+&lt;blockquote&gt;
+&lt;p&gt;📄 附：本文方法论文档 —— &lt;a href=&quot;/pdfs/L8_Agentic_Engineering_workflow_notes.pdf&quot;&gt;L8 首席工程师的 Agentic Engineering 工作流 课程笔记（PDF）&lt;/a&gt;（27页，由 Kun Chen 视频整理，含五步认知地图、No Mistakes 流水线、GNHF 长任务循环、First Mate 调度架构等完整内容）&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&amp;lt;PdfViewer
+src=&quot;/pdfs/L8_Agentic_Engineering_workflow_notes.pdf&quot;
+title=&quot;L8 首席工程师的 Agentic Engineering 工作流 课程笔记（27页 PDF）&quot;
+/&amp;gt;&lt;/p&gt;
+</content:encoded></item><item><title>由 Codex 断联引发的计网 think</title><link>https://csurfing.xyz/posts/codex-disconnect-network-think/</link><guid isPermaLink="true">https://csurfing.xyz/posts/codex-disconnect-network-think/</guid><description>从 Codex 高推理强度频繁断连（5/5 重新连接失败）与打比赛时 docker/modelscope 拉取缓慢两个真实场景出发，梳理 WebSocket / TLS / TCP / 代理 / Clash TUN 的完整排查链路。17 张 Mermaid 图讲清长连接为什么容易断、close_notify 到底意味着什么、如何分层定位网络故障。</description><pubDate>Mon, 10 Aug 2026 00:00:00 GMT</pubDate><content:encoded>&lt;blockquote&gt;
 &lt;p&gt;两个真实场景，一条完整链路：先是打比赛时 docker pull、modelscope 下载龟速，然后是 Codex 推理强度开高后频繁出现&quot;5/5 重新连接失败&quot;。原本以为是玄学，顺着 AI 给的解释把排查链路捋通之后，发现计算机网络的知识全部串起来了。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;h2&gt;一、两个真实场景&lt;/h2&gt;
