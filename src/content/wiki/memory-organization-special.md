@@ -7,7 +7,7 @@ category: Agent
 type: entries
 ---
 
-> 完整长文（含 8 张 Mermaid 图与全部代码）：[记忆组织专题：让零散经验形成可推理的结构](/posts/memory-organization/)
+> 完整长文（含 7 张 Mermaid 图与全部代码）：[记忆组织专题：让零散经验形成可推理的结构](/posts/memory-organization/)
 > 代码出处：《记忆工程》[MemTensor/MemBook](https://github.com/MemTensor/MemBook) `code/Chapter_5/`
 
 ## 一句话
