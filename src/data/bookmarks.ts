@@ -345,7 +345,25 @@ export const bookmarksData: BookmarkItem[] = [
 		tags: ["LLM", "学习"],
 		category: "学习",
 	},
-	];
+	{
+		id: 37,
+		title: "Zread",
+		imgurl: "",
+		desc: "AI 驱动的论文与代码库阅读平台：Discover/Trending 发现前沿工作、私有仓库支持、订阅跟踪最新动态",
+		siteurl: "https://zread.ai/",
+		tags: ["AI", "论文", "阅读"],
+		category: "工具",
+	},
+	{
+		id: 38,
+		title: "DeepWiki",
+		imgurl: "",
+		desc: "Cognition 出品：为任意 GitHub 仓库自动生成可对话的 AI 文档，GitHub 版 Deep Research",
+		siteurl: "https://deepwiki.com/",
+		tags: ["AI", "代码库", "文档"],
+		category: "工具",
+	},
+];
 
 export function getBookmarksList(): BookmarkItem[] {
 	return bookmarksData;
