@@ -1,6 +1,6 @@
 ---
 title: "DevSpace：把 ChatGPT 的 Chat 模式搬到本地"
-updated: 2026-08-07
+updated: 2026-08-21
 description: "用普通 ChatGPT Chat 对话 + DevSpace MCP 插件直接读写本地文件、跑 shell，不消耗 Codex/agentic 额度。含从安装、Quick Tunnel、OAuth 到聊天内激活的完整可运行配置。"
 tags: [DevSpace, ChatGPT, MCP, Codex, Agent]
 category: Agent
@@ -81,6 +81,8 @@ devspace init
 - **公网 HTTPS origin**：Quick Tunnel 每次启动都会换新地址，这里先填占位，第 3 步用 `config set` 覆盖
 
 **保存首次显示的 Owner 密码**：OAuth 批准页面需要它，DevSpace 只保存密码 verifier，无法恢复明文。它也存放在 `~/.devspace/auth.json`，注意保密。
+
+**忘记密码时查看**：一条命令即可——`cat ~/.devspace/auth.json`，文件里存有 Owner 密码（连同 OAuth token 等凭据），用完后注意保密。
 
 ### 2. 启动 Quick Tunnel，拿到新 URL
 
