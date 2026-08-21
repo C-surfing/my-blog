@@ -1753,6 +1753,13 @@ Yazi         h j k l 导航 / Enter 打开 / Space 选择 / a 新建
 src=&quot;/pdfs/L8_Agentic_Engineering_workflow_notes.pdf&quot;
 title=&quot;L8 首席工程师的 Agentic Engineering 工作流 课程笔记（27页 PDF）&quot;
 /&amp;gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;📄 附：本文第八章的思想来源 —— &lt;a href=&quot;/pdfs/vibe_engineering_notes.pdf&quot;&gt;《vibe时代的软件工程》（PDF）&lt;/a&gt;（39页，AI 时代的软件工程方法论：验证鸿沟、意图-生成-验证循环、复杂度守门员、检查点式开发、门禁流水线、组织记忆与结尾三封信）&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&amp;lt;PdfViewer
+src=&quot;/pdfs/vibe_engineering_notes.pdf&quot;
+title=&quot;《vibe时代的软件工程》（39页 PDF）&quot;
+/&amp;gt;&lt;/p&gt;
 </content:encoded></item><item><title>由 Codex 断联引发的计网 think</title><link>https://csurfing.xyz/posts/codex-disconnect-network-think/</link><guid isPermaLink="true">https://csurfing.xyz/posts/codex-disconnect-network-think/</guid><description>从 Codex 高推理强度频繁断连（5/5 重新连接失败）与打比赛时 docker/modelscope 拉取缓慢两个真实场景出发，梳理 WebSocket / TLS / TCP / 代理 / Clash TUN 的完整排查链路。17 张 Mermaid 图讲清长连接为什么容易断、close_notify 到底意味着什么、如何分层定位网络故障。</description><pubDate>Mon, 10 Aug 2026 00:00:00 GMT</pubDate><content:encoded>&lt;blockquote&gt;
 &lt;p&gt;两个真实场景，一条完整链路：先是打比赛时 docker pull、modelscope 下载龟速，然后是 Codex 推理强度开高后频繁出现&quot;5/5 重新连接失败&quot;。原本以为是玄学，顺着 AI 给的解释把排查链路捋通之后，发现计算机网络的知识全部串起来了。&lt;/p&gt;
 &lt;/blockquote&gt;
