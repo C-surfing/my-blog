@@ -363,6 +363,15 @@ export const bookmarksData: BookmarkItem[] = [
 		tags: ["AI", "代码库", "文档"],
 		category: "工具",
 	},
+	{
+		id: 39,
+		title: "通往AGI之路（WayToAGI）",
+		imgurl: "",
+		desc: "开源 AI 学习知识库：万篇文档覆盖 AI 学习路径、工具教程与应用实操，从入门到进阶（附配套问答站 waytoagi.com）",
+		siteurl: "https://waytoagi.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e",
+		tags: ["AI", "学习"],
+		category: "学习",
+	},
 ];
 
 export function getBookmarksList(): BookmarkItem[] {
